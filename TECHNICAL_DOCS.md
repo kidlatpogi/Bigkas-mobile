@@ -21,6 +21,7 @@
    - [SessionResultScreen](#48-sessionresultscreen)
    - [ProfileScreen](#49-profilescreen)
    - [EditProfileScreen](#410-editprofilescreen)
+   - [ProgressScreen](#411-progressscreen)
 5. [Reusable Component Props](#5-reusable-component-props)
 6. [Utility Functions](#6-utility-functions)
 7. [Navigation Map](#7-navigation-map)
@@ -732,6 +733,84 @@ const { user, updateNickname, isLoading } = useAuth();
 
 ---
 
+### 4.11 ProgressScreen
+
+**File**: `src/screens/Main/ProgressScreen.jsx`  
+**Route**: `Progress` (BottomTabNavigator — third tab)
+
+#### Hook Destructuring
+
+```js
+const { sessions, isLoading, fetchSessions } = useSessions();
+```
+
+#### State Variables
+
+| Variable    | Type                            | Initial Value | Description                           |
+| ----------- | ------------------------------- | ------------- | ------------------------------------- |
+| `timeRange` | `'week' \| 'month' \| 'year'`   | `'week'`      | Selected time period filter           |
+
+#### From Hooks
+
+| Variable        | Source           | Type         | Description                  |
+| --------------- | ---------------- | ------------ | ---------------------------- |
+| `sessions`      | `useSessions()`  | `Session[]`  | Session list for metrics     |
+| `isLoading`     | `useSessions()`  | `boolean`    | Data loading indicator       |
+| `fetchSessions` | `useSessions()`  | `function`   | Load session data            |
+
+#### Derived Variables
+
+| Variable                 | Type     | Derivation                                    | Description                              |
+| ------------------------ | -------- | --------------------------------------------- | ---------------------------------------- |
+| `performancePercentage`  | `number` | Avg of all session scores * 100               | Overall performance score (0-100)        |
+| `improvementPercentage`  | `number` | `12` (placeholder)                            | Improvement from previous period         |
+| `betterThanLastWeek`     | `number` | `12` (placeholder)                            | Week-over-week improvement percentage    |
+| `averageScore`           | `number` | Avg of all session scores * 100               | Average score across all sessions        |
+| `chartData`              | `ChartDataPoint[]` | Aggregated data based on `timeRange` | Array for ProgressChart visualization    |
+| `recentSessions`         | `SessionDisplay[]` | First 5 sessions with formatted data | Sessions for display list                |
+
+#### ChartDataPoint Shape
+
+| Property | Type     | Description                              |
+| -------- | -------- | ---------------------------------------- |
+| `label`  | `string` | X-axis label (Mon, Tue, Wk1, Jan, etc.)  |
+| `value`  | `number` | Y-axis value (performance metric 0-100)  |
+
+#### SessionDisplay Shape
+
+| Property   | Type     | Description                          |
+| ---------- | -------- | ------------------------------------ |
+| `id`       | `string` | Session ID                           |
+| `title`    | `string` | Session title                        |
+| `subtitle` | `string` | Date + duration (e.g., "Oct 23 • 4 mins") |
+| `score`    | `number` | Score value 0-100                    |
+
+#### Handlers
+
+| Handler              | Trigger                  | Action                                      |
+| -------------------- | ------------------------ | ------------------------------------------- |
+| `handleGoBack()`     | Back arrow press         | `navigation.goBack()`                       |
+| `handleSessionPress(sessionId)` | Session card tap | `navigation.navigate('SessionDetail', { sessionId })` |
+| `handleViewAll()`    | "VIEW ALL" link press    | `navigation.navigate('History')`            |
+
+#### UI Sections
+
+| Section            | Content                                                |
+| ------------------ | ------------------------------------------------------ |
+| Performance Trend  | Large percentage, improvement badge, chart, time selector |
+| Stats Row          | "Better than last week" + "Avg Score" cards            |
+| Recent Sessions    | List of SessionScoreCard components (max 5)            |
+
+#### Components Used
+
+| Component             | Props                               | Description                    |
+| --------------------- | ----------------------------------- | ------------------------------ |
+| `TimeRangeSelector`   | `selected`, `onSelect`              | Week/Month/Year pill selector  |
+| `ProgressChart`       | `data`                              | Line chart visualization       |
+| `SessionScoreCard`    | `title`, `subtitle`, `score`, `onPress` | Individual session card   |
+
+---
+
 ## 5. Reusable Component Props
 
 ### BrandLogo (`src/components/common/BrandLogo.jsx`)
@@ -814,6 +893,32 @@ Uses FontAwesome `google` icon with outline border style.
 | `style`   | `ViewStyle` | —       | Container style override |
 | `children`| `ReactNode` | —       | Card content             |
 
+### TimeRangeSelector (`src/components/common/TimeRangeSelector.jsx`)
+
+| Prop       | Type                           | Default  | Description                           |
+| ---------- | ------------------------------ | -------- | ------------------------------------- |
+| `selected` | `'week' \| 'month' \| 'year'`  | `'week'` | Currently selected time range         |
+| `onSelect` | `function`                     | —        | Callback when range is selected       |
+
+### ProgressChart (`src/components/charts/ProgressChart.jsx`)
+
+| Prop   | Type                                  | Default | Description                        |
+| ------ | ------------------------------------- | ------- | ---------------------------------- |
+| `data` | `Array<{label: string, value: number}>` | `[]`  | Chart data points                  |
+
+Data structure:
+- `label`: X-axis label (Mon, Tue, Wk1, Jan, etc.)
+- `value`: Y-axis value (0-100 performance metric)
+
+### SessionScoreCard (`src/components/common/SessionScoreCard.jsx`)
+
+| Prop       | Type       | Default | Description                              |
+| ---------- | ---------- | ------- | ---------------------------------------- |
+| `title`    | `string`   | —       | Session title/name                       |
+| `subtitle` | `string`   | —       | Session metadata (date, duration)        |
+| `score`    | `number`   | —       | Score value (0-100)                      |
+| `onPress`  | `function` | —       | Press handler                            |
+
 ---
 
 ## 6. Utility Functions
@@ -861,6 +966,7 @@ AppNavigator (root stack)
         ├── BottomTabs   → BottomTabNavigator
         │   ├── Dashboard → DashboardScreen
         │   ├── Practice  → PracticeScreen
+        │   ├── Progress  → ProgressScreen
         │   ├── History   → HistoryScreen
         │   └── Profile   → ProfileScreen
         ├── SessionDetail → SessionDetailScreen

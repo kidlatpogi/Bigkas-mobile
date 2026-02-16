@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import DashboardScreen from '../screens/Main/DashboardScreen';
 import PracticeScreen from '../screens/Main/PracticeScreen';
+import ProgressScreen from '../screens/Main/ProgressScreen';
 import HistoryScreen from '../screens/Main/HistoryScreen';
 import ProfileScreen from '../screens/Main/ProfileScreen';
 import { colors } from '../styles/colors';
@@ -26,6 +27,9 @@ const BottomTabNavigator = () => {
               break;
             case 'Practice':
               iconName = focused ? 'mic' : 'mic-outline';
+              break;
+            case 'Progress':
+              iconName = focused ? 'stats-chart' : 'stats-chart-outline';
               break;
             case 'History':
               iconName = focused ? 'time' : 'time-outline';
@@ -53,7 +57,8 @@ const BottomTabNavigator = () => {
         },
         headerShown: false,
       })}
-    >
+    >Progress" component={ProgressScreen} options={{ tabBarLabel: 'Progress' }} />
+      <Tab.Screen name="
       <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ tabBarLabel: 'Home' }} />
       <Tab.Screen name="Practice" component={PracticeScreen} options={{ tabBarLabel: 'Practice' }} />
       <Tab.Screen name="History" component={HistoryScreen} options={{ tabBarLabel: 'History' }} />
