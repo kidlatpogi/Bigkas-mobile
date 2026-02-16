@@ -245,8 +245,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
     paddingBottom: 100, // room for floating nav
   },
   contentWrap: {
@@ -270,14 +270,14 @@ const styles = StyleSheet.create({
   /* ──── Title ──── */
   title: {
     textAlign: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
     fontWeight: '700',
   },
 
   /* ──── Avatar ──── */
   avatarWrap: {
     alignItems: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
 
   /* ──── Form ──── */
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     marginTop: spacing.xs,
   },
   settingLabel: {
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
 
   /* ──── Action buttons ──── */
   actions: {
-    marginTop: spacing.lg,
+    marginTop: spacing.md,
   },
   saveButton: {
     width: '100%',

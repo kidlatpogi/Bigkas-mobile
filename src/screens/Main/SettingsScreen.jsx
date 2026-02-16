@@ -250,14 +250,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scrollContent: {
-    padding: spacing.md,
+    padding: spacing.sm,
     paddingBottom: 100, // room for floating nav
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   backButton: {
     width: 40,
@@ -271,17 +271,17 @@ const styles = StyleSheet.create({
     width: 40,
   },
   section: {
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
   sectionTitle: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
     letterSpacing: 1,
   },
   settingGroup: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   settingLabel: {
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
     letterSpacing: 0.5,
   },
   testButton: {

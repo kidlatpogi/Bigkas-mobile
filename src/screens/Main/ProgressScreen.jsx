@@ -279,14 +279,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scrollContent: {
-    padding: spacing.md,
+    padding: spacing.sm,
     paddingBottom: 100, // room for floating nav
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   backButton: {
     width: 40,
@@ -300,11 +300,11 @@ const styles = StyleSheet.create({
     width: 40,
   },
   trendCard: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   sectionLabel: {
     letterSpacing: 1,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   performanceRow: {
     flexDirection: 'row',

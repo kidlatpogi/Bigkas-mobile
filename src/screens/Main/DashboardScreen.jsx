@@ -329,8 +329,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
     paddingBottom: 100, // room for floating nav
   },
 
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
   profileButton: {
     width: 40,
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
 
   /* Greeting */
   greetingWrap: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   greetingText: {
     fontStyle: 'italic',
