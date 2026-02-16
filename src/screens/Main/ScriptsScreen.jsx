@@ -186,38 +186,39 @@ const ScriptsScreen = ({ navigation }) => {
           <View style={styles.headerSpacer} />
         </View>
 
-        {/* Action Buttons */}
-        <PrimaryButton
-          title="Write Script"
-          onPress={handleWriteScript}
-          variant="outline"
-          style={styles.writeButton}
-        />
-        <Typography variant="body" color="textSecondary" style={styles.orText}>
-          or
-        </Typography>
-        <PrimaryButton
-          title="Generate Script"
-          onPress={handleGenerateScript}
-          variant="primary"
-          style={styles.generateButton}
-        />
-
-        {/* Filter Tabs */}
-        <View style={styles.filterContainer}>
-          <FilterTabs
-            tabs={filterTabs}
-            selected={filterType}
-            onSelect={handleFilterChange}
-          />
-        </View>
-
-        {/* Scripts List */}
+        {/* Scripts List - includes action buttons + filter + scripts */}
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {/* Action Buttons */}
+          <PrimaryButton
+            title="Write Script"
+            onPress={handleWriteScript}
+            variant="outline"
+            style={styles.writeButton}
+          />
+          <Typography variant="body" color="textSecondary" style={styles.orText}>
+            or
+          </Typography>
+          <PrimaryButton
+            title="Generate Script"
+            onPress={handleGenerateScript}
+            variant="primary"
+            style={styles.generateButton}
+          />
+
+          {/* Filter Tabs */}
+          <View style={styles.filterContainer}>
+            <FilterTabs
+              tabs={filterTabs}
+              selected={filterType}
+              onSelect={handleFilterChange}
+            />
+          </View>
+
+          {/* Scripts Cards */}
           {filteredScripts.length === 0 ? (
             <View style={styles.emptyState}>
               <Typography variant="body" color="textSecondary" align="center">
@@ -255,14 +256,14 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: spacing.md,
-    marginBottom: spacing.lg,
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
   },
   backButton: {
     width: 40,
@@ -275,6 +276,14 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 40,
   },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xs,
+    paddingBottom: 100,
+  },
   writeButton: {
     width: '100%',
     marginBottom: spacing.xs,
@@ -286,23 +295,17 @@ const styles = StyleSheet.create({
   },
   generateButton: {
     width: '100%',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   filterContainer: {
-    marginBottom: spacing.md,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 100, // room for floating nav
+    marginBottom: spacing.sm,
   },
   emptyState: {
-    paddingVertical: spacing.xxxl,
+    paddingVertical: spacing.xxl,
     alignItems: 'center',
   },
   emptySubtext: {
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
 });
 
