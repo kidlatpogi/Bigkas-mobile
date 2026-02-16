@@ -144,17 +144,36 @@ const DashboardScreen = ({ navigation }) => {
               </Typography>
             </View>
 
-            <View style={styles.infoCard}>
-              <Typography variant="caption" color="textSecondary" style={styles.cardLabel}>
-                TIP OF THE DAY
-              </Typography>
+            <TouchableOpacity
+              style={styles.infoCard}
+              onPress={() => navigation.navigate('Scripts')}
+              activeOpacity={0.7}
+            >
+              <View style={styles.scriptsCardHeader}>
+                <Typography variant="caption" color="textSecondary" style={styles.cardLabel}>
+                  MY SCRIPTS
+                </Typography>
+                <Ionicons name="arrow-forward" size={16} color={colors.primary} />
+              </View>
               <Typography variant="bodySmall" style={styles.cardBody}>
-                Start with a hook
+                Manage your practice scripts
               </Typography>
               <Typography variant="caption" color="textSecondary">
-                Open with a surprising fact, question, or story to grab attention in the first 30 seconds.
+                Create, edit, and organize your speaking materials
               </Typography>
-            </View>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.infoCard}>
+            <Typography variant="caption" color="textSecondary" style={styles.cardLabel}>
+              TIP OF THE DAY
+            </Typography>
+            <Typography variant="bodySmall" style={styles.cardBody}>
+              Start with a hook
+            </Typography>
+            <Typography variant="caption" color="textSecondary">
+              Open with a surprising fact, question, or story to grab attention in the first 30 seconds.
+            </Typography>
           </View>
         </View>
       </ScrollView>
@@ -263,6 +282,14 @@ const styles = StyleSheet.create({
   infoCard: {
     width: '48%',
     backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+  },
+  scriptsCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     shadowColor: colors.black,

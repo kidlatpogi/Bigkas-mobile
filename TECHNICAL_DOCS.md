@@ -22,6 +22,7 @@
    - [ProfileScreen](#49-profilescreen)
    - [EditProfileScreen](#410-editprofilescreen)
    - [ProgressScreen](#411-progressscreen)
+   - [ScriptsScreen](#412-scriptsscreen)
 5. [Reusable Component Props](#5-reusable-component-props)
 6. [Utility Functions](#6-utility-functions)
 7. [Navigation Map](#7-navigation-map)
@@ -811,6 +812,76 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 
 ---
 
+### 4.12 ScriptsScreen
+
+**File**: `src/screens/Main/ScriptsScreen.jsx`  
+**Route**: `Scripts` (MainNavigator stack)
+
+#### State Variables
+
+| Variable     | Type                                | Initial Value      | Description                           |
+| ------------ | ----------------------------------- | ------------------ | ------------------------------------- |
+| `filterType` | `'self-authored' \| 'auto-generated'` | `'self-authored'` | Selected script type filter           |
+| `scripts`    | `Script[]`                          | `[]`               | Array of all script objects           |
+| `isLoading`  | `boolean`                           | `false`            | Data loading indicator                |
+
+#### Script Object Shape
+
+| Property      | Type                                | Description                          |
+| ------------- | ----------------------------------- | ------------------------------------ |
+| `id`          | `string`                            | Unique script identifier             |
+| `title`       | `string`                            | Script title/name                    |
+| `description` | `string`                            | Script body preview text             |
+| `type`        | `'self-authored' \| 'auto-generated'` | Script source type                 |
+| `editedAt`    | `string`                            | ISO 8601 timestamp of last edit      |
+| `content`     | `string`                            | Full script content                  |
+| `createdAt`   | `string`                            | ISO 8601 timestamp of creation       |
+
+#### Derived Variables
+
+| Variable          | Type            | Derivation                                    | Description                           |
+| ----------------- | --------------- | --------------------------------------------- | ------------------------------------- |
+| `filteredScripts` | `Script[]`      | Filtered by `filterType`                      | Scripts matching current filter       |
+| `filterTabs`      | `TabOption[]`   | `[{value, label}, ...]`                       | Filter tab options                    |
+
+#### TabOption Shape
+
+| Property | Type     | Description              |
+| -------- | -------- | ------------------------ |
+| `value`  | `string` | Tab identifier           |
+| `label`  | `string` | Tab display text         |
+
+#### Handlers
+
+| Handler                   | Trigger                    | Action                                                  |
+| ------------------------- | -------------------------- | ------------------------------------------------------- |
+| `handleGoBack()`          | Back arrow press           | `navigation.goBack()`                                   |
+| `handleWriteScript()`     | "Write Script" button      | Navigate to script creation screen (placeholder)        |
+| `handleGenerateScript()`  | "Generate Script" button   | Trigger AI script generation (placeholder)              |
+| `handleEditScript(id)`    | "Edit" button on card      | Navigate to script editor with script ID (placeholder)  |
+| `handleUseInPractice(id)` | "Use in Practice" button   | Navigate to Practice with script content                |
+| `handleFilterChange(val)` | Filter tab selection       | Updates `filterType` state                              |
+| `formatEditedTime(iso)`   | Called during render       | Converts ISO timestamp to readable format               |
+
+#### formatEditedTime Return Values
+
+| Condition                | Return Value                          |
+| ------------------------ | ------------------------------------- |
+| < 24 hours ago           | `'EDITED TODAY'`                      |
+| 1 day ago                | `'EDITED YESTERDAY'`                  |
+| 2-6 days ago             | `'EDITED X DAYS AGO'`                 |
+| 7+ days ago              | `'EDITED MMM DD'`                     |
+
+#### Components Used
+
+| Component      | Props                                                      | Description                    |
+| -------------- | ---------------------------------------------------------- | ------------------------------ |
+| `PrimaryButton`| `title`, `onPress`, `variant`, `style`                     | Write/Generate action buttons  |
+| `FilterTabs`   | `tabs`, `selected`, `onSelect`                             | Self-Authored/Auto-Generated filter |
+| `ScriptCard`   | `title`, `description`, `editedTime`, `onEdit`, `onUseInPractice` | Script display card  |
+
+---
+
 ## 5. Reusable Component Props
 
 ### BrandLogo (`src/components/common/BrandLogo.jsx`)
@@ -919,6 +990,25 @@ Data structure:
 | `score`    | `number`   | —       | Score value (0-100)                      |
 | `onPress`  | `function` | —       | Press handler                            |
 
+### FilterTabs (`src/components/common/FilterTabs.jsx`)
+
+| Prop       | Type                                  | Default | Description                           |
+| ---------- | ------------------------------------- | ------- | ------------------------------------- |
+| `tabs`     | `Array<{value: string, label: string}>` | `[]`  | Array of tab options                  |
+| `selected` | `string`                              | —       | Currently selected tab value          |
+| `onSelect` | `function`                            | —       | Callback when a tab is selected       |
+
+### ScriptCard (`src/components/common/ScriptCard.jsx`)
+
+| Prop              | Type       | Default | Description                              |
+| ----------------- | ---------- | ------- | ---------------------------------------- |
+| `title`           | `string`   | —       | Script title/name                        |
+| `description`     | `string`   | —       | Script description/preview text          |
+| `editedTime`      | `string`   | —       | Last edited timestamp text               |
+| `onEdit`          | `function` | —       | Handler for Edit button                  |
+| `onUseInPractice` | `function` | —       | Handler for Use in Practice button       |
+| `onPress`         | `function` | —       | Handler for card press (optional)        |
+
 ---
 
 ## 6. Utility Functions
@@ -971,7 +1061,8 @@ AppNavigator (root stack)
         │   └── Profile   → ProfileScreen
         ├── SessionDetail → SessionDetailScreen
         ├── SessionResult → SessionResultScreen
-        └── EditProfile   → EditProfileScreen
+        ├── EditProfile   → EditProfileScreen
+        └── Scripts       → ScriptsScreen
 ```
 
 ### Route Params Summary

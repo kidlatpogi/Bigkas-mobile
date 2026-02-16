@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SessionDetailScreen from '../screens/Session/SessionDetailScreen';
 import SessionResultScreen from '../screens/Session/SessionResultScreen';
 import EditProfileScreen from '../screens/Main/EditProfileScreen';
+import ScriptsScreen from '../screens/Main/ScriptsScreen';
 import BottomTabNavigator from './BottomTabNavigator';
 const Stack = createNativeStackNavigator();
 
@@ -36,6 +37,13 @@ const MainNavigator = () => {
       <Stack.Screen
         name="EditProfile"
         component={EditProfileScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="Scripts"
+        component={ScriptsScreen}
         options={{
           headerShown: false,
         }}
