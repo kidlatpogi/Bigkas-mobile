@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: spacing.md,
-    paddingBottom: spacing.xxxl,
+    paddingBottom: 100, // room for floating nav
   },
   header: {
     flexDirection: 'row',

@@ -31,11 +31,12 @@ const TAB_ICONS = {
 /**
  * BottomTabNavigator
  *
- * 5-tab bar matching the Figma design:
+ * Floating bottom tab bar matching the Figma design:
  *  | Scripts | Progress | Home | Profile | Settings |
  *
  * - Icons only (no labels)
  * - Center "Home" icon is visually larger
+ * - Floating bar: rounded corners, horizontal margin, elevated shadow
  * - Active colour: #010101 (black)
  * - Inactive colour: rgba(1,1,1,0.45) (textMuted)
  * - Tab bar background: #FFFFFF
@@ -49,7 +50,7 @@ const BottomTabNavigator = () => {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: false,
-        tabBarIcon: ({ focused, size }) => {
+        tabBarIcon: ({ focused }) => {
           const icons = TAB_ICONS[route.name];
           const iconName = focused ? icons.focused : icons.outline;
           const iconColor = focused ? colors.black : colors.textMuted;
@@ -80,20 +81,28 @@ const BottomTabNavigator = () => {
 
 const styles = StyleSheet.create({
   tabBar: {
+    position: 'absolute',
+    bottom: Platform.OS === 'android' ? 16 : 24,
+    left: 20,
+    right: 20,
+    height: 64,
     backgroundColor: colors.white,
+    borderRadius: 32,
     borderTopWidth: 0,
-    elevation: 12,
+    paddingBottom: 0,
+    paddingTop: 0,
+    // Shadow (iOS)
     shadowColor: colors.black,
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    height: Platform.OS === 'android' ? 64 : 80,
-    paddingBottom: Platform.OS === 'android' ? 8 : 20,
-    paddingTop: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    // Shadow (Android)
+    elevation: 20,
   },
   tabBarItem: {
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 10,
   },
   centerIcon: {
     alignItems: 'center',

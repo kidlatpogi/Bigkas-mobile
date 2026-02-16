@@ -19,22 +19,36 @@ import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 
 /**
- * Edit Profile screen for updating user details and avatar.
- * Variables documented for web version reuse.
+ * EditProfileScreen — 1:1 copy of the Figma "Edit Profile / DONE" screen.
+ *
+ * Layout (top → bottom):
+ *  1. Circular back-arrow button
+ *  2. "Edit Profile" bold title centred
+ *  3. AvatarPicker (120 px, dark circle, camera icon overlay)
+ *  4. First Name + Last Name side-by-side inputs
+ *  5. Email Address full-width input
+ *  6. "Change Password" row with chevron
+ *  7. "Account Settings" row with chevron
+ *  8. "Save Changes" black button
+ *  9. "Cancel" outlined button
+ *
+ * @component
+ * @param {{ navigation: import('@react-navigation/native').NavigationProp }} props
  */
 const EditProfileScreen = ({ navigation }) => {
   const { user, updateNickname, isLoading } = useAuth();
 
-  // Profile form state for cross-platform reuse (web + mobile).
+  /** @type {[{firstName:string,lastName:string,email:string,avatarUri:string|null}, Function]} */
   const [formData, setFormData] = useState({
     firstName: user?.name?.split(' ')[0] || '',
-    lastName: user?.name?.split(' ')[1] || '',
+    lastName: user?.name?.split(' ').slice(1).join(' ') || '',
     email: user?.email || '',
     avatarUri: user?.avatar_url || null,
   });
 
   const [errors, setErrors] = useState({});
 
+  /** Update a single form field and clear its error. */
   const updateField = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -42,8 +56,8 @@ const EditProfileScreen = ({ navigation }) => {
     }
   };
 
+  /** Validate & save — wired for Supabase profile update. */
   const handleSaveChanges = async () => {
-    // Basic validation
     const newErrors = {};
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
@@ -59,13 +73,8 @@ const EditProfileScreen = ({ navigation }) => {
     ]);
   };
 
-  const handleCancel = () => {
-    navigation.goBack();
-  };
-
-  const handleGoBack = () => {
-    navigation.goBack();
-  };
+  const handleCancel = () => navigation.goBack();
+  const handleGoBack = () => navigation.goBack();
 
   const handleChangePassword = () => {
     Alert.alert('Change Password', 'Password change flow will be available soon.');
@@ -81,16 +90,23 @@ const EditProfileScreen = ({ navigation }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.contentWrap}>
+            {/* ── Back button ── */}
             <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
               <Ionicons name="arrow-back" size={18} color={colors.textPrimary} />
             </TouchableOpacity>
 
+            {/* ── Title ── */}
             <Typography variant="h1" style={styles.title}>
               Edit Profile
             </Typography>
 
+            {/* ── Avatar ── */}
             <View style={styles.avatarWrap}>
               <AvatarPicker
                 uri={formData.avatarUri}
@@ -101,51 +117,63 @@ const EditProfileScreen = ({ navigation }) => {
               />
             </View>
 
+            {/* ── Form ── */}
             <View style={styles.form}>
+              {/* First Name + Last Name */}
               <View style={styles.row}>
                 <View style={styles.rowItem}>
                   <TextField
-                    label="First Name"
+                    label="FIRST NAME"
                     placeholder="Juan"
                     value={formData.firstName}
-                    onChangeText={(value) => updateField('firstName', value)}
+                    onChangeText={(v) => updateField('firstName', v)}
                     autoCapitalize="words"
                     error={errors.firstName}
                   />
                 </View>
                 <View style={styles.rowItem}>
                   <TextField
-                    label="Last Name"
+                    label="LAST NAME"
                     placeholder="Dela Cruz"
                     value={formData.lastName}
-                    onChangeText={(value) => updateField('lastName', value)}
+                    onChangeText={(v) => updateField('lastName', v)}
                     autoCapitalize="words"
                     error={errors.lastName}
                   />
                 </View>
               </View>
 
+              {/* Email */}
               <TextField
-                label="Email Address"
+                label="EMAIL ADDRESS"
                 placeholder="juan@student.edu.ph"
                 value={formData.email}
-                onChangeText={(value) => updateField('email', value)}
+                onChangeText={(v) => updateField('email', v)}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
                 error={errors.email}
               />
 
+              {/* Change Password */}
               <TouchableOpacity style={styles.settingRow} onPress={handleChangePassword}>
-                <Typography variant="body">Change Password</Typography>
+                <Typography variant="body" style={styles.settingLabel}>
+                  Change Password
+                </Typography>
                 <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
 
+              {/* Account Settings */}
               <TouchableOpacity style={styles.settingRow} onPress={handleAccountSettings}>
-                <Typography variant="body">Account Settings</Typography>
+                <Typography variant="body" style={styles.settingLabel}>
+                  Account Settings
+                </Typography>
                 <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
+            </View>
 
+            {/* ── Action buttons ── */}
+            <View style={styles.actions}>
               <PrimaryButton
                 title="Save Changes"
                 onPress={handleSaveChanges}
@@ -171,6 +199,7 @@ const EditProfileScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  /* ── Layout ── */
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -181,59 +210,78 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: 100, // room for floating nav
   },
   contentWrap: {
     width: '100%',
     maxWidth: 420,
     alignSelf: 'center',
   },
+
+  /* ── Back button ── */
   backButton: {
     width: 40,
     height: 40,
     borderRadius: borderRadius.full,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.borderDark,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
+
+  /* ── Title ── */
   title: {
-    marginBottom: spacing.xl,
     textAlign: 'center',
+    marginBottom: spacing.lg,
+    fontWeight: '700',
   },
+
+  /* ── Avatar ── */
   avatarWrap: {
     alignItems: 'center',
     marginBottom: spacing.xl,
   },
+
+  /* ── Form ── */
   form: {
-    marginBottom: spacing.xl,
+    marginBottom: spacing.sm,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: spacing.md,
   },
   rowItem: {
     width: '48%',
   },
+
+  /* ── Setting rows ── */
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    marginBottom: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  settingLabel: {
+    fontSize: 15,
+  },
+
+  /* ── Action buttons ── */
+  actions: {
+    marginTop: spacing.lg,
   },
   saveButton: {
     width: '100%',
-    marginTop: spacing.lg,
     backgroundColor: colors.black,
+    borderRadius: borderRadius.lg,
   },
   cancelButton: {
     width: '100%',
     marginTop: spacing.sm,
+    borderRadius: borderRadius.lg,
+    borderColor: colors.borderDark,
   },
 });
 
