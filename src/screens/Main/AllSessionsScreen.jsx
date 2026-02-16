@@ -41,66 +41,79 @@ const AllSessionsScreen = ({ navigation }) => {
 
   // Mock data for display - replace with actual filtered sessions
   const allSessionsMock = useMemo(() => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
     return [
       {
         id: '1',
         title: 'Impromptu Speech #10',
         subtitle: 'Oct 23 • 4 mins',
         score: 42,
+        date: new Date(today.getTime() - 0 * 24 * 60 * 60 * 1000), // Today
       },
       {
         id: '2',
         title: 'Impromptu Speech #10',
         subtitle: 'Oct 23 • 4 mins',
         score: 92,
+        date: new Date(today.getTime() - 0 * 24 * 60 * 60 * 1000), // Today
       },
       {
         id: '3',
         title: 'Impromptu Speech #10',
         subtitle: 'Oct 23 • 4 mins',
         score: 65,
+        date: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000), // Yesterday
       },
       {
         id: '4',
         title: 'Impromptu Speech #10',
         subtitle: 'Oct 23 • 4 mins',
         score: 42,
+        date: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
       },
       {
         id: '5',
         title: 'Impromptu Speech #10',
         subtitle: 'Oct 23 • 4 mins',
         score: 92,
+        date: new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
       },
       {
         id: '6',
         title: 'Impromptu Speech #10',
         subtitle: 'Oct 23 • 4 mins',
         score: 65,
+        date: new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
       },
       {
         id: '7',
         title: 'Impromptu Speech #10',
         subtitle: 'Oct 23 • 4 mins',
         score: 92,
+        date: new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
       },
       {
         id: '8',
         title: 'Impromptu Speech #10',
         subtitle: 'Oct 23 • 4 mins',
         score: 65,
+        date: new Date(today.getTime() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
       },
       {
         id: '9',
         title: 'Impromptu Speech #10',
         subtitle: 'Oct 23 • 4 mins',
         score: 42,
+        date: new Date(today.getTime() - 20 * 24 * 60 * 60 * 1000), // 20 days ago
       },
       {
         id: '10',
         title: 'Impromptu Speech #10',
         subtitle: 'Oct 23 • 4 mins',
         score: 92,
+        date: new Date(today.getTime() - 35 * 24 * 60 * 60 * 1000), // 35 days ago
       },
     ];
   }, []);
@@ -113,12 +126,26 @@ const AllSessionsScreen = ({ navigation }) => {
 
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000); // Last 7 days including today
+    const thirtyDaysAgo = new Date(today.getTime() - 29 * 24 * 60 * 60 * 1000); // Last 30 days including today
 
-    // For now, return all since we're using mock data with no actual timestamps
-    // In production, filter actual sessions by date
-    return allSessionsMock;
+    return allSessionsMock.filter((session) => {
+      const sessionDate = new Date(session.date.getFullYear(), session.date.getMonth(), session.date.getDate());
+
+      if (filterType === 'today') {
+        return sessionDate.getTime() === today.getTime();
+      }
+
+      if (filterType === 'thisWeek') {
+        return sessionDate.getTime() >= sevenDaysAgo.getTime() && sessionDate.getTime() <= today.getTime();
+      }
+
+      if (filterType === 'thisMonth') {
+        return sessionDate.getTime() >= thirtyDaysAgo.getTime() && sessionDate.getTime() <= today.getTime();
+      }
+
+      return false;
+    });
   }, [filterType, allSessionsMock]);
 
   const handleGoBack = () => {
