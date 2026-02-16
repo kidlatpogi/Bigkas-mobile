@@ -81,10 +81,11 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     backgroundColor: colors.white,
     paddingHorizontal: spacing.sm,
+    minHeight: 52,
   },
   input: {
     flex: 1,
-    paddingVertical: spacing.sm,
+    paddingVertical: 14,
     fontSize: fontSize.md,
     color: colors.textPrimary,
   },
