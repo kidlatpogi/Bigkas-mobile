@@ -57,10 +57,10 @@ const BottomTabNavigator = () => {
         },
         headerShown: false,
       })}
-    >Progress" component={ProgressScreen} options={{ tabBarLabel: 'Progress' }} />
-      <Tab.Screen name="
+    >
       <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ tabBarLabel: 'Home' }} />
       <Tab.Screen name="Practice" component={PracticeScreen} options={{ tabBarLabel: 'Practice' }} />
+      <Tab.Screen name="Progress" component={ProgressScreen} options={{ tabBarLabel: 'Progress' }} />
       <Tab.Screen name="History" component={HistoryScreen} options={{ tabBarLabel: 'History' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
