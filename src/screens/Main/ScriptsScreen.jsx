@@ -123,8 +123,7 @@ const ScriptsScreen = ({ navigation }) => {
   };
 
   const handleWriteScript = () => {
-    // Navigate to script writing screen
-    Alert.alert('Write Script', 'Navigate to script creation screen');
+    navigation.navigate('ScriptEditor', { isNew: true });
   };
 
   const handleGenerateScript = () => {
@@ -133,8 +132,8 @@ const ScriptsScreen = ({ navigation }) => {
   };
 
   const handleEditScript = (scriptId) => {
-    // Navigate to script editor with script ID
-    Alert.alert('Edit Script', `Edit script ID: ${scriptId}`);
+    const script = scripts.find((s) => s.id === scriptId);
+    navigation.navigate('ScriptEditor', { scriptId, script });
   };
 
   const handleUseInPractice = (scriptId) => {

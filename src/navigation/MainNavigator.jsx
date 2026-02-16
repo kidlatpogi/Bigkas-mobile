@@ -6,6 +6,7 @@ import EditProfileScreen from '../screens/Main/EditProfileScreen';
 import PracticeScreen from '../screens/Main/PracticeScreen';
 import HistoryScreen from '../screens/Main/HistoryScreen';
 import AllSessionsScreen from '../screens/Main/AllSessionsScreen';
+import ScriptEditorScreen from '../screens/Main/ScriptEditorScreen';
 import BottomTabNavigator from './BottomTabNavigator';
 
 const Stack = createNativeStackNavigator();
@@ -26,6 +27,7 @@ const MainNavigator = () => {
       <Stack.Screen name="Practice" component={PracticeScreen} />
       <Stack.Screen name="History" component={HistoryScreen} />
       <Stack.Screen name="AllSessions" component={AllSessionsScreen} />
+      <Stack.Screen name="ScriptEditor" component={ScriptEditorScreen} />
       <Stack.Screen
         name="SessionDetail"
         component={SessionDetailScreen}
