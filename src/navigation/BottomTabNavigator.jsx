@@ -91,6 +91,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     paddingBottom: 0,
     paddingTop: 0,
+    marginRight: 10,
+    marginLeft: 10,
     // Shadow (iOS)
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 8 },

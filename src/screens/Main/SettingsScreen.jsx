@@ -295,10 +295,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   logoutButton: {
-    backgroundColor: '#DC3545',
+    backgroundColor: '#ff0019',
     borderRadius: borderRadius.md,
     paddingVertical: spacing.md,
     alignItems: 'center',
+    marginTop: spacing.ms,
   },
 });
 

@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   },
   generateButton: {
     width: '100%',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xl,
   },
   filterContainer: {
     marginBottom: spacing.sm,

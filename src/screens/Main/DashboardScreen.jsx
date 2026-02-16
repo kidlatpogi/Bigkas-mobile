@@ -20,7 +20,7 @@ import { spacing, borderRadius } from '../../styles/spacing';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 /** Width of each info card in the two-column row */
 const CARD_GAP = spacing.md;
-const CARD_WIDTH = (SCREEN_WIDTH - spacing.lg * 2 - CARD_GAP) / 2;
+const CARD_WIDTH = (SCREEN_WIDTH - spacing.lg * 1 - CARD_GAP) / 2;
 
 /* ------------------------------------------------------------------ */
 /*  Daily content helpers                                              */
@@ -214,11 +214,25 @@ const DashboardScreen = ({ navigation }) => {
 
         {/* -------- Hero card -------- */}
         <View style={styles.heroCard}>
+          {/* Header: Icon + Badge */}
+          <View style={styles.heroHeader}>
+            <View style={styles.heroIcon}>
+              <Ionicons name="mic" size={32} color={colors.white} />
+            </View>
+            <View style={styles.streakBadge}>
+              <Ionicons name="flame" size={14} color={colors.primary} />
+              <Typography variant="caption" weight="bold" style={styles.streakText}>
+                {streakCount} day streak
+              </Typography>
+            </View>
+          </View>
+
+          {/* Content */}
           <Typography variant="h2" color="textInverse" weight="bold" style={styles.heroTitle}>
             Ready to speak?
           </Typography>
-          <Typography variant="bodySmall" color="textInverse" style={styles.heroSubtitle}>
-            Ready when you are.
+          <Typography variant="body" color="textInverse" style={styles.heroSubtitle}>
+            Practice makes perfect! Start your daily session and improve your public speaking skills.
           </Typography>
 
           <PrimaryButton
@@ -248,6 +262,7 @@ const DashboardScreen = ({ navigation }) => {
         {/* -------- Stats row -------- */}
         <View style={styles.statsCard}>
           <View style={styles.statItem}>
+            <Ionicons name="calendar" size={20} color={colors.primary} style={styles.statIcon} />
             <Typography variant="h1" align="center" style={styles.statValue}>
               {String(todayCount).padStart(2, '0')}
             </Typography>
@@ -259,6 +274,7 @@ const DashboardScreen = ({ navigation }) => {
           <View style={styles.statDivider} />
 
           <View style={styles.statItem}>
+            <Ionicons name="star" size={20} color={colors.primary} style={styles.statIcon} />
             <Typography variant="h1" align="center" style={styles.statValue}>
               {averageScore}
             </Typography>
@@ -270,6 +286,7 @@ const DashboardScreen = ({ navigation }) => {
           <View style={styles.statDivider} />
 
           <View style={styles.statItem}>
+            <Ionicons name="flame" size={20} color={colors.primary} style={styles.statIcon} />
             <Typography variant="h1" align="center" style={styles.statValue}>
               {String(streakCount).padStart(2, '0')}
             </Typography>
@@ -368,12 +385,38 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xl,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.sm,
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 16,
     elevation: 10,
+  },
+  heroHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: spacing.md,
+  },
+  heroIcon: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  streakBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(251, 175, 0, 0.15)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 4,
+  },
+  streakText: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '700',
   },
   heroTitle: {
     marginBottom: 4,
@@ -381,6 +424,7 @@ const styles = StyleSheet.create({
   heroSubtitle: {
     marginBottom: spacing.lg,
     opacity: 0.7,
+    lineHeight: 20,
   },
   practiceButton: {
     backgroundColor: colors.white,
@@ -416,7 +460,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.md,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.sm,
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
@@ -426,6 +470,9 @@ const styles = StyleSheet.create({
   statItem: {
     flex: 1,
     alignItems: 'center',
+  },
+  statIcon: {
+    marginBottom: spacing.xs,
   },
   statValue: {
     fontSize: 32,
