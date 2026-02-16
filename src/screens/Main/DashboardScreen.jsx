@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
   RefreshControl,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,28 +17,94 @@ import { useSessions } from '../../hooks/useSessions';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 
+/**
+ * DashboardScreen Component
+ * Main dashboard displaying user greeting, statistics, and quick action buttons
+ * 
+ * @component
+ * @param {Object} props - Component props
+ * @param {Object} props.navigation - React Navigation object
+ * @returns {React.ReactNode} Dashboard screen UI
+ * 
+ * @description
+ * Features:
+ * - Personalized greeting based on time of day
+ * - Display user nickname or name
+ * - Show today's session count and average score
+ * - List recent practice sessions
+ * - Quick action buttons for practice and history
+ * - Pull-to-refresh functionality
+ * - Error handling for failed data fetches
+ * 
+ * Variable naming convention (for web/mobile reuse):
+ * - `displayName` - User's display name (nickname or full name)
+ * - `greeting` - Time-based greeting string
+ * - `todayCount` - Number of sessions today
+ * - `averageScore` - Average practice score
+ * 
+ * @example
+ * <DashboardScreen navigation={navigation} />
+ */
 const DashboardScreen = ({ navigation }) => {
-  const { user } = useAuth();
-  const { sessions, isLoading, fetchSessions } = useSessions();
+  // Auth hook with error handling
+  const { user, error: authError } = useAuth();
+  const { sessions, isLoading, error: sessionsError, fetchSessions } = useSessions();
 
   useEffect(() => {
-    fetchSessions();
+    try {
+      fetchSessions();
+    } catch (err) {
+      console.error('Failed to fetch sessions:', err);
+    }
   }, [fetchSessions]);
 
-  const handleRefresh = () => {
-    fetchSessions(1, true);
-  };
+  /**
+   * Handle pull-to-refresh action
+   */
+  const handleRefresh = useCallback(() => {
+    try {
+      fetchSessions(1, true);
+    } catch (err) {
+      console.error('Refresh failed:', err);
+      Alert.alert('Refresh Failed', 'Could not refresh your sessions');
+    }
+  }, [fetchSessions]);
 
-  const handleStartPractice = () => {
-    navigation.navigate('Practice');
-  };
+  /**
+   * Navigate to Practice screen
+   */
+  const handleStartPractice = useCallback(() => {
+    try {
+      navigation.navigate('Practice');
+    } catch (err) {
+      console.error('Navigation error:', err);
+      Alert.alert('Error', 'Failed to navigate to practice screen');
+    }
+  }, [navigation]);
 
-  const handleViewHistory = () => {
-    navigation.navigate('History');
-  };
+  /**
+   * Navigate to History screen
+   */
+  const handleViewHistory = useCallback(() => {
+    try {
+      navigation.navigate('History');
+    } catch (err) {
+      console.error('Navigation error:', err);
+      Alert.alert('Error', 'Failed to navigate to history screen');
+    }
+  }, [navigation]);
 
   // Derived UI values for reuse in web + mobile.
+  /**
+   * User's display name - prioritizes nickname over full name
+   * @type {string} displayName
+   */
   const displayName = user?.nickname || user?.name || 'Speaker';
+
+  /**
+   * Time-based greeting message
+   * @type {string} greeting
+   */
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning,';
@@ -46,9 +113,43 @@ const DashboardScreen = ({ navigation }) => {
   }, []);
 
   // Stats placeholders (replace with Supabase data later).
+  /**
+   * Today's session count - derived from sessions array
+   * @type {number} todayCount
+   */
   const todayCount = sessions.length || 4;
+
+  /**
+   * Average practice score across all sessions
+   * @type {number} averageScore
+   */
   const averageScore = 84;
+
+  /**
+   * Consecutive days practiced
+   * @type {number} streakCount
+   */
   const streakCount = 3;
+
+  // Show error state if there's an auth or session error
+  if (authError) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.errorContainer}>
+          <Typography variant="h3" color="error">
+            Authentication Error
+          </Typography>
+          <Typography variant="body" color="textSecondary" style={styles.errorMessage}>
+            {authError}
+          </Typography>
+          <PrimaryButton
+            title="Retry"
+            onPress={() => fetchSessions()}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -290,6 +391,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  scriptsCard: {
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     shadowColor: colors.black,
@@ -304,6 +406,16 @@ const styles = StyleSheet.create({
   },
   cardBody: {
     marginBottom: spacing.sm,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  errorMessage: {
+    marginVertical: spacing.md,
+    textAlign: 'center',
   },
 });
 

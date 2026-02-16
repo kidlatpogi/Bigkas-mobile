@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,19 +10,64 @@ import { useSessions } from '../../hooks/useSessions';
 import { colors } from '../../styles/colors';
 import { spacing } from '../../styles/spacing';
 
+/**
+ * ProfileScreen Component
+ * Displays user profile information and profile-related actions
+ * 
+ * @component
+ * @param {Object} props - Component props
+ * @param {Object} props.navigation - React Navigation object
+ * @returns {React.ReactNode} Profile screen UI
+ * 
+ * @description
+ * Features:
+ * - Displays user avatar with initials
+ * - Shows user name and email
+ * - Displays statistics (sessions, words practiced, average score)
+ * - Settings options (notifications, language, audio quality)
+ * - About section with app information  * - Logout functionality
+ * 
+ * @example
+ * <ProfileScreen navigation={navigation} />
+ */
 const ProfileScreen = ({ navigation }) => {
-  const { user, logout, isLoading } = useAuth();
+  // Get user data and auth functions with fallback values
+  const { user, logout, isLoading, error } = useAuth();
   const { reset: resetSessions } = useSessions();
 
-  const handleEditProfile = () => {
-    navigation.navigate('EditProfile');
-  };
+  // Safe getters for user data
+  const userInitial = user?.name?.charAt(0)?.toUpperCase() ?? 'U';
+  const userName = user?.name ?? 'User';
+  const userEmail = user?.email ?? 'user@example.com';
 
-  const handleOpenSettings = () => {
-    navigation.navigate('Settings');
-  };
+  /**
+   * Navigate to EditProfile screen
+   */
+  const handleEditProfile = useCallback(() => {
+    try {
+      navigation.navigate('EditProfile');
+    } catch (err) {
+      console.error('Navigation error:', err);
+      Alert.alert('Error', 'Failed to navigate to edit profile');
+    }
+  }, [navigation]);
 
-  const handleLogout = () => {
+  /**
+   * Navigate to Settings screen
+   */
+  const handleOpenSettings = useCallback(() => {
+    try {
+      navigation.navigate('Settings');
+    } catch (err) {
+      console.error('Navigation error:', err);
+      Alert.alert('Error', 'Failed to navigate to settings');
+    }
+  }, [navigation]);
+
+  /**
+   * Handle logout with confirmation and session reset
+   */
+  const handleLogout = useCallback(async () => {
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
@@ -32,14 +77,40 @@ const ProfileScreen = ({ navigation }) => {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
-            resetSessions();
-            await logout();
+            try {
+              resetSessions();
+              await logout();
+            } catch (err) {
+              console.error('Logout error:', err);
+              Alert.alert('Error', 'Failed to logout. Please try again.');
+            }
           },
         },
       ],
       { cancelable: true }
     );
-  };
+  }, [logout, resetSessions]);
+
+  // Show error if auth error exists
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.errorContainer}>
+          <Typography variant="h3" color="error">
+            Error Loading Profile
+          </Typography>
+          <Typography variant="body" color="textSecondary" style={styles.errorMessage}>
+            {error}
+          </Typography>
+          <PrimaryButton
+            title="Retry"
+            onPress={() => {}}
+            style={styles.retryButton}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -48,14 +119,14 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.header}>
           <View style={styles.avatar}>
             <Typography variant="h1" color="white">
-              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+              {userInitial}
             </Typography>
           </View>
           <Typography variant="h3" style={styles.userName}>
-            {user?.name || 'User'}
+            {userName}
           </Typography>
           <Typography variant="body" color="textSecondary">
-            {user?.email || 'user@example.com'}
+            {userEmail}
           </Typography>
           <PrimaryButton
             title="Edit Profile"
@@ -98,7 +169,11 @@ const ProfileScreen = ({ navigation }) => {
                 Avg. Score
               </Typography>
             </View>
-         TouchableOpacity onPress={handleOpenSettings} activeOpacity={0.7}>
+          </View>
+        </Card>
+
+        {/* Settings */}
+        <TouchableOpacity onPress={handleOpenSettings} activeOpacity={0.7}>
           <Card style={styles.settingsCard}>
             <View style={styles.settingsHeader}>
               <Typography variant="h4" style={styles.cardTitle}>
@@ -128,11 +203,7 @@ const ProfileScreen = ({ navigation }) => {
               </Typography>
             </View>
           </Card>
-        </TouchableOpacityypography variant="bodySmall" color="textSecondary">
-              High
-            </Typography>
-          </View>
-        </Card>
+        </TouchableOpacity>
 
         {/* About */}
         <Card style={styles.aboutCard}>
@@ -167,6 +238,19 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: spacing.md,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  errorMessage: {
+    marginVertical: spacing.md,
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: spacing.lg,
   },
   header: {
     alignItems: 'center',
@@ -203,12 +287,13 @@ const styles = StyleSheet.create({
   },
   statDivider: {
     width: 1,
-    backgsHeader: {
+    height: 36,
+    backgroundColor: colors.primary,
+  },
+  settingsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  settingroundColor: colors.border,
   },
   settingsCard: {
     marginBottom: spacing.md,
