@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import Typography from '../../components/common/Typography';
 import Card from '../../components/common/Card';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -15,6 +16,10 @@ const ProfileScreen = ({ navigation }) => {
 
   const handleEditProfile = () => {
     navigation.navigate('EditProfile');
+  };
+
+  const handleOpenSettings = () => {
+    navigation.navigate('Settings');
   };
 
   const handleLogout = () => {
@@ -93,32 +98,37 @@ const ProfileScreen = ({ navigation }) => {
                 Avg. Score
               </Typography>
             </View>
-          </View>
-        </Card>
+         TouchableOpacity onPress={handleOpenSettings} activeOpacity={0.7}>
+          <Card style={styles.settingsCard}>
+            <View style={styles.settingsHeader}>
+              <Typography variant="h4" style={styles.cardTitle}>
+                Settings
+              </Typography>
+              <Ionicons name="chevron-forward" size={20} color={colors.black} />
+            </View>
 
-        {/* Settings */}
-        <Card style={styles.settingsCard}>
-          <Typography variant="h4" style={styles.cardTitle}>
-            Settings
-          </Typography>
+            <View style={styles.settingItem}>
+              <Typography variant="body">Notifications</Typography>
+              <Typography variant="bodySmall" color="textSecondary">
+                Enabled
+              </Typography>
+            </View>
 
-          <View style={styles.settingItem}>
-            <Typography variant="body">Notifications</Typography>
-            <Typography variant="bodySmall" color="textSecondary">
-              Enabled
-            </Typography>
-          </View>
+            <View style={styles.settingItem}>
+              <Typography variant="body">Language</Typography>
+              <Typography variant="bodySmall" color="textSecondary">
+                Filipino (Tagalog)
+              </Typography>
+            </View>
 
-          <View style={styles.settingItem}>
-            <Typography variant="body">Language</Typography>
-            <Typography variant="bodySmall" color="textSecondary">
-              Filipino (Tagalog)
-            </Typography>
-          </View>
-
-          <View style={styles.settingItem}>
-            <Typography variant="body">Audio Quality</Typography>
-            <Typography variant="bodySmall" color="textSecondary">
+            <View style={styles.settingItem}>
+              <Typography variant="body">Audio Quality</Typography>
+              <Typography variant="bodySmall" color="textSecondary">
+                High
+              </Typography>
+            </View>
+          </Card>
+        </TouchableOpacityypography variant="bodySmall" color="textSecondary">
               High
             </Typography>
           </View>
@@ -193,7 +203,12 @@ const styles = StyleSheet.create({
   },
   statDivider: {
     width: 1,
-    backgroundColor: colors.border,
+    backgsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  settingroundColor: colors.border,
   },
   settingsCard: {
     marginBottom: spacing.md,

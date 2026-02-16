@@ -23,6 +23,7 @@
    - [EditProfileScreen](#410-editprofilescreen)
    - [ProgressScreen](#411-progressscreen)
    - [ScriptsScreen](#412-scriptsscreen)
+   - [SettingsScreen](#413-settingsscreen)
 5. [Reusable Component Props](#5-reusable-component-props)
 6. [Utility Functions](#6-utility-functions)
 7. [Navigation Map](#7-navigation-map)
@@ -882,6 +883,86 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 
 ---
 
+### 4.13 SettingsScreen
+
+**File**: `src/screens/Main/SettingsScreen.jsx`  
+**Route**: `Settings` (MainNavigator stack)
+
+#### State Variables
+
+| Variable           | Type                                        | Initial Value | Description                           |
+| ------------------ | ------------------------------------------- | ------------- | ------------------------------------- |
+| `microphoneSource` | `'default' \| 'bluetooth' \| 'external'`   | `'default'`   | Selected microphone input device      |
+| `cameraSource`     | `'front' \| 'back'`                        | `'front'`     | Selected camera device                |
+
+#### From Hooks
+
+| Variable  | Source        | Type       | Description                  |
+| --------- | ------------- | ---------- | ---------------------------- |
+| `logout`  | `useAuth()`   | `function` | Clear user session           |
+| `reset`   | `useSessions()` | `function` | Clear session data          |
+
+#### Dropdown Options
+
+| Variable             | Type                                  | Description                           |
+| -------------------- | ------------------------------------- | ------------------------------------- |
+| `microphoneOptions`  | `Array<{label: string, value: string}>` | Microphone source choices           |
+| `cameraOptions`      | `Array<{label: string, value: string}>` | Camera source choices               |
+
+#### microphoneOptions Values
+
+| Value      | Label                             |
+| ---------- | --------------------------------- |
+| `default`  | Default - Built-in Microphone     |
+| `bluetooth`| Bluetooth Microphone              |
+| `external` | External Microphone               |
+
+#### cameraOptions Values
+
+| Value   | Label        |
+| ------- | ------------ |
+| `front` | Front Camera |
+| `back`  | Back Camera  |
+
+#### Handlers
+
+| Handler                     | Trigger                     | Action                                                  |
+| --------------------------- | --------------------------- | ------------------------------------------------------- |
+| `handleGoBack()`            | Back arrow press            | `navigation.goBack()`                                   |
+| `handleMicrophoneChange(val)` | Microphone dropdown change | Updates `microphoneSource` state and AsyncStorage      |
+| `handleCameraChange(val)`   | Camera dropdown change      | Updates `cameraSource` state and AsyncStorage           |
+| `handleTestAudioVideo()`    | Test Audio/Video button     | Shows alert to test hardware settings (placeholder)    |
+| `handleClearCache()`        | Clear Cache button          | Shows confirmation, then clears non-essential AsyncStorage keys |
+| `handleLogout()`            | Logout button               | Shows confirmation, then calls `reset()` and `logout()` |
+
+#### AsyncStorage Keys
+
+| Key                | Preserved on Cache Clear? | Description                      |
+| ------------------ | ------------------------- | -------------------------------- |
+| `microphone_source`| ✅ Yes                    | Saved microphone preference      |
+| `camera_source`    | ✅ Yes                    | Saved camera preference          |
+| `auth_token`       | ✅ Yes                    | Auth token (STORAGE_KEYS)        |
+| `user_data`        | ✅ Yes                    | User data (STORAGE_KEYS)         |
+| Other keys         | ❌ No                     | Cache data (cleared)             |
+
+#### UI Sections
+
+| Section   | Content                                                      |
+| --------- | ------------------------------------------------------------ |
+| Header    | Back button + "Settings" title                               |
+| HARDWARE  | Microphone dropdown, Camera dropdown, Test Audio/Video button |
+| STORAGE   | Clear Local Cache button (gray), Log out button (red)        |
+
+#### Components Used
+
+| Component      | Props                                      | Description                    |
+| -------------- | ------------------------------------------ | ------------------------------ |
+| `Dropdown`     | `value`, `options`, `onSelect`             | Microphone/camera selectors    |
+| `PrimaryButton`| `title`, `onPress`, `variant`, `style`     | Test Audio/Video button        |
+| `TouchableOpacity` | `onPress`, `style`                     | Clear Cache and Logout buttons |
+
+---
+
 ## 5. Reusable Component Props
 
 ### BrandLogo (`src/components/common/BrandLogo.jsx`)
@@ -1009,6 +1090,24 @@ Data structure:
 | `onUseInPractice` | `function` | —       | Handler for Use in Practice button       |
 | `onPress`         | `function` | —       | Handler for card press (optional)        |
 
+### Dropdown (`src/components/common/Dropdown.jsx`)
+
+| Prop          | Type                                    | Default        | Description                              |
+| ------------- | --------------------------------------- | -------------- | ---------------------------------------- |
+| `value`       | `string`                                | —              | Currently selected value                 |
+| `options`     | `Array<{label: string, value: string}>` | `[]`           | Array of selectable options              |
+| `onSelect`    | `function`                              | —              | Callback when option is selected         |
+| `placeholder` | `string`                                | `'Select...'`  | Placeholder text when no value selected  |
+
+**Internal State:**
+- `isOpen`: boolean for dropdown modal visibility
+
+**Modal Behavior:**
+- Shows overlay with dimmed background
+- Displays options in a scrollable list
+- Selected option is highlighted with checkmark icon
+- Close on overlay tap or option selection
+
 ---
 
 ## 6. Utility Functions
@@ -1062,7 +1161,8 @@ AppNavigator (root stack)
         ├── SessionDetail → SessionDetailScreen
         ├── SessionResult → SessionResultScreen
         ├── EditProfile   → EditProfileScreen
-        └── Scripts       → ScriptsScreen
+        ├── Scripts       → ScriptsScreen
+        └── Settings      → SettingsScreen
 ```
 
 ### Route Params Summary

@@ -4,6 +4,7 @@ import SessionDetailScreen from '../screens/Session/SessionDetailScreen';
 import SessionResultScreen from '../screens/Session/SessionResultScreen';
 import EditProfileScreen from '../screens/Main/EditProfileScreen';
 import ScriptsScreen from '../screens/Main/ScriptsScreen';
+import SettingsScreen from '../screens/Main/SettingsScreen';
 import BottomTabNavigator from './BottomTabNavigator';
 const Stack = createNativeStackNavigator();
 
@@ -44,6 +45,13 @@ const MainNavigator = () => {
       <Stack.Screen
         name="Scripts"
         component={ScriptsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
         options={{
           headerShown: false,
         }}
