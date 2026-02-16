@@ -16,6 +16,7 @@ import { fontSize } from '../../styles/typography';
  * @param {boolean} [props.autoCorrect] - Auto-correct toggle.
  * @param {string} [props.autoCapitalize] - Auto-capitalization mode.
  * @param {boolean} [props.secureTextEntry] - Secure entry for passwords.
+ * @param {boolean} [props.editable] - Enable/disable editing (default: true).
  * @param {string} [props.error] - Error message string.
  * @param {Object} [props.containerStyle] - Wrapper style overrides.
  * @param {Object} [props.inputStyle] - Input style overrides.
@@ -30,6 +31,7 @@ const TextField = ({
   autoCorrect = false,
   autoCapitalize = 'none',
   secureTextEntry = false,
+  editable = true,
   error,
   containerStyle,
   inputStyle,
@@ -42,7 +44,7 @@ const TextField = ({
       </Typography>
       <View style={[styles.inputWrapper, error && styles.inputError]}>
         <TextInput
-          style={[styles.input, inputStyle]}
+          style={[styles.input, inputStyle, !editable && styles.inputDisabled]}
           placeholder={placeholder}
           placeholderTextColor={colors.textMuted}
           value={value}
@@ -51,6 +53,7 @@ const TextField = ({
           autoCorrect={autoCorrect}
           autoCapitalize={autoCapitalize}
           secureTextEntry={secureTextEntry}
+          editable={editable}
         />
         {rightAdornment ? <View style={styles.adornment}>{rightAdornment}</View> : null}
       </View>
@@ -88,6 +91,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: fontSize.md,
     color: colors.textPrimary,
+  },
+  inputDisabled: {
+    color: colors.textMuted,
+    backgroundColor: colors.gray100,
   },
   adornment: {
     marginLeft: spacing.sm,

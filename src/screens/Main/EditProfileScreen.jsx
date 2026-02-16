@@ -148,10 +148,10 @@ const EditProfileScreen = ({ navigation }) => {
                 label="EMAIL ADDRESS"
                 placeholder="juan@student.edu.ph"
                 value={formData.email}
-                onChangeText={(v) => updateField('email', v)}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                editable={false}
                 error={errors.email}
               />
 
