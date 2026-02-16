@@ -226,14 +226,6 @@ const ProfileScreen = ({ navigation }) => {
                 size="large"
                 style={styles.cancelButton}
               />
-
-              <PrimaryButton
-                title="Logout"
-                onPress={handleLogout}
-                variant="outline"
-                size="large"
-                style={styles.logoutButton}
-              />
             </View>
           </View>
         </ScrollView>
@@ -322,12 +314,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
   },
   cancelButton: {
-    width: '100%',
-    marginTop: spacing.sm,
-    borderRadius: borderRadius.lg,
-    borderColor: colors.borderDark,
-  },
-  logoutButton: {
     width: '100%',
     marginTop: spacing.sm,
     borderRadius: borderRadius.lg,

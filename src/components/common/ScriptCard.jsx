@@ -13,6 +13,7 @@ import { spacing, borderRadius } from '../../styles/spacing';
  * @param {string} props.title - Script title/name
  * @param {string} props.description - Script description/preview text
  * @param {string} props.editedTime - Last edited timestamp text
+ * @param {string} props.type - Script type ('self-authored' | 'auto-generated')
  * @param {Function} props.onEdit - Handler for Edit button
  * @param {Function} props.onUseInPractice - Handler for Use in Practice button
  * @param {Function} props.onPress - Handler for card press (optional)
@@ -21,6 +22,7 @@ import { spacing, borderRadius } from '../../styles/spacing';
  * - title: script title string
  * - description: script body preview
  * - editedTime: formatted timestamp (e.g., "EDITED YESTERDAY")
+ * - type: 'self-authored' or 'auto-generated'
  * - onEdit: edit button callback
  * - onUseInPractice: use in practice button callback
  */
@@ -28,10 +30,21 @@ const ScriptCard = ({
   title,
   description,
   editedTime,
+  type = 'self-authored',
   onEdit,
   onUseInPractice,
   onPress,
 }) => {
+  const getBadgeStyle = () => {
+    if (type === 'auto-generated') {
+      return { backgroundColor: colors.gray200, text: colors.textSecondary };
+    }
+    return { backgroundColor: colors.primary, text: colors.black };
+  };
+
+  const badge = getBadgeStyle();
+  const badgeLabel = type === 'self-authored' ? 'Self-Authored' : 'Auto-Generated';
+
   return (
     <TouchableOpacity
       style={styles.container}
@@ -40,6 +53,17 @@ const ScriptCard = ({
       disabled={!onPress}
     >
       <View style={styles.content}>
+        {/* Badge */}
+        <View style={[styles.badge, { backgroundColor: badge.backgroundColor }]}>
+          <Typography 
+            variant="caption" 
+            weight="medium" 
+            style={{ color: badge.text, fontSize: 12 }}
+          >
+            {badgeLabel}
+          </Typography>
+        </View>
+
         <Typography variant="body" weight="bold" style={styles.title}>
           {title}
         </Typography>
@@ -92,6 +116,13 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: spacing.md,
+  },
+  badge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    marginBottom: spacing.sm,
   },
   title: {
     marginBottom: spacing.sm,

@@ -80,9 +80,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondary,
   },
   button_outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: colors.primary,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
   },
   button_disabled: {
     backgroundColor: colors.gray300,
@@ -118,7 +123,7 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   text_outline: {
-    color: colors.primary,
+    color: colors.textPrimary,
   },
   text_disabled: {
     color: colors.gray500,

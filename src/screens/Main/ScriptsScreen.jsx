@@ -187,20 +187,21 @@ const ScriptsScreen = ({ navigation }) => {
         </View>
 
         {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <PrimaryButton
-            title="Write Script"
-            onPress={handleWriteScript}
-            variant="outline"
-            style={styles.actionButton}
-          />
-          <PrimaryButton
-            title="Generate Script"
-            onPress={handleGenerateScript}
-            variant="primary"
-            style={styles.actionButton}
-          />
-        </View>
+        <PrimaryButton
+          title="Write Script"
+          onPress={handleWriteScript}
+          variant="outline"
+          style={styles.writeButton}
+        />
+        <Typography variant="body" color="textSecondary" style={styles.orText}>
+          or
+        </Typography>
+        <PrimaryButton
+          title="Generate Script"
+          onPress={handleGenerateScript}
+          variant="primary"
+          style={styles.generateButton}
+        />
 
         {/* Filter Tabs */}
         <View style={styles.filterContainer}>
@@ -234,6 +235,7 @@ const ScriptsScreen = ({ navigation }) => {
                 key={script.id}
                 title={script.title}
                 description={script.description}
+                type={script.type}
                 editedTime={formatEditedTime(script.editedAt)}
                 onEdit={() => handleEditScript(script.id)}
                 onUseInPractice={() => handleUseInPractice(script.id)}
@@ -273,13 +275,18 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 40,
   },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
+  writeButton: {
+    width: '100%',
+    marginBottom: spacing.sm,
   },
-  actionButton: {
-    flex: 1,
+  orText: {
+    textAlign: 'center',
+    marginVertical: spacing.sm,
+    fontSize: 14,
+  },
+  generateButton: {
+    width: '100%',
+    marginBottom: spacing.lg,
   },
   filterContainer: {
     marginBottom: spacing.md,
