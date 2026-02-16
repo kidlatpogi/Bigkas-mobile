@@ -13,6 +13,10 @@ const ProfileScreen = ({ navigation }) => {
   const { user, logout, isLoading } = useAuth();
   const { reset: resetSessions } = useSessions();
 
+  const handleEditProfile = () => {
+    navigation.navigate('EditProfile');
+  };
+
   const handleLogout = () => {
     Alert.alert(
       'Logout',
@@ -48,6 +52,13 @@ const ProfileScreen = ({ navigation }) => {
           <Typography variant="body" color="textSecondary">
             {user?.email || 'user@example.com'}
           </Typography>
+          <PrimaryButton
+            title="Edit Profile"
+            onPress={handleEditProfile}
+            variant="outline"
+            size="small"
+            style={styles.editButton}
+          />
         </View>
 
         {/* Stats Card */}
@@ -163,6 +174,9 @@ const styles = StyleSheet.create({
   },
   userName: {
     marginBottom: spacing.xs,
+  },
+  editButton: {
+    marginTop: spacing.md,
   },
   statsCard: {
     marginBottom: spacing.md,

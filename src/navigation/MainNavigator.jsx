@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SessionDetailScreen from '../screens/Session/SessionDetailScreen';
 import SessionResultScreen from '../screens/Session/SessionResultScreen';
+import EditProfileScreen from '../screens/Main/EditProfileScreen';
 import BottomTabNavigator from './BottomTabNavigator';
 const Stack = createNativeStackNavigator();
 
@@ -30,6 +31,13 @@ const MainNavigator = () => {
           headerShown: true,
           headerTitle: 'Results',
           headerBackTitle: 'Back',
+        }}
+      />
+      <Stack.Screen
+        name="EditProfile"
+        component={EditProfileScreen}
+        options={{
+          headerShown: false,
         }}
       />
     </Stack.Navigator>
