@@ -115,15 +115,19 @@ const styles = StyleSheet.create({
   text: {
     ...textStyles.button,
     textAlign: 'center',
+    fontWeight: '700',
   },
   text_primary: {
-    color: colors.white,
+    color: colors.black,
+    fontWeight: '700',
   },
   text_secondary: {
     color: colors.white,
+    fontWeight: '700',
   },
   text_outline: {
     color: colors.textPrimary,
+    fontWeight: '700',
   },
   text_disabled: {
     color: colors.gray500,

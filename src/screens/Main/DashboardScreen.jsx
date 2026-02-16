@@ -204,7 +204,7 @@ const DashboardScreen = ({ navigation }) => {
 
         {/* -------- Greeting -------- */}
         <View style={styles.greetingWrap}>
-          <Typography variant="body" color="primary" weight="medium" style={styles.greetingText}>
+          <Typography variant="body" color="secondaryLight" weight="medium" style={styles.greetingText}>
             {greeting}
           </Typography>
           <Typography variant="h1" style={styles.displayName}>

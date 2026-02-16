@@ -277,16 +277,16 @@ const styles = StyleSheet.create({
   },
   writeButton: {
     width: '100%',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   orText: {
     textAlign: 'center',
-    marginVertical: spacing.sm,
-    fontSize: 14,
+    marginVertical: spacing.xs,
+    fontSize: 12,
   },
   generateButton: {
     width: '100%',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   filterContainer: {
     marginBottom: spacing.md,
