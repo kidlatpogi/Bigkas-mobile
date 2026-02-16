@@ -216,6 +216,8 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     marginBottom: spacing.md,
+    marginHorizontal: -spacing.xs,
+    paddingHorizontal: spacing.xs,
   },
   scrollView: {
     flex: 1,

@@ -50,13 +50,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.md,
     padding: spacing.xs / 2,
-    alignSelf: 'flex-start',
+    width: '100%',
   },
   tab: {
-    paddingHorizontal: spacing.md,
+    flex: 1,
+    paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.sm,
     marginHorizontal: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tabActive: {
     backgroundColor: colors.primary,
