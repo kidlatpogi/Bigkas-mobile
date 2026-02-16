@@ -160,13 +160,13 @@ const ProgressScreen = ({ navigation }) => {
   };
 
   const handleViewAll = () => {
-    navigation.navigate('History');
+    navigation.navigate('AllSessions');
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
+      <View style={styles.content}>
+        {/* Header - Fixed, doesn't scroll */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
@@ -178,6 +178,13 @@ const ProgressScreen = ({ navigation }) => {
           <Typography variant="h3">Progress</Typography>
           <View style={styles.headerSpacer} />
         </View>
+
+        {/* Scrollable Content */}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
 
         {/* Performance Trend Card */}
         <Card style={styles.trendCard}>
@@ -251,7 +258,7 @@ const ProgressScreen = ({ navigation }) => {
             RECENT SESSIONS
           </Typography>
           <TouchableOpacity onPress={handleViewAll} activeOpacity={0.7}>
-            <Typography variant="bodySmall" color="primary" weight="medium">
+            <Typography variant="bodySmall" color="secondary" weight="medium">
               VIEW ALL
             </Typography>
           </TouchableOpacity>
@@ -268,7 +275,8 @@ const ProgressScreen = ({ navigation }) => {
             />
           ))}
         </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -278,14 +286,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  content: {
+    flex: 1,
+    paddingHorizontal: spacing.sm,
+  },
+  scrollView: {
+    flex: 1,
+  },
   scrollContent: {
-    padding: spacing.sm,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xs,
     paddingBottom: 100, // room for floating nav
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: spacing.sm,
     marginBottom: spacing.md,
   },
   backButton: {
