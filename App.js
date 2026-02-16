@@ -40,7 +40,5 @@ export default function App() {
         </NavigationContainer>
       </SafeAreaProvider>
     </ErrorBoundary>
-      </NavigationContainer>
-    </SafeAreaProvider>
   );
 }

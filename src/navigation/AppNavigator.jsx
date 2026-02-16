@@ -11,7 +11,7 @@ import { colors } from '../styles/colors';
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   // Show loading screen while checking auth state
   if (isLoading) {

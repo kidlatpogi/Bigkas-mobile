@@ -3,20 +3,27 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SessionDetailScreen from '../screens/Session/SessionDetailScreen';
 import SessionResultScreen from '../screens/Session/SessionResultScreen';
 import EditProfileScreen from '../screens/Main/EditProfileScreen';
-import ScriptsScreen from '../screens/Main/ScriptsScreen';
-import SettingsScreen from '../screens/Main/SettingsScreen';
+import PracticeScreen from '../screens/Main/PracticeScreen';
+import HistoryScreen from '../screens/Main/HistoryScreen';
 import BottomTabNavigator from './BottomTabNavigator';
+
 const Stack = createNativeStackNavigator();
 
-// Main Navigator (includes tabs + session screens)
+/**
+ * MainNavigator
+ *
+ * Stack navigator wrapping the BottomTabNavigator.
+ * Screens pushed on top of the tab bar (Practice, History,
+ * SessionDetail, SessionResult, EditProfile) live here.
+ *
+ * @component
+ */
 const MainNavigator = () => {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
+      <Stack.Screen name="Practice" component={PracticeScreen} />
+      <Stack.Screen name="History" component={HistoryScreen} />
       <Stack.Screen
         name="SessionDetail"
         component={SessionDetailScreen}
@@ -35,27 +42,7 @@ const MainNavigator = () => {
           headerBackTitle: 'Back',
         }}
       />
-      <Stack.Screen
-        name="EditProfile"
-        component={EditProfileScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="Scripts"
-        component={ScriptsScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
     </Stack.Navigator>
   );
 };

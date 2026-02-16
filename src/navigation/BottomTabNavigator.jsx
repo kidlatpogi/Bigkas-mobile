@@ -1,70 +1,104 @@
 import React from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
 import DashboardScreen from '../screens/Main/DashboardScreen';
-import PracticeScreen from '../screens/Main/PracticeScreen';
+import ScriptsScreen from '../screens/Main/ScriptsScreen';
 import ProgressScreen from '../screens/Main/ProgressScreen';
-import HistoryScreen from '../screens/Main/HistoryScreen';
 import ProfileScreen from '../screens/Main/ProfileScreen';
+import SettingsScreen from '../screens/Main/SettingsScreen';
 import { colors } from '../styles/colors';
 
 const Tab = createBottomTabNavigator();
 
 /**
- * Bottom tab navigation shared across the main screens.
+ * Tab icon configuration — maps route names to Ionicons glyph names.
+ *
+ * Order (left → right, matching the Figma design):
+ *  Scripts · Progress · Home (Dashboard) · Profile · Settings
+ *
+ * @type {Record<string, { focused: string, outline: string }>}
+ */
+const TAB_ICONS = {
+  Scripts:   { focused: 'document-text',       outline: 'document-text-outline' },
+  Progress:  { focused: 'stats-chart',         outline: 'stats-chart-outline' },
+  Dashboard: { focused: 'home',                outline: 'home-outline' },
+  Profile:   { focused: 'person',              outline: 'person-outline' },
+  Settings:  { focused: 'settings',            outline: 'settings-outline' },
+};
+
+/**
+ * BottomTabNavigator
+ *
+ * 5-tab bar matching the Figma design:
+ *  | Scripts | Progress | Home | Profile | Settings |
+ *
+ * - Icons only (no labels)
+ * - Center "Home" icon is visually larger
+ * - Active colour: #010101 (black)
+ * - Inactive colour: rgba(1,1,1,0.45) (textMuted)
+ * - Tab bar background: #FFFFFF
+ *
+ * @component
  */
 const BottomTabNavigator = () => {
   return (
     <Tab.Navigator
+      initialRouteName="Dashboard"
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
+        headerShown: false,
+        tabBarShowLabel: false,
+        tabBarIcon: ({ focused, size }) => {
+          const icons = TAB_ICONS[route.name];
+          const iconName = focused ? icons.focused : icons.outline;
+          const iconColor = focused ? colors.black : colors.textMuted;
 
-          switch (route.name) {
-            case 'Dashboard':
-              iconName = focused ? 'home' : 'home-outline';
-              break;
-            case 'Practice':
-              iconName = focused ? 'mic' : 'mic-outline';
-              break;
-            case 'Progress':
-              iconName = focused ? 'stats-chart' : 'stats-chart-outline';
-              break;
-            case 'History':
-              iconName = focused ? 'time' : 'time-outline';
-              break;
-            case 'Profile':
-              iconName = focused ? 'person' : 'person-outline';
-              break;
-            default:
-              iconName = 'ellipse';
+          // Center Home tab gets a slightly larger icon
+          if (route.name === 'Dashboard') {
+            return (
+              <View style={styles.centerIcon}>
+                <Ionicons name={iconName} size={28} color={iconColor} />
+              </View>
+            );
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return <Ionicons name={iconName} size={24} color={iconColor} />;
         },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: {
-          backgroundColor: colors.white,
-          borderTopColor: colors.border,
-          paddingBottom: 6,
-          paddingTop: 6,
-          height: 64,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-        },
-        headerShown: false,
+        tabBarStyle: styles.tabBar,
+        tabBarItemStyle: styles.tabBarItem,
       })}
     >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ tabBarLabel: 'Home' }} />
-      <Tab.Screen name="Practice" component={PracticeScreen} options={{ tabBarLabel: 'Practice' }} />
-      <Tab.Screen name="Progress" component={ProgressScreen} options={{ tabBarLabel: 'Progress' }} />
-      <Tab.Screen name="History" component={HistoryScreen} options={{ tabBarLabel: 'History' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
+      <Tab.Screen name="Scripts" component={ScriptsScreen} />
+      <Tab.Screen name="Progress" component={ProgressScreen} />
+      <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );
 };
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: colors.white,
+    borderTopWidth: 0,
+    elevation: 12,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    height: Platform.OS === 'android' ? 64 : 80,
+    paddingBottom: Platform.OS === 'android' ? 8 : 20,
+    paddingTop: 8,
+  },
+  tabBarItem: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  centerIcon: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
 
 export default BottomTabNavigator;

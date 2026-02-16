@@ -376,7 +376,7 @@ const { updateNickname, isLoading } = useAuth();
 ### 4.4 DashboardScreen
 
 **File**: `src/screens/Main/DashboardScreen.jsx`  
-**Route**: `Dashboard` (BottomTabNavigator — first tab)
+**Route**: `Dashboard` (BottomTabNavigator — centre tab)
 
 #### Hook Destructuring
 
@@ -385,15 +385,36 @@ const { user } = useAuth();
 const { sessions, isLoading, fetchSessions } = useSessions();
 ```
 
+#### State Variables
+
+| Variable | Type                              | Initial Value | Description                                |
+| -------- | --------------------------------- | ------------- | ------------------------------------------ |
+| `quote`  | `{ text: string, author: string}` | Fallback quote | Daily motivational quote from ZenQuotes API |
+
 #### Derived Variables
 
 | Variable       | Type     | Derivation                                        | Description                      |
 | -------------- | -------- | ------------------------------------------------- | -------------------------------- |
 | `displayName`  | `string` | `user?.nickname \|\| user?.name \|\| 'Speaker'`   | Greeting name shown on dashboard |
 | `greeting`     | `string` | Based on `new Date().getHours()` via `useMemo`    | `'Good morning,'` / `'Good afternoon,'` / `'Good evening,'` |
-| `todayCount`   | `number` | `sessions.length \|\| 4`                          | Daily session count (placeholder)|
+| `todayCount`   | `number` | `sessions?.length \|\| 0`                         | Daily session count              |
 | `averageScore` | `number` | `84` (hardcoded placeholder)                      | Average score stat               |
 | `streakCount`  | `number` | `3` (hardcoded placeholder)                       | Streak days stat                 |
+| `tip`          | `{ title: string, body: string }` | `getDailyTip()` via `useMemo` | Rotates daily from curated list |
+
+#### External APIs
+
+| API            | Endpoint                         | Docs                        | Purpose                              |
+| -------------- | -------------------------------- | --------------------------- | -----------------------------------  |
+| **ZenQuotes**  | `https://zenquotes.io/api/today` | https://docs.zenquotes.io   | Fetches one daily motivational quote |
+
+> Fallback: if the API is unreachable, a hardcoded Churchill quote is shown.
+
+#### Daily Tip Source
+
+The "Tip of the Day" rotates from a built-in curated list of 10 speaking tips.  
+The index is derived deterministically from the day-of-year (`dayOfYear % tips.length`),  
+so the same tip shows all day and changes at midnight.
 
 #### From Hooks
 
@@ -406,22 +427,37 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 
 #### Handlers
 
-| Handler              | Trigger                   | Action                              |
-| -------------------- | ------------------------- | ----------------------------------- |
-| `handleRefresh()`    | Pull-to-refresh           | `fetchSessions(1, true)`           |
-| `handleStartPractice()` | "Start Practice" press | `navigation.navigate('Practice')`  |
-| `handleViewHistory()`   | "View History" press   | `navigation.navigate('History')`   |
+| Handler                | Trigger                   | Action                              |
+| ---------------------- | ------------------------- | ----------------------------------- |
+| `handleRefresh()`      | Pull-to-refresh           | `fetchSessions(1, true)` + re-fetch quote |
+| `handleStartPractice()`| "Start Practice" press    | `navigation.navigate('Practice')`   |
+| `handleStartTraining()`| "Start Training" press    | `navigation.navigate('Practice')`   |
 
-#### UI Sections
+#### UI Sections (top → bottom)
 
-| Section       | Content                                                    |
-| ------------- | ---------------------------------------------------------- |
-| Top Row       | `BrandLogo` + profile icon button                          |
-| Header        | `greeting` + `displayName`                                 |
-| Hero Card     | Black bg card with "Ready to speak?" + practice/training buttons |
-| Stats Pill    | `todayCount` / `averageScore` / `streakCount`              |
-| Motivation    | Static motivation text in Card                             |
-| Quick Tip     | Static tip text in Card                                    |
+| Section          | Content                                                          |
+| ---------------- | ---------------------------------------------------------------- |
+| Top Row          | `BrandLogo` + profile circle icon button                         |
+| Greeting         | Italic greeting (primary colour) + bold `displayName`            |
+| Hero Card        | Black bg card with "Ready to speak?" + Start Practice / Training |
+| Stats Row        | `todayCount` · `averageScore` · `streakCount` (yellow dividers)  |
+| Motivation Card  | Daily quote from ZenQuotes API (italic text + author)            |
+| Tip of the Day   | Bold tip title + descriptive body (rotates daily)                |
+
+#### Bottom Tab Navigation
+
+| Tab Order | Route      | Icon (Ionicons)         | Screen         |
+| --------- | ---------- | ----------------------- | -------------- |
+| 1         | Scripts    | `document-text-outline` | ScriptsScreen  |
+| 2         | Progress   | `stats-chart-outline`   | ProgressScreen |
+| 3 (centre)| Dashboard  | `home-outline`          | DashboardScreen|
+| 4         | Profile    | `person-outline`        | ProfileScreen  |
+| 5         | Settings   | `settings-outline`      | SettingsScreen |
+
+- **No labels** — icon-only tabs  
+- Active icon colour: `#010101` (black)  
+- Inactive icon colour: `rgba(1,1,1,0.45)` (textMuted)  
+- Centre Home icon is slightly larger (28px vs 24px)
 
 ---
 
@@ -1152,17 +1188,17 @@ AppNavigator (root stack)
 │
 └── [Authenticated + Has Nickname]
     └── MainNavigator (stack)
-        ├── BottomTabs   → BottomTabNavigator
-        │   ├── Dashboard → DashboardScreen
-        │   ├── Practice  → PracticeScreen
-        │   ├── Progress  → ProgressScreen
-        │   ├── History   → HistoryScreen
-        │   └── Profile   → ProfileScreen
+        ├── MainTabs     → BottomTabNavigator
+        │   ├── Scripts   → ScriptsScreen      (tab 1)
+        │   ├── Progress  → ProgressScreen     (tab 2)
+        │   ├── Dashboard → DashboardScreen    (tab 3, centre)
+        │   ├── Profile   → ProfileScreen      (tab 4)
+        │   └── Settings  → SettingsScreen     (tab 5)
+        ├── Practice      → PracticeScreen     (stack screen)
+        ├── History       → HistoryScreen      (stack screen)
         ├── SessionDetail → SessionDetailScreen
         ├── SessionResult → SessionResultScreen
-        ├── EditProfile   → EditProfileScreen
-        ├── Scripts       → ScriptsScreen
-        └── Settings      → SettingsScreen
+        └── EditProfile   → EditProfileScreen
 ```
 
 ### Route Params Summary
