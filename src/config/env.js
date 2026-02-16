@@ -13,7 +13,7 @@
 /** Supabase project URL derived from the anon key's JWT `ref` claim. */
 export const SUPABASE_URL =
   process.env.EXPO_PUBLIC_SUPABASE_URL ||
-  'https://pkshgjlggqfuostxpllo.supabase.co';
+  'https://pkshjglggqfuostxpllo.supabase.co';
 
 /** Supabase anon / public key — safe to ship in client bundles. */
 export const SUPABASE_ANON_KEY =

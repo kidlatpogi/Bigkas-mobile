@@ -191,6 +191,7 @@ const styles = StyleSheet.create({
   },
   form: {
     marginBottom: spacing.xl,
+    height: 300, // prevent layout jump when error appears
   },
   forgotPassword: {
     alignSelf: 'flex-end',
