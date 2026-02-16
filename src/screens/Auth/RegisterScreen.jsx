@@ -5,23 +5,28 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  TextInput,
+  TouchableOpacity,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import Typography from '../../components/common/Typography';
 import PrimaryButton from '../../components/common/PrimaryButton';
-import Card from '../../components/common/Card';
+import BrandLogo from '../../components/common/BrandLogo';
+import TextField from '../../components/common/TextField';
+import PasswordField from '../../components/common/PasswordField';
 import { useAuth } from '../../hooks/useAuth';
 import { colors } from '../../styles/colors';
-import { spacing } from '../../styles/spacing';
+import { spacing, borderRadius } from '../../styles/spacing';
 import { isValidEmail, validatePassword, isNotEmpty } from '../../utils/validators';
 
 const RegisterScreen = ({ navigation }) => {
   const { register, isLoading, error, clearError } = useAuth();
 
+  // Form fields for cross-platform reuse (web + mobile).
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -39,8 +44,12 @@ const RegisterScreen = ({ navigation }) => {
   const validate = () => {
     const errors = {};
 
-    if (!isNotEmpty(formData.name)) {
-      errors.name = 'Name is required';
+    if (!isNotEmpty(formData.firstName)) {
+      errors.firstName = 'First name is required';
+    }
+
+    if (!isNotEmpty(formData.lastName)) {
+      errors.lastName = 'Last name is required';
     }
 
     if (!formData.email.trim()) {
@@ -68,7 +77,7 @@ const RegisterScreen = ({ navigation }) => {
     if (!validate()) return;
 
     const result = await register({
-      name: formData.name.trim(),
+      name: `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim(),
       email: formData.email.trim(),
       password: formData.password,
     });
@@ -82,132 +91,104 @@ const RegisterScreen = ({ navigation }) => {
     navigation.navigate('Login');
   };
 
+  const handleGoBack = () => {
+    navigation.goBack();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.header}>
-            <Typography variant="h1" align="center">
-              Bigkas
-            </Typography>
-            <Typography variant="body" color="textSecondary" align="center">
-              Create your account
-            </Typography>
-          </View>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <View style={styles.contentWrap}>
+            <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+              <Ionicons name="arrow-back" size={18} color={colors.textPrimary} />
+            </TouchableOpacity>
 
-          <Card style={styles.card}>
-            <Typography variant="h3" style={styles.cardTitle}>
-              Register
+            <BrandLogo style={styles.logo} />
+
+            <Typography variant="h1" style={styles.title}>
+              Create
+              {'\n'}Account
+            </Typography>
+            <Typography
+              variant="body"
+              color="textSecondary"
+              weight="medium"
+              style={styles.subtitle}
+            >
+              Start Tracking your speaking practice with AI analysis.
             </Typography>
 
-            <View style={styles.inputContainer}>
-              <Typography variant="bodySmall" style={styles.label}>
-                Full Name
-              </Typography>
-              <TextInput
-                style={[
-                  styles.input,
-                  validationErrors.name && styles.inputError,
-                ]}
-                placeholder="Enter your full name"
-                placeholderTextColor={colors.gray400}
-                value={formData.name}
-                onChangeText={(value) => updateField('name', value)}
-                autoCapitalize="words"
-              />
-              {validationErrors.name && (
-                <Typography variant="caption" color="error">
-                  {validationErrors.name}
-                </Typography>
-              )}
-            </View>
+            <View style={styles.form}>
+              <View style={styles.row}>
+                <View style={styles.rowItem}>
+                  <TextField
+                    label="First Name"
+                    placeholder="Juan"
+                    value={formData.firstName}
+                    onChangeText={(value) => updateField('firstName', value)}
+                    autoCapitalize="words"
+                    error={validationErrors.firstName}
+                  />
+                </View>
+                <View style={styles.rowItem}>
+                  <TextField
+                    label="Last Name"
+                    placeholder="Dela Cruz"
+                    value={formData.lastName}
+                    onChangeText={(value) => updateField('lastName', value)}
+                    autoCapitalize="words"
+                    error={validationErrors.lastName}
+                  />
+                </View>
+              </View>
 
-            <View style={styles.inputContainer}>
-              <Typography variant="bodySmall" style={styles.label}>
-                Email
-              </Typography>
-              <TextInput
-                style={[
-                  styles.input,
-                  validationErrors.email && styles.inputError,
-                ]}
-                placeholder="Enter your email"
-                placeholderTextColor={colors.gray400}
+              <TextField
+                label="Email Address"
+                placeholder="juan@student.edu.ph"
                 value={formData.email}
                 onChangeText={(value) => updateField('email', value)}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                error={validationErrors.email}
               />
-              {validationErrors.email && (
-                <Typography variant="caption" color="error">
-                  {validationErrors.email}
-                </Typography>
-              )}
-            </View>
 
-            <View style={styles.inputContainer}>
-              <Typography variant="bodySmall" style={styles.label}>
-                Password
-              </Typography>
-              <TextInput
-                style={[
-                  styles.input,
-                  validationErrors.password && styles.inputError,
-                ]}
+              <PasswordField
+                label="Password"
                 placeholder="Create a password"
-                placeholderTextColor={colors.gray400}
                 value={formData.password}
                 onChangeText={(value) => updateField('password', value)}
-                secureTextEntry
+                error={validationErrors.password}
               />
-              {validationErrors.password && (
-                <Typography variant="caption" color="error">
-                  {validationErrors.password}
-                </Typography>
-              )}
-            </View>
 
-            <View style={styles.inputContainer}>
-              <Typography variant="bodySmall" style={styles.label}>
-                Confirm Password
-              </Typography>
-              <TextInput
-                style={[
-                  styles.input,
-                  validationErrors.confirmPassword && styles.inputError,
-                ]}
+              <PasswordField
+                label="Confirm Password"
                 placeholder="Confirm your password"
-                placeholderTextColor={colors.gray400}
                 value={formData.confirmPassword}
                 onChangeText={(value) => updateField('confirmPassword', value)}
-                secureTextEntry
+                error={validationErrors.confirmPassword}
               />
-              {validationErrors.confirmPassword && (
-                <Typography variant="caption" color="error">
-                  {validationErrors.confirmPassword}
+
+              {error ? (
+                <Typography variant="bodySmall" color="error" align="center" style={styles.errorText}>
+                  {error}
                 </Typography>
-              )}
+              ) : null}
+
+              <PrimaryButton
+                title="Create Account"
+                onPress={handleRegister}
+                loading={isLoading}
+                variant="primary"
+                size="large"
+                style={styles.registerButton}
+                textStyle={styles.registerButtonText}
+              />
             </View>
-
-            {error && (
-              <Typography variant="bodySmall" color="error" align="center">
-                {error}
-              </Typography>
-            )}
-
-            <PrimaryButton
-              title="Register"
-              onPress={handleRegister}
-              loading={isLoading}
-              style={styles.registerButton}
-            />
 
             <View style={styles.loginContainer}>
               <Typography variant="bodySmall" color="textSecondary">
@@ -222,7 +203,7 @@ const RegisterScreen = ({ navigation }) => {
                 Login
               </Typography>
             </View>
-          </Card>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -240,44 +221,58 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
   },
-  header: {
-    marginBottom: spacing.xl,
+  contentWrap: {
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
   },
-  card: {
-    padding: spacing.lg,
-  },
-  cardTitle: {
-    marginBottom: spacing.lg,
-    textAlign: 'center',
-  },
-  inputContainer: {
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.borderDark,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.md,
   },
-  label: {
+  logo: {
+    alignSelf: 'center',
+    marginBottom: spacing.lg,
+  },
+  title: {
     marginBottom: spacing.xs,
-    color: colors.textSecondary,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    padding: spacing.sm,
-    fontSize: 16,
-    color: colors.textPrimary,
-    backgroundColor: colors.white,
+  subtitle: {
+    marginBottom: spacing.lg,
   },
-  inputError: {
-    borderColor: colors.error,
+  form: {
+    marginBottom: spacing.xl,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  rowItem: {
+    width: '48%',
+  },
+  errorText: {
+    marginBottom: spacing.md,
   },
   registerButton: {
-    marginTop: spacing.md,
+    width: '100%',
+    backgroundColor: colors.primary,
+  },
+  registerButtonText: {
+    color: colors.textPrimary,
   },
   loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: spacing.lg,
   },
   loginLink: {
     fontWeight: '600',
