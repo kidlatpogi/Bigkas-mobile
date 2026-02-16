@@ -4,6 +4,7 @@ import { ActivityIndicator, View, StyleSheet } from 'react-native';
 
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
+import NicknameScreen from '../screens/Onboarding/NicknameScreen';
 import { useAuth } from '../hooks/useAuth';
 import { colors } from '../styles/colors';
 
@@ -24,7 +25,11 @@ const AppNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {isAuthenticated ? (
-        <Stack.Screen name="Main" component={MainNavigator} />
+        user?.nickname ? (
+          <Stack.Screen name="Main" component={MainNavigator} />
+        ) : (
+          <Stack.Screen name="Nickname" component={NicknameScreen} />
+        )
       ) : (
         <Stack.Screen name="Auth" component={AuthNavigator} />
       )}

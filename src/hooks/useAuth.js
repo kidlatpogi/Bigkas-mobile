@@ -15,6 +15,7 @@ export const useAuth = () => {
     register,
     logout,
     clearError,
+    updateNickname,
   } = useAuthContext();
 
   return {
@@ -29,6 +30,7 @@ export const useAuth = () => {
     register,
     logout,
     clearError,
+    updateNickname,
   };
 };
 

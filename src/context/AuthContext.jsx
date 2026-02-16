@@ -19,6 +19,7 @@ const AUTH_ACTIONS = {
   SET_ERROR: 'SET_ERROR',
   CLEAR_ERROR: 'CLEAR_ERROR',
   RESTORE_SESSION: 'RESTORE_SESSION',
+  UPDATE_PROFILE: 'UPDATE_PROFILE',
 };
 
 // Reducer
@@ -61,6 +62,15 @@ const authReducer = (state, action) => {
         user: action.payload.user,
         isAuthenticated: !!action.payload.user,
         isLoading: false,
+      };
+
+    case AUTH_ACTIONS.UPDATE_PROFILE:
+      return {
+        ...state,
+        user: action.payload,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
       };
 
     default:
@@ -121,6 +131,7 @@ export const AuthProvider = ({ children }) => {
         id: '1',
         name: email.split('@')[0],
         email: email,
+        nickname: null,
         createdAt: new Date().toISOString(),
       };
 
@@ -164,6 +175,7 @@ export const AuthProvider = ({ children }) => {
         id: Math.random().toString(36).substr(2, 9),
         name: userData.name,
         email: userData.email,
+        nickname: null,
         createdAt: new Date().toISOString(),
       };
 
@@ -220,12 +232,42 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
   };
 
+  // Update nickname on first login
+  const updateNickname = async (nickname) => {
+    const trimmedNickname = nickname.trim();
+    if (!trimmedNickname) {
+      return { success: false, error: 'Nickname is required' };
+    }
+
+    try {
+      const updatedUser = { ...state.user, nickname: trimmedNickname };
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.USER_DATA,
+        JSON.stringify(updatedUser)
+      );
+
+      dispatch({
+        type: AUTH_ACTIONS.UPDATE_PROFILE,
+        payload: updatedUser,
+      });
+
+      return { success: true };
+    } catch (error) {
+      dispatch({
+        type: AUTH_ACTIONS.SET_ERROR,
+        payload: error.message || 'Failed to update nickname',
+      });
+      return { success: false, error: error.message };
+    }
+  };
+
   const value = {
     ...state,
     login,
     register,
     logout,
     clearError,
+    updateNickname,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
