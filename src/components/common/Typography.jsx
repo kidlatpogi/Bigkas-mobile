@@ -1,7 +1,11 @@
 import React from 'react';
 import { Text, StyleSheet } from 'react-native';
 import { colors } from '../../styles/colors';
-import { textStyles as typographyStyles, fontWeight as fontWeights } from '../../styles/typography';
+import {
+  textStyles as typographyStyles,
+  fontWeight as fontWeights,
+  fontFamily as fontFamilies,
+} from '../../styles/typography';
 
 /**
  * Typography component for consistent text styling
@@ -22,11 +26,18 @@ const Typography = ({
   style,
   ...props
 }) => {
+  const weightFamilyMap = {
+    regular: fontFamilies.regular,
+    medium: fontFamilies.medium,
+    semibold: fontFamilies.bold,
+    bold: fontFamilies.bold,
+  };
+
   const textStyles = [
     styles.base,
     typographyStyles[variant],
     { color: colors[color] || color },
-    weight && { fontWeight: fontWeights[weight] },
+    weight && { fontWeight: fontWeights[weight], fontFamily: weightFamilyMap[weight] },
     { textAlign: align },
     style,
   ];
@@ -41,6 +52,7 @@ const Typography = ({
 const styles = StyleSheet.create({
   base: {
     color: colors.textPrimary,
+    fontFamily: fontFamilies.regular,
   },
 });
 

@@ -5,13 +5,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  TextInput,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Typography from '../../components/common/Typography';
 import PrimaryButton from '../../components/common/PrimaryButton';
-import Card from '../../components/common/Card';
+import BrandLogo from '../../components/common/BrandLogo';
+import TextField from '../../components/common/TextField';
+import PasswordField from '../../components/common/PasswordField';
+import SocialButton from '../../components/common/SocialButton';
 import { useAuth } from '../../hooks/useAuth';
 import { colors } from '../../styles/colors';
 import { spacing } from '../../styles/spacing';
@@ -20,6 +22,7 @@ import { isValidEmail } from '../../utils/validators';
 const LoginScreen = ({ navigation }) => {
   const { login, isLoading, error, clearError } = useAuth();
 
+  // Auth form state for reuse across platforms.
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
@@ -57,88 +60,86 @@ const LoginScreen = ({ navigation }) => {
     navigation.navigate('Register');
   };
 
+  const handleForgotPassword = () => {
+    Alert.alert('Forgot Password', 'Password reset will be available soon.');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.header}>
-            <Typography variant="h1" align="center">
-              Bigkas
-            </Typography>
-            <Typography variant="body" color="textSecondary" align="center">
-              Improve your Filipino pronunciation
-            </Typography>
-          </View>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <View style={styles.contentWrap}>
+            <BrandLogo style={styles.logo} />
 
-          <Card style={styles.card}>
-            <Typography variant="h3" style={styles.cardTitle}>
-              Welcome Back
+            <Typography variant="h1" style={styles.title}>
+              Login
+            </Typography>
+            <Typography
+              variant="body"
+              color="textSecondary"
+              weight="medium"
+              style={styles.subtitle}
+            >
+              Continue your public speaking journey.
             </Typography>
 
-            <View style={styles.inputContainer}>
-              <Typography variant="bodySmall" style={styles.label}>
-                Email
-              </Typography>
-              <TextInput
-                style={[
-                  styles.input,
-                  validationErrors.email && styles.inputError,
-                ]}
-                placeholder="Enter your email"
-                placeholderTextColor={colors.gray400}
+            <View style={styles.form}>
+              <TextField
+                label="Email Address"
+                placeholder="student@example.com"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                error={validationErrors.email}
               />
-              {validationErrors.email && (
-                <Typography variant="caption" color="error">
-                  {validationErrors.email}
-                </Typography>
-              )}
-            </View>
 
-            <View style={styles.inputContainer}>
-              <Typography variant="bodySmall" style={styles.label}>
-                Password
-              </Typography>
-              <TextInput
-                style={[
-                  styles.input,
-                  validationErrors.password && styles.inputError,
-                ]}
+              <PasswordField
+                label="Password"
                 placeholder="Enter your password"
-                placeholderTextColor={colors.gray400}
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry
+                error={validationErrors.password}
               />
-              {validationErrors.password && (
-                <Typography variant="caption" color="error">
-                  {validationErrors.password}
-                </Typography>
-              )}
-            </View>
 
-            {error && (
-              <Typography variant="bodySmall" color="error" align="center">
-                {error}
+              <Typography
+                variant="bodySmall"
+                color="primary"
+                style={styles.forgotPassword}
+                onPress={handleForgotPassword}
+              >
+                Forgot password?
               </Typography>
-            )}
 
-            <PrimaryButton
-              title="Login"
-              onPress={handleLogin}
-              loading={isLoading}
-              style={styles.loginButton}
-            />
+              {error ? (
+                <Typography variant="bodySmall" color="error" align="center" style={styles.errorText}>
+                  {error}
+                </Typography>
+              ) : null}
+
+              <PrimaryButton
+                title="Log In"
+                onPress={handleLogin}
+                loading={isLoading}
+                variant="secondary"
+                size="large"
+                style={styles.loginButton}
+              />
+
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Typography variant="bodySmall" color="textSecondary" style={styles.dividerText}>
+                  or
+                </Typography>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <SocialButton title="Log In with Google" onPress={() => {}} />
+            </View>
 
             <View style={styles.registerContainer}>
               <Typography variant="bodySmall" color="textSecondary">
@@ -150,10 +151,10 @@ const LoginScreen = ({ navigation }) => {
                 onPress={handleRegisterPress}
                 style={styles.registerLink}
               >
-                Register
+                Create Account
               </Typography>
             </View>
-          </Card>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -171,44 +172,53 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
   },
-  header: {
+  contentWrap: {
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
+  },
+  logo: {
     marginBottom: spacing.xl,
   },
-  card: {
-    padding: spacing.lg,
+  title: {
+    marginBottom: spacing.xs,
   },
-  cardTitle: {
+  subtitle: {
+    marginBottom: spacing.xl,
+  },
+  form: {
+    marginBottom: spacing.xl,
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
     marginBottom: spacing.lg,
-    textAlign: 'center',
   },
-  inputContainer: {
+  errorText: {
     marginBottom: spacing.md,
   },
-  label: {
-    marginBottom: spacing.xs,
-    color: colors.textSecondary,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    padding: spacing.sm,
-    fontSize: 16,
-    color: colors.textPrimary,
-    backgroundColor: colors.white,
-  },
-  inputError: {
-    borderColor: colors.error,
-  },
   loginButton: {
-    marginTop: spacing.md,
+    width: '100%',
+    marginBottom: spacing.lg,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  dividerText: {
+    marginHorizontal: spacing.sm,
   },
   registerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: spacing.lg,
   },
   registerLink: {
     fontWeight: '600',

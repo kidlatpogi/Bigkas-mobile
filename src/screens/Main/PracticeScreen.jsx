@@ -172,28 +172,28 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: spacing.md,
+    padding: spacing.sm,
   },
   header: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   wordCard: {
-    padding: spacing.xl,
-    marginBottom: spacing.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
   },
   wordText: {
-    marginVertical: spacing.md,
+    marginVertical: spacing.sm,
   },
   visualizerContainer: {
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   statusContainer: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   recordContainer: {
     alignItems: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
   navButtons: {
     flexDirection: 'row',

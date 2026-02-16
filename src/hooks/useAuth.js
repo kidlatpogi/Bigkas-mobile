@@ -2,33 +2,33 @@
 import { useAuthContext } from '../context/AuthContext';
 
 /**
- * Hook for authentication functionality
- * Provides access to auth state and actions
+ * Hook for authentication functionality.
+ * Must be used within an AuthProvider.
+ *
+ * @returns {Object} auth
+ * @returns {Object|null}  auth.user            - Authenticated user object
+ * @returns {boolean}      auth.isLoading       - Whether auth state is loading
+ * @returns {boolean}      auth.isAuthenticated - Whether the user is logged in
+ * @returns {string|null}  auth.error           - Error message if any
+ * @returns {Function}     auth.login           - (email, password) => Promise
+ * @returns {Function}     auth.register        - (name, email, password) => Promise
+ * @returns {Function}     auth.logout          - () => Promise
+ * @returns {Function}     auth.clearError      - Clears the current error
+ * @returns {Function}     auth.updateNickname  - (nickname) => Promise
  */
 export const useAuth = () => {
-  const {
-    user,
-    isLoading,
-    isAuthenticated,
-    error,
-    login,
-    register,
-    logout,
-    clearError,
-  } = useAuthContext();
+  const context = useAuthContext();
 
   return {
-    // State
-    user,
-    isLoading,
-    isAuthenticated,
-    error,
-
-    // Actions
-    login,
-    register,
-    logout,
-    clearError,
+    user: context.user ?? null,
+    isLoading: context.isLoading ?? false,
+    isAuthenticated: context.isAuthenticated ?? false,
+    error: context.error ?? null,
+    login: context.login,
+    register: context.register,
+    logout: context.logout,
+    clearError: context.clearError,
+    updateNickname: context.updateNickname,
   };
 };
 

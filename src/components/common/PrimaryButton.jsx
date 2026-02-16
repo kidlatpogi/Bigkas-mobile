@@ -80,9 +80,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondary,
   },
   button_outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: colors.primary,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
   },
   button_disabled: {
     backgroundColor: colors.gray300,
@@ -110,15 +115,19 @@ const styles = StyleSheet.create({
   text: {
     ...textStyles.button,
     textAlign: 'center',
+    fontWeight: '700',
   },
   text_primary: {
-    color: colors.white,
+    color: colors.black,
+    fontWeight: '700',
   },
   text_secondary: {
     color: colors.white,
+    fontWeight: '700',
   },
   text_outline: {
-    color: colors.primary,
+    color: colors.textPrimary,
+    fontWeight: '700',
   },
   text_disabled: {
     color: colors.gray500,

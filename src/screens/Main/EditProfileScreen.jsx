@@ -19,15 +19,14 @@ import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 
 /**
- * ProfileScreen — User profile with editable details.
- * 1:1 copy of the Figma design showing user info + edit capability.
+ * EditProfileScreen — 1:1 copy of the Figma "Edit Profile / DONE" screen.
  *
  * Layout (top → bottom):
  *  1. Circular back-arrow button
- *  2. "Edit Profile" bold title centered
+ *  2. "Edit Profile" bold title centred
  *  3. AvatarPicker (120 px, dark circle, camera icon overlay)
  *  4. First Name + Last Name side-by-side inputs
- *  5. Email Address full-width input (read-only)
+ *  5. Email Address full-width input
  *  6. "Change Password" row with chevron
  *  7. "Account Settings" row with chevron
  *  8. "Save Changes" black button
@@ -36,8 +35,8 @@ import { spacing, borderRadius } from '../../styles/spacing';
  * @component
  * @param {{ navigation: import('@react-navigation/native').NavigationProp }} props
  */
-const ProfileScreen = ({ navigation }) => {
-  const { user, logout, isLoading } = useAuth();
+const EditProfileScreen = ({ navigation }) => {
+  const { user, updateNickname, isLoading } = useAuth();
 
   /** @type {[{firstName:string,lastName:string,email:string,avatarUri:string|null}, Function]} */
   const [formData, setFormData] = useState({
@@ -70,24 +69,12 @@ const ProfileScreen = ({ navigation }) => {
 
     // TODO: Wire Supabase profile update when backend is ready
     Alert.alert('Success', 'Profile updated successfully!', [
-      { text: 'OK' },
+      { text: 'OK', onPress: () => navigation.goBack() },
     ]);
   };
 
-  const handleCancel = () => {
-    // Reset form to initial values
-    setFormData({
-      firstName: user?.name?.split(' ')[0] || '',
-      lastName: user?.name?.split(' ').slice(1).join(' ') || '',
-      email: user?.email || '',
-      avatarUri: user?.avatar_url || null,
-    });
-    setErrors({});
-  };
-
-  const handleGoBack = () => {
-    navigation.goBack();
-  };
+  const handleCancel = () => navigation.goBack();
+  const handleGoBack = () => navigation.goBack();
 
   const handleChangePassword = () => {
     Alert.alert('Change Password', 'Password change flow will be available soon.');
@@ -95,29 +82,6 @@ const ProfileScreen = ({ navigation }) => {
 
   const handleAccountSettings = () => {
     Alert.alert('Account Settings', 'Account settings will be available soon.');
-  };
-
-  const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await logout();
-            } catch (err) {
-              console.error('Logout error:', err);
-              Alert.alert('Error', 'Failed to logout. Please try again.');
-            }
-          },
-        },
-      ],
-      { cancelable: true }
-    );
   };
 
   return (
@@ -132,17 +96,17 @@ const ProfileScreen = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.contentWrap}>
-            {/* ──── Back button ──── */}
+            {/* ── Back button ── */}
             <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
               <Ionicons name="arrow-back" size={18} color={colors.textPrimary} />
             </TouchableOpacity>
 
-            {/* ──── Title ──── */}
+            {/* ── Title ── */}
             <Typography variant="h1" style={styles.title}>
               Edit Profile
             </Typography>
 
-            {/* ──── Avatar ──── */}
+            {/* ── Avatar ── */}
             <View style={styles.avatarWrap}>
               <AvatarPicker
                 uri={formData.avatarUri}
@@ -153,7 +117,7 @@ const ProfileScreen = ({ navigation }) => {
               />
             </View>
 
-            {/* ──── Form ──── */}
+            {/* ── Form ── */}
             <View style={styles.form}>
               {/* First Name + Last Name */}
               <View style={styles.row}>
@@ -179,7 +143,7 @@ const ProfileScreen = ({ navigation }) => {
                 </View>
               </View>
 
-              {/* Email (read-only) */}
+              {/* Email */}
               <TextField
                 label="EMAIL ADDRESS"
                 placeholder="juan@student.edu.ph"
@@ -208,7 +172,7 @@ const ProfileScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
-            {/* ──── Action buttons ──── */}
+            {/* ── Action buttons ── */}
             <View style={styles.actions}>
               <PrimaryButton
                 title="Save Changes"
@@ -235,7 +199,7 @@ const ProfileScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  /* ──── Layout ──── */
+  /* ── Layout ── */
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -255,7 +219,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
 
-  /* ──── Back button ──── */
+  /* ── Back button ── */
   backButton: {
     width: 40,
     height: 40,
@@ -267,20 +231,20 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
 
-  /* ──── Title ──── */
+  /* ── Title ── */
   title: {
     textAlign: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
     fontWeight: '700',
   },
 
-  /* ──── Avatar ──── */
+  /* ── Avatar ── */
   avatarWrap: {
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
 
-  /* ──── Form ──── */
+  /* ── Form ── */
   form: {
     marginBottom: spacing.sm,
   },
@@ -292,21 +256,21 @@ const styles = StyleSheet.create({
     width: '48%',
   },
 
-  /* ──── Setting rows ──── */
+  /* ── Setting rows ── */
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md,
     marginTop: spacing.xs,
   },
   settingLabel: {
     fontSize: 15,
   },
 
-  /* ──── Action buttons ──── */
+  /* ── Action buttons ── */
   actions: {
-    marginTop: spacing.md,
+    marginTop: spacing.lg,
   },
   saveButton: {
     width: '100%',
@@ -321,4 +285,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProfileScreen;
+export default EditProfileScreen;

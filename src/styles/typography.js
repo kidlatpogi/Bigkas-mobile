@@ -1,19 +1,8 @@
-import { Platform } from 'react-native';
-
-// Font families
+// Font families (Expo + Android)
 export const fontFamily = {
-  regular: Platform.select({
-    ios: 'System',
-    android: 'Roboto',
-  }),
-  medium: Platform.select({
-    ios: 'System',
-    android: 'Roboto',
-  }),
-  bold: Platform.select({
-    ios: 'System',
-    android: 'Roboto',
-  }),
+  regular: 'Inter-Regular',
+  medium: 'Inter-Medium',
+  bold: 'Inter-Bold',
 };
 
 // Font sizes
@@ -47,41 +36,49 @@ export const lineHeight = {
 export const textStyles = {
   h1: {
     fontSize: fontSize.xxxl,
+    fontFamily: fontFamily.bold,
     fontWeight: fontWeight.bold,
     lineHeight: fontSize.xxxl * lineHeight.tight,
   },
   h2: {
     fontSize: fontSize.xxl,
+    fontFamily: fontFamily.bold,
     fontWeight: fontWeight.bold,
     lineHeight: fontSize.xxl * lineHeight.tight,
   },
   h3: {
     fontSize: fontSize.xl,
+    fontFamily: fontFamily.bold,
     fontWeight: fontWeight.semibold,
     lineHeight: fontSize.xl * lineHeight.tight,
   },
   h4: {
     fontSize: fontSize.lg,
+    fontFamily: fontFamily.medium,
     fontWeight: fontWeight.semibold,
     lineHeight: fontSize.lg * lineHeight.normal,
   },
   body: {
     fontSize: fontSize.md,
+    fontFamily: fontFamily.regular,
     fontWeight: fontWeight.regular,
     lineHeight: fontSize.md * lineHeight.normal,
   },
   bodySmall: {
     fontSize: fontSize.sm,
+    fontFamily: fontFamily.regular,
     fontWeight: fontWeight.regular,
     lineHeight: fontSize.sm * lineHeight.normal,
   },
   caption: {
     fontSize: fontSize.xs,
+    fontFamily: fontFamily.regular,
     fontWeight: fontWeight.regular,
     lineHeight: fontSize.xs * lineHeight.normal,
   },
   button: {
     fontSize: fontSize.md,
+    fontFamily: fontFamily.medium,
     fontWeight: fontWeight.semibold,
     lineHeight: fontSize.md * lineHeight.normal,
   },

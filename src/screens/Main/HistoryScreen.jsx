@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    padding: spacing.md,
+    padding: spacing.sm,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   listContent: {
-    padding: spacing.md,
+    padding: spacing.sm,
     flexGrow: 1,
   },
   sessionCard: {
