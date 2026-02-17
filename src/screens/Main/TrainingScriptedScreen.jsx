@@ -7,7 +7,6 @@ import {
   Modal,
   Text,
   Animated,
-  Image,
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -347,38 +346,8 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Main Content + Camera Background */}
-      <View style={styles.mainArea}>
-        {hasCamera && cameraPermission && (
-          <CameraView
-            ref={setCameraRef}
-            style={styles.cameraBackground}
-            facing="front"
-          />
-        )}
-
-        {/* User Camera Photo Display */}
-        {cameraUri && (
-          <View style={styles.photoContainer}>
-            <Image
-              source={{ uri: cameraUri }}
-              style={styles.userPhoto}
-              resizeMode="cover"
-            />
-          </View>
-        )}
-
-        {hasCamera && cameraPermission && (
-          <TouchableOpacity
-            style={styles.cameraButton}
-            onPress={handleCaptureCameraPhoto}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="camera" size={16} color={colors.white} />
-          </TouchableOpacity>
-        )}
-
-        <View style={styles.content}>
+      {/* Main Content */}
+      <View style={styles.content}>
         {/* Title */}
         <Typography variant="h1" align="center" style={styles.title}>
           Training
@@ -404,31 +373,44 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
             </Typography>
           </View>
         ) : (
-          <ScrollView
-            ref={scrollViewRef}
-            style={styles.teleprompter}
-            contentContainerStyle={styles.teleprompterContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Render script with highlighted words */}
-            <Text style={[styles.scriptBody, { fontSize, lineHeight: fontSize * 1.8 }]}>
-              {scriptWords.map((word, idx) => (
-                <Text
-                  key={`${idx}-${word}`}
-                  style={[
-                    styles.scriptWord,
-                    { fontSize, lineHeight: fontSize * 1.8 },
-                    isRecording && !isPaused && idx < highlightedWordIndex && styles.scriptWordPassed,
-                    isRecording && !isPaused && idx === highlightedWordIndex && styles.scriptWordCurrent,
-                    isRecording && !isPaused && idx > highlightedWordIndex && styles.scriptWordFuture,
-                    !isRecording && styles.scriptWordFuture,
-                  ]}
-                >
-                  {word}{' '}
-                </Text>
-              ))}
-            </Text>
-          </ScrollView>
+          <View style={styles.teleprompterCameraWrap}>
+            {/* Teleprompter text */}
+            <ScrollView
+              ref={scrollViewRef}
+              style={styles.teleprompter}
+              contentContainerStyle={styles.teleprompterContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <Text style={[styles.scriptBody, { fontSize, lineHeight: fontSize * 1.8 }]}>
+                {scriptWords.map((word, idx) => (
+                  <Text
+                    key={`${idx}-${word}`}
+                    style={[
+                      styles.scriptWord,
+                      { fontSize, lineHeight: fontSize * 1.8 },
+                      isRecording && !isPaused && idx < highlightedWordIndex && styles.scriptWordPassed,
+                      isRecording && !isPaused && idx === highlightedWordIndex && styles.scriptWordCurrent,
+                      isRecording && !isPaused && idx > highlightedWordIndex && styles.scriptWordFuture,
+                      !isRecording && styles.scriptWordFuture,
+                    ]}
+                  >
+                    {word}{' '}
+                  </Text>
+                ))}
+              </Text>
+            </ScrollView>
+
+            {/* Camera Feed below teleprompter */}
+            {hasCamera && cameraPermission && (
+              <View style={styles.cameraContainer}>
+                <CameraView
+                  ref={setCameraRef}
+                  style={styles.cameraFeed}
+                  facing="front"
+                />
+              </View>
+            )}
+          </View>
         )}
 
         {/* Enhanced Audio Waveform Visualizer */}
@@ -525,7 +507,6 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
               Restart
             </Typography>
           </TouchableOpacity>
-        </View>
         </View>
       </View>
 
@@ -754,44 +735,14 @@ const styles = StyleSheet.create({
   },
 
   // Camera styles
-  mainArea: {
-    flex: 1,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  cameraBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 0,
-  },
-  cameraButton: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 28,
-    height: 28,
-    borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 2,
-  },
-
-  // User photo display (under teleprompter)
-  photoContainer: {
-    position: 'absolute',
-    bottom: 280,
-    left: spacing.md,
-    right: spacing.md,
-    height: 120,
+  cameraContainer: {
+    width: '100%',
+    aspectRatio: 3 / 4,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
-    opacity: 0.3,
+    marginTop: -spacing.md,
   },
-  userPhoto: {
+  cameraFeed: {
     flex: 1,
   },
 
@@ -799,8 +750,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
-    backgroundColor: 'transparent',
-    zIndex: 1,
   },
   title: {
     marginBottom: spacing.md,
@@ -815,11 +764,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  teleprompter: {
+  teleprompterCameraWrap: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.75)',
     borderRadius: borderRadius.lg,
+    overflow: 'hidden',
     marginBottom: spacing.md,
+  },
+  teleprompter: {
+    maxHeight: 180,
+    backgroundColor: colors.white,
+    borderTopLeftRadius: borderRadius.lg,
+    borderTopRightRadius: borderRadius.lg,
+    zIndex: 1,
   },
   teleprompterContent: {
     padding: spacing.md,
