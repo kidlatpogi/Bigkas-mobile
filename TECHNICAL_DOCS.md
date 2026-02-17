@@ -29,6 +29,8 @@
    - [TrainingSetupScreen](#414-trainingsetupscreen)
    - [GenerateScriptScreen](#415-generatescriptscreen)
    - [TrainingScriptedScreen](#416-trainingscriptedscreen)
+   - [ChangePasswordScreen](#417-changepasswordscreen)
+   - [AccountSettingsScreen](#418-accountsettingsscreen)
 5. [Reusable Component Props](#5-reusable-component-props)
 5b. [API Modules](#5b-api-modules)
 6. [Utility Functions](#6-utility-functions)
@@ -782,41 +784,70 @@ When mic test is active, the audio level is polled every 120 ms. If the level st
 #### Hook Destructuring
 
 ```js
-const { user, logout, isLoading } = useAuth();
-const { reset: resetSessions } = useSessions();
+const { user, logout, isLoading, updateNickname } = useAuth();
 ```
+
+#### State Variables
+
+| Variable   | Type     | Initial Value                                   | Description                   |
+| ---------- | -------- | ----------------------------------------------- | ----------------------------- |
+| `formData` | `object` | (see below)                                     | Editable profile fields       |
+| `errors`   | `object` | `{}`                                            | Per-field validation errors   |
+| `isSaving` | `boolean`| `false`                                         | Save operation in progress    |
+
+#### `formData` Shape
+
+| Key          | Type              | Initial Value                          | Description               |
+| ------------ | ----------------- | -------------------------------------- | ------------------------- |
+| `firstName`  | `string`          | `user?.name?.split(' ')[0] \|\| ''`    | First name input          |
+| `lastName`   | `string`          | `user?.name?.split(' ').slice(1).join(' ') \|\| ''` | Last name input (optional) |
+| `nickname`   | `string`          | `user?.nickname \|\| ''`               | Display nickname input    |
+| `email`      | `string`          | `user?.email \|\| ''`                  | Email input (read-only)   |
+| `avatarUri`  | `string \| null`  | `user?.avatar_url \|\| null`           | Selected avatar image URI |
+
+#### Validation
+
+| Key         | Message                         | Required? |
+| ----------- | ------------------------------- | --------- |
+| `firstName` | `'First name is required'`      | Yes       |
+| `lastName`  | —                               | No (optional) |
 
 #### From Hooks
 
-| Variable         | Source           | Type       | Description                      |
-| ---------------- | ---------------- | ---------- | -------------------------------- |
-| `user`           | `useAuth()`      | `object`   | Current user                     |
-| `logout`         | `useAuth()`      | `function` | Clears auth state + storage      |
-| `isLoading`      | `useAuth()`      | `boolean`  | Loading indicator                |
-| `resetSessions`  | `useSessions()`  | `function` | Clear session state on logout    |
-
-#### Displayed User Fields
-
-| Field                               | Section          | Display                        |
-| ----------------------------------- | ---------------- | ------------------------------ |
-| `user?.name?.charAt(0)?.toUpperCase()` | Avatar circle | Initial letter                 |
-| `user?.name`                        | Below avatar     | Full name                      |
-| `user?.email`                       | Below name       | Email address                  |
+| Variable         | Source       | Type       | Description                       |
+| ---------------- | ------------ | ---------- | --------------------------------- |
+| `user`           | `useAuth()`  | `object`   | Pre-populate form fields          |
+| `logout`         | `useAuth()`  | `function` | Clears auth state + storage       |
+| `isLoading`      | `useAuth()`  | `boolean`  | Loading indicator                 |
+| `updateNickname` | `useAuth()`  | `function` | Update nickname in context + Supabase |
 
 #### Handlers
 
-| Handler           | Trigger                  | Action                                         |
-| ----------------- | ------------------------ | ---------------------------------------------- |
-| `handleEditProfile()` | "Edit Profile" press | `navigation.navigate('EditProfile')`           |
-| `handleLogout()`  | "Logout" button press    | Shows Alert; on confirm: `resetSessions()` + `logout()` |
+| Handler                   | Trigger                    | Action                                              |
+| ------------------------- | -------------------------- | --------------------------------------------------- |
+| `updateField(field, value)` | Any input change         | Updates `formData[field]`, clears matching error    |
+| `handleSaveChanges()`     | "Save Changes" press       | Validates, uploads avatar if changed, updates Supabase user_metadata (full_name, nickname, avatar_url), syncs nickname via context |
+| `handleCancel()`          | "Cancel" press             | Resets form to initial user values                  |
+| `handleGoBack()`          | Back arrow press           | `navigation.goBack()` or `navigation.navigate('Dashboard')` |
+| `handleChangePassword()`  | "Change Password" row     | `navigation.navigate('ChangePassword')`             |
+| `handleAccountSettings()` | "Account Settings" row    | `navigation.navigate('AccountSettings')`            |
+| `uploadAvatar(localUri)`  | Called by handleSaveChanges | Uploads image to Supabase Storage `avatars` bucket, returns public URL |
 
-#### UI Cards
+#### Avatar Upload Flow
 
-| Card Section     | Static Content                       |
-| ---------------- | ------------------------------------ |
-| Stats Card       | Total Sessions (0), Avg Score (—), Streak (0) — placeholders |
-| Settings Card    | Notifications, Language, Dark Mode — placeholder rows |
-| About Card       | Version, Terms, Privacy — placeholder rows |
+1. User picks image via `AvatarPicker` → local URI stored in `formData.avatarUri`
+2. On save, if URI changed and starts with `file`, `uploadAvatar()` is called
+3. Image fetched as blob → converted to ArrayBuffer
+4. Uploaded to `avatars/{userId}/avatar.{ext}` with `upsert: true`
+5. Public URL returned and saved to `user_metadata.avatar_url`
+
+#### Components Used
+
+| Component      | Props                                        | Description               |
+| -------------- | -------------------------------------------- | ------------------------- |
+| `AvatarPicker` | `uri`, `username`, `size`, `editable`, `onImageSelect` | Avatar selection with camera icon |
+| `TextField`    | `label`, `value`, `onChangeText`, `error`    | Form inputs               |
+| `PrimaryButton`| `title`, `onPress`, `loading`, `variant`     | Save/Cancel buttons       |
 
 ---
 
@@ -870,8 +901,8 @@ const { user, updateNickname, isLoading } = useAuth();
 | `handleSaveChanges()`   | "Save Changes" press       | Validates, shows success Alert + navigates back     |
 | `handleCancel()`        | "Cancel" press             | `navigation.goBack()`                               |
 | `handleGoBack()`        | Back arrow press           | `navigation.goBack()`                               |
-| `handleChangePassword()` | "Change Password" row    | Placeholder Alert                                   |
-| `handleAccountSettings()` | "Account Settings" row  | Placeholder Alert                                   |
+| `handleChangePassword()` | "Change Password" row    | `navigation.navigate('ChangePassword')`             |
+| `handleAccountSettings()` | "Account Settings" row  | `navigation.navigate('AccountSettings')`            |
 
 #### Components Used
 
@@ -1436,6 +1467,109 @@ Calculation: `wordsElapsed = Math.floor(recordingDuration * (wpm / 60))`
 
 ---
 
+### 4.17 ChangePasswordScreen
+
+**File**: `src/screens/Main/ChangePasswordScreen.jsx`  
+**Route**: `ChangePassword` (MainNavigator stack)
+
+#### State Variables
+
+| Variable          | Type      | Initial Value | Description                          |
+| ----------------- | --------- | ------------- | ------------------------------------ |
+| `oldPassword`     | `string`  | `''`          | Current password input               |
+| `newPassword`     | `string`  | `''`          | New password input                   |
+| `confirmPassword` | `string`  | `''`          | Confirm new password input           |
+| `errors`          | `object`  | `{}`          | Per-field validation errors          |
+| `isSaving`        | `boolean` | `false`       | Save operation in progress           |
+
+#### `errors` Keys
+
+| Key               | Message Examples                              |
+| ----------------- | --------------------------------------------- |
+| `oldPassword`     | `'Old password is required'`, `'Incorrect current password'` |
+| `newPassword`     | `'New password is required'`, `'Password must be at least 6 characters'` |
+| `confirmPassword` | `'Please confirm your new password'`, `'Passwords do not match'` |
+
+#### Handlers
+
+| Handler                    | Trigger                  | Action                                              |
+| -------------------------- | ------------------------ | --------------------------------------------------- |
+| `updateField(field, value)` | Any input change        | Updates field state, clears matching error          |
+| `handleSaveNewPassword()`  | "Save New Password" press | Validates fields, verifies old password via `supabase.auth.signInWithPassword`, updates via `supabase.auth.updateUser({ password })` |
+| `handleGoBack()`           | Back arrow / Cancel press | `navigation.goBack()`                              |
+
+#### Password Change Flow
+
+1. User enters old password, new password, and confirms new password
+2. Client-side validation: all fields required, new password ≥ 6 chars, passwords match
+3. Old password verified via `supabase.auth.signInWithPassword({ email, password: oldPassword })`
+4. If incorrect, sets `errors.oldPassword = 'Incorrect current password'`
+5. If correct, calls `supabase.auth.updateUser({ password: newPassword })`
+6. Success: Alert shown, navigates back
+
+#### Components Used
+
+| Component       | Props                                        | Description               |
+| --------------- | -------------------------------------------- | ------------------------- |
+| `PasswordField` | `label`, `placeholder`, `value`, `onChangeText`, `error` | Password input with toggle visibility |
+| `PrimaryButton` | `title`, `onPress`, `loading`, `variant`     | Save/Cancel buttons       |
+
+---
+
+### 4.18 AccountSettingsScreen
+
+**File**: `src/screens/Main/AccountSettingsScreen.jsx`  
+**Route**: `AccountSettings` (MainNavigator stack)
+
+#### State Variables
+
+| Variable          | Type      | Initial Value | Description                          |
+| ----------------- | --------- | ------------- | ------------------------------------ |
+| `showDeleteModal` | `boolean` | `false`       | Whether delete confirmation modal is visible |
+| `password`        | `string`  | `''`          | Password input in delete modal       |
+| `confirmText`     | `string`  | `''`          | "CONFIRM DELETE" text input in modal |
+| `isDeleting`      | `boolean` | `false`       | Delete operation in progress         |
+
+#### Derived Variables
+
+| Variable               | Type      | Derivation                                              | Description                              |
+| ---------------------- | --------- | ------------------------------------------------------- | ---------------------------------------- |
+| `isConfirmDeleteValid` | `boolean` | `password.trim() && confirmText === 'CONFIRM DELETE'`   | Enables delete button when both valid    |
+
+#### Hook Destructuring
+
+```js
+const { logout } = useAuth();
+```
+
+#### Handlers
+
+| Handler                    | Trigger                        | Action                                              |
+| -------------------------- | ------------------------------ | --------------------------------------------------- |
+| `handleGoBack()`           | Back arrow / Cancel press      | `navigation.goBack()`                               |
+| `handleDeactivateProfile()`| "Deactivate Profile" press     | Shows Alert with confirm (TODO: Supabase integration) |
+| `handleDeleteAccountPress()` | "Delete Account" press       | Resets modal fields, opens delete confirmation modal |
+| `handleConfirmDelete()`    | Modal "Delete Account" press   | Validates password + confirmText, calls `supabase.auth.admin.deleteUser()`, then logout + navigate to Login |
+
+#### Delete Account Flow
+
+1. User clicks "Delete Account" red button
+2. Modal slides up with password input + "CONFIRM DELETE" text input
+3. Both fields must be valid for Delete button to enable
+4. On confirm: password verified, account deleted via Supabase, user logged out
+5. Navigates to Login screen
+
+#### UI Sections
+
+| Section             | Content                                                         |
+| ------------------- | --------------------------------------------------------------- |
+| Deactivate Profile  | Description + "Deactivate Profile" outline button               |
+| Delete Account      | Warning text + red "Delete Account" button (white text)         |
+| Cancel              | Fixed at bottom of screen with border separator                 |
+| Delete Modal        | Bottom-sheet style: password input, confirm text input, Cancel/Delete buttons |
+
+---
+
 ## 5. Reusable Component Props
 
 ### BrandLogo (`src/components/common/BrandLogo.jsx`)
@@ -1707,12 +1841,28 @@ AppNavigator (root stack)
         ├── TrainingSetup → TrainingSetupScreen (stack screen)
         ├── TrainingScripted → TrainingScriptedScreen (stack screen)
         ├── History       → HistoryScreen      (stack screen)
+        ├── AllSessions   → AllSessionsScreen  (stack screen)
+        ├── ScriptEditor  → ScriptEditorScreen (stack screen)
         ├── SessionDetail → SessionDetailScreen
         ├── SessionResult → SessionResultScreen
         ├── DetailedFeedback → DetailedFeedbackScreen
-        ├── AudioCameraTest → AudioCameraTestScreen
-        └── EditProfile   → EditProfileScreen
+        ├── EditProfile   → EditProfileScreen
+        ├── AccountSettings → AccountSettingsScreen
+        ├── ChangePassword → ChangePasswordScreen
+        └── AudioCameraTest → AudioCameraTestScreen
 ```
+
+### BottomTabNavigator Keyboard Behavior
+
+| Option                  | Value    | Description                                         |
+| ----------------------- | -------- | --------------------------------------------------- |
+| `tabBarHideOnKeyboard`  | `true`   | Hides floating tab bar when keyboard opens           |
+
+### KeyboardAvoidingView Behavior
+
+All form screens use `KeyboardAvoidingView` with:
+- **iOS**: `behavior="padding"` — adjusts padding to keep fields visible
+- **Android**: `behavior={undefined}` — relies on system `windowSoftInputMode` to handle keyboard avoidance without pushing the bottom navigation bar up
 
 ### Route Params Summary
 
@@ -1726,6 +1876,8 @@ AppNavigator (root stack)
 | `SessionResult`    | `{confidenceScore, summary, pitchStability, paceWpm, paceRating, resultMode}` |
 | `DetailedFeedback` | `{resultMode, trainingParams, timelinePoints, eyeContact, bodyGestures, voice, feedbackItems}` |
 | `AudioCameraTest`  | None (opened from Settings "Test Audio / Video")              |
+| `ChangePassword`   | None (opened from Edit Profile "Change Password")             |
+| `AccountSettings`  | None (opened from Edit Profile "Account Settings")            |
 | All others         | No params                                                 |
 
 ### Screen Flow Diagram
