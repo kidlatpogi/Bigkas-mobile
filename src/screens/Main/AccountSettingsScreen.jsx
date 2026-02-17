@@ -261,6 +261,7 @@ const AccountSettingsScreen = ({ navigation }) => {
                     opacity: isConfirmDeleteValid && !isDeleting ? 1 : 0.5,
                   },
                 ]}
+                textStyle={styles.modalDeleteButtonText}
               />
             </View>
           </View>
@@ -405,6 +406,9 @@ const styles = StyleSheet.create({
   modalDeleteBtn: {
     flex: 1,
     backgroundColor: colors.error,
+  },
+  modalDeleteButtonText: {
+    color: colors.white,
   },
 });
 
