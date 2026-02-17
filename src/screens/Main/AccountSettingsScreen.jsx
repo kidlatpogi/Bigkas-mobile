@@ -174,6 +174,7 @@ const AccountSettingsScreen = ({ navigation }) => {
                 onPress={handleDeleteAccountPress}
                 variant="primary"
                 style={styles.deleteButton}
+                textStyle={styles.deleteButtonText}
               />
             </View>
           </View>
@@ -334,6 +335,8 @@ const styles = StyleSheet.create({
   deleteButton: {
     width: '100%',
     backgroundColor: colors.error,
+  },
+  deleteButtonText: {
     color: colors.white,
   },
 
