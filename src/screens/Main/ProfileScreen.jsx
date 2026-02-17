@@ -38,7 +38,8 @@ import { spacing, borderRadius } from '../../styles/spacing';
  * @param {{ navigation: import('@react-navigation/native').NavigationProp }} props
  */
 const ProfileScreen = ({ navigation }) => {
-  const { user, logout, isLoading, updateNickname } = useAuth();
+  const { user, logout, isLoading, updateNickname, updateNicknameLocal } =
+    useAuth();
 
   const [formData, setFormData] = useState({
     firstName: user?.name?.split(' ')[0] || '',
@@ -51,6 +52,24 @@ const ProfileScreen = ({ navigation }) => {
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
 
+  /**
+   * Detect if any form field differs from the original user data.
+   * Returns true if there are unsaved changes.
+   */
+  const hasChanges = () => {
+    const originalFirstName = user?.name?.split(' ')[0] || '';
+    const originalLastName = user?.name?.split(' ').slice(1).join(' ') || '';
+    const originalNickname = user?.nickname || '';
+    const originalAvatar = user?.avatar_url || null;
+
+    return (
+      formData.firstName !== originalFirstName ||
+      formData.lastName !== originalLastName ||
+      formData.nickname !== originalNickname ||
+      formData.avatarUri !== originalAvatar
+    );
+  };
+
   /** Update a single form field and clear its error. */
   const updateField = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -59,7 +78,7 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
-  /** Validate & save profile to Supabase. */
+  /** Validate & save profile to Supabase with optimistic UI updates. */
   const handleSaveChanges = async () => {
     const newErrors = {};
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
@@ -73,37 +92,60 @@ const ProfileScreen = ({ navigation }) => {
       setIsSaving(true);
 
       const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
-
-      // Upload avatar if changed (local URI means new pick)
       let avatarUrl = formData.avatarUri;
-      if (formData.avatarUri && formData.avatarUri !== user?.avatar_url && formData.avatarUri.startsWith('file')) {
-        avatarUrl = await uploadAvatar(formData.avatarUri);
-      }
+      const hasNewAvatar = formData.avatarUri && formData.avatarUri !== user?.avatar_url && formData.avatarUri.startsWith('file');
 
-      // Update Supabase user metadata
+      // Update Supabase user metadata immediately (without waiting for avatar)
       const { error: updateError } = await supabase.auth.updateUser({
         data: {
           full_name: fullName,
           nickname: formData.nickname.trim() || null,
-          avatar_url: avatarUrl,
+          avatar_url: hasNewAvatar ? formData.avatarUri : avatarUrl, // Temporarily use local URI
         },
       });
 
       if (updateError) throw updateError;
 
-      // Also update nickname via context so local state stays in sync
-      if (formData.nickname.trim()) {
-        await updateNickname(formData.nickname.trim());
-      }
+      // Update nickname via context in parallel (local only since we already updated Supabase)
+      const nicknamePromise = formData.nickname.trim() 
+        ? updateNicknameLocal(formData.nickname.trim())
+        : Promise.resolve({ success: true });
 
+      // Show success immediately for better UX
       Alert.alert('Success', 'Profile updated successfully!', [
         { text: 'OK' },
       ]);
+
+      // Upload avatar in background if needed
+      if (hasNewAvatar) {
+        uploadAvatarInBackground(formData.avatarUri);
+      }
+
+      // Wait for nickname update
+      await nicknamePromise;
+
     } catch (err) {
       console.error('Profile save error:', err);
       Alert.alert('Error', err.message || 'Failed to update profile. Please try again.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  /** Upload avatar in background and update user metadata when complete. */
+  const uploadAvatarInBackground = async (localUri) => {
+    try {
+      const avatarUrl = await uploadAvatar(localUri);
+      
+      // Update user metadata with actual avatar URL
+      await supabase.auth.updateUser({
+        data: {
+          avatar_url: avatarUrl,
+        },
+      });
+    } catch (err) {
+      console.warn('Background avatar upload failed:', err);
+      // Could show a non-blocking toast notification here
     }
   };
 
@@ -140,6 +182,32 @@ const ProfileScreen = ({ navigation }) => {
       .getPublicUrl(fileName);
 
     return publicUrl;
+  };
+
+  /**
+   * Auto-save avatar to Supabase when user picks and crops.
+   * Updates form state and Supabase metadata immediately.
+   */
+  const handleAvatarAutoSave = async (localUri) => {
+    try {
+      // Show success immediately to user
+      setFormData((prev) => ({ ...prev, avatarUri: localUri }));
+      Alert.alert('Success', 'Profile picture updated!', [{ text: 'OK' }]);
+
+      // Upload and update Supabase in background
+      const uploadedUrl = await uploadAvatar(localUri);
+      await supabase.auth.updateUser({
+        data: { avatar_url: uploadedUrl },
+      });
+
+      // Update local state with uploaded URL
+      setFormData((prev) => ({ ...prev, avatarUri: uploadedUrl }));
+    } catch (err) {
+      console.error('Avatar auto-save error:', err);
+      Alert.alert('Error', 'Failed to save profile picture. Please try again.');
+      // Revert form state on error
+      setFormData((prev) => ({ ...prev, avatarUri: user?.avatar_url || null }));
+    }
   };
 
   const handleCancel = () => {
@@ -221,7 +289,7 @@ const ProfileScreen = ({ navigation }) => {
                 username={formData.firstName || 'U'}
                 size={120}
                 editable
-                onImageSelect={(uri) => updateField('avatarUri', uri)}
+                onImageSelectAndUpload={handleAvatarAutoSave}
               />
             </View>
 
@@ -296,6 +364,7 @@ const ProfileScreen = ({ navigation }) => {
                 title="Save Changes"
                 onPress={handleSaveChanges}
                 loading={isSaving}
+                disabled={!hasChanges()}
                 variant="secondary"
                 size="large"
                 style={styles.saveButton}

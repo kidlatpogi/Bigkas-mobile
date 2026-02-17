@@ -24,17 +24,15 @@ import { spacing, borderRadius } from '../../styles/spacing';
  *  1. Circular back-arrow button
  *  2. "New Password" bold title
  *  3. "Create a new, strong password for your account" description
- *  4. Enter old Password field
- *  5. New Password field
- *  6. Confirm New Password field
- *  7. "Save New Password" primary button
- *  8. "Cancel" outlined button
+ *  4. New Password field
+ *  5. Confirm New Password field
+ *  6. "Save New Password" primary button
+ *  7. "Cancel" outlined button
  *
  * @component
  * @param {{ navigation: import('@react-navigation/native').NavigationProp }} props
  */
 const ChangePasswordScreen = ({ navigation }) => {
-  const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState({});
@@ -49,7 +47,6 @@ const ChangePasswordScreen = ({ navigation }) => {
   const handleSaveNewPassword = async () => {
     const newErrors = {};
 
-    if (!oldPassword.trim()) newErrors.oldPassword = 'Old password is required';
     if (!newPassword.trim()) newErrors.newPassword = 'New password is required';
     else if (newPassword.length < 6) newErrors.newPassword = 'Password must be at least 6 characters';
     if (!confirmPassword.trim()) newErrors.confirmPassword = 'Please confirm your new password';
@@ -63,26 +60,22 @@ const ChangePasswordScreen = ({ navigation }) => {
     try {
       setIsSaving(true);
 
-      // Verify old password by re-authenticating
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.email) throw new Error('Unable to verify current user');
-
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: oldPassword,
-      });
-
-      if (signInError) {
-        setErrors({ oldPassword: 'Incorrect current password' });
-        return;
-      }
-
-      // Update password via Supabase
+      // Update password via Supabase (built-in verification)
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword,
       });
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        // Handle specific Supabase errors
+        if (updateError.message?.includes('New password should be different')) {
+          setErrors({ newPassword: 'New password must be different from current password' });
+        } else if (updateError.message?.includes('weak')) {
+          setErrors({ newPassword: 'Password is too weak. Please choose a stronger password.' });
+        } else {
+          throw updateError;
+        }
+        return;
+      }
 
       Alert.alert('Success', 'Your password has been updated successfully.', [
         { text: 'OK', onPress: handleGoBack },
@@ -96,8 +89,7 @@ const ChangePasswordScreen = ({ navigation }) => {
   };
 
   const updateField = (field, value) => {
-    if (field === 'oldPassword') setOldPassword(value);
-    else if (field === 'newPassword') setNewPassword(value);
+    if (field === 'newPassword') setNewPassword(value);
     else if (field === 'confirmPassword') setConfirmPassword(value);
 
     if (errors[field]) {
@@ -134,14 +126,6 @@ const ChangePasswordScreen = ({ navigation }) => {
 
             {/* ── Form ── */}
             <View style={styles.form}>
-              <PasswordField
-                label="Enter old Password"
-                placeholder="Enter old password"
-                value={oldPassword}
-                onChangeText={(v) => updateField('oldPassword', v)}
-                error={errors.oldPassword}
-              />
-
               <PasswordField
                 label="New Password"
                 placeholder="Enter new password"

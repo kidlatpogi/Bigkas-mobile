@@ -105,11 +105,12 @@ const RegisterScreen = ({ navigation }) => {
       >
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <View style={styles.contentWrap}>
-            <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
-              <Ionicons name="arrow-back" size={24} color={colors.black} />
-            </TouchableOpacity>
-
-            <BrandLogo style={styles.logo} />
+            <View style={styles.topBar}>
+              <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
+                <Ionicons name="arrow-back" size={24} color={colors.black} />
+              </TouchableOpacity>
+              <BrandLogo style={styles.headerLogo} />
+            </View>
 
             <Typography variant="h1" style={styles.title}>
               Create
@@ -238,10 +239,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+  },
+  headerLogo: {
+    marginBottom: 0,
   },
   logo: {
-    alignSelf: 'center',
     marginBottom: spacing.lg,
   },
   title: {
