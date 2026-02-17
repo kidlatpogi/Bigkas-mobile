@@ -97,6 +97,7 @@ const PracticeScreen = ({ navigation }) => {
       scriptId: script.id,
       focusMode: 'free',
       scriptType: 'prewritten',
+      autoStart: true,
     });
   };
 

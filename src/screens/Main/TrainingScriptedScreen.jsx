@@ -58,7 +58,7 @@ const { width: screenWidth } = Dimensions.get('window');
  */
 const TrainingScriptedScreen = ({ navigation, route }) => {
   // Route params
-  const { scriptId, focusMode } = route?.params || {};
+  const { scriptId, focusMode, autoStart } = route?.params || {};
 
   // Script state
   const [scriptData, setScriptData] = useState(null);
@@ -98,6 +98,7 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
   const audioLevelRefs = useRef([]);
   const recordingTimerRef = useRef(null);
   const countdownTimerRef = useRef(null);
+  const hasAutoStartedRef = useRef(false);
 
   // Scroll ref for teleprompter
   const scrollViewRef = React.useRef(null);
@@ -153,6 +154,15 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
     }
     return () => clearTimeout(countdownTimerRef.current);
   }, [showCountdown, countdownValue]);
+
+  // Auto-start countdown when arriving from a start action
+  useEffect(() => {
+    if (!autoStart) return;
+    if (hasAutoStartedRef.current) return;
+    if (isRecording || showCountdown || isLoadingScript) return;
+    hasAutoStartedRef.current = true;
+    handleStartCountdown();
+  }, [autoStart, isRecording, showCountdown, isLoadingScript]);
 
   // Recording duration timer effect
   useEffect(() => {
@@ -334,15 +344,28 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Camera Feed (Top Right) */}
-      {hasCamera && cameraPermission && (
-        <View style={styles.cameraContainer}>
+      {/* Main Content + Camera Background */}
+      <View style={styles.mainArea}>
+        {hasCamera && cameraPermission && (
           <CameraView
             ref={setCameraRef}
-            style={styles.cameraFeed}
+            style={styles.cameraBackground}
             facing="front"
-            autofocus="on"
           />
+        )}
+
+        {/* User Camera Photo Display */}
+        {cameraUri && (
+          <View style={styles.photoContainer}>
+            <Image
+              source={{ uri: cameraUri }}
+              style={styles.userPhoto}
+              resizeMode="cover"
+            />
+          </View>
+        )}
+
+        {hasCamera && cameraPermission && (
           <TouchableOpacity
             style={styles.cameraButton}
             onPress={handleCaptureCameraPhoto}
@@ -350,22 +373,9 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
           >
             <Ionicons name="camera" size={16} color={colors.white} />
           </TouchableOpacity>
-        </View>
-      )}
+        )}
 
-      {/* User Camera Photo Display */}
-      {cameraUri && (
-        <View style={styles.photoContainer}>
-          <Image
-            source={{ uri: cameraUri }}
-            style={styles.userPhoto}
-            resizeMode="cover"
-          />
-        </View>
-      )}
-
-      {/* Main Content */}
-      <View style={styles.content}>
+        <View style={styles.content}>
         {/* Title */}
         <Typography variant="h1" align="center" style={styles.title}>
           Training
@@ -398,32 +408,23 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
             showsVerticalScrollIndicator={false}
           >
             {/* Render script with highlighted words */}
-            {isRecording && !isPaused ? (
-              <View>
-                {scriptData?.body.split(/\s+/).map((word, idx) => (
-                  <Text
-                    key={idx}
-                    style={[
-                      styles.scriptWord,
-                      { fontSize },
-                      idx < highlightedWordIndex && styles.scriptWordPassed,
-                      idx === highlightedWordIndex && styles.scriptWordCurrent,
-                      idx > highlightedWordIndex && styles.scriptWordFuture,
-                    ]}
-                  >
-                    {word}{' '}
-                  </Text>
-                ))}
-              </View>
-            ) : (
-              <Typography
-                variant="body"
-                color="textSecondary"
-                style={[styles.scriptBody, { fontSize }]}
-              >
-                {scriptData?.body}
-              </Typography>
-            )}
+            <Text style={[styles.scriptBody, { fontSize }]}>
+              {scriptData?.body.split(/\s+/).map((word, idx) => (
+                <Text
+                  key={idx}
+                  style={[
+                    styles.scriptWord,
+                    { fontSize },
+                    isRecording && !isPaused && idx < highlightedWordIndex && styles.scriptWordPassed,
+                    isRecording && !isPaused && idx === highlightedWordIndex && styles.scriptWordCurrent,
+                    isRecording && !isPaused && idx > highlightedWordIndex && styles.scriptWordFuture,
+                    !isRecording && styles.scriptWordFuture,
+                  ]}
+                >
+                  {word}{' '}
+                </Text>
+              ))}
+            </Text>
           </ScrollView>
         )}
 
@@ -521,6 +522,7 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
               Restart
             </Typography>
           </TouchableOpacity>
+        </View>
         </View>
       </View>
 
@@ -749,31 +751,24 @@ const styles = StyleSheet.create({
   },
 
   // Camera styles
-  cameraContainer: {
-    position: 'absolute',
-    top: 60,
-    right: 16,
-    width: 100,
-    height: 100,
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: colors.primary,
-    zIndex: 10,
-  },
-  cameraFeed: {
+  mainArea: {
     flex: 1,
+  },
+  cameraBackground: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.28,
   },
   cameraButton: {
     position: 'absolute',
-    bottom: 8,
-    right: 8,
+    top: 16,
+    right: 16,
     width: 28,
     height: 28,
     borderRadius: borderRadius.full,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 2,
   },
 
   // User photo display (under teleprompter)
@@ -811,7 +806,7 @@ const styles = StyleSheet.create({
   },
   teleprompter: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderRadius: borderRadius.lg,
     marginBottom: spacing.md,
   },

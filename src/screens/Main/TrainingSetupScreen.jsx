@@ -104,6 +104,7 @@ const TrainingSetupScreen = ({ navigation }) => {
         scriptId: selectedScriptId,
         focusMode: selectedFocus,
         scriptType: selectedScriptType,
+        autoStart: true,
       });
     } finally {
       setIsStarting(false);
