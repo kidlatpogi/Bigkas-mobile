@@ -120,8 +120,7 @@ const PracticeScreen = ({ navigation }) => {
             Practice{"\n"}Setup
           </Typography>
           <Typography variant="body" weight="medium" color="textSecondary" style={styles.subtitle}>
-            Choose one of these pre-written speech or{"\n"}
-            generate your own to start.
+            Choose one of these pre-written speech or generate your own to start.
           </Typography>
 
           {/* Tabs */}

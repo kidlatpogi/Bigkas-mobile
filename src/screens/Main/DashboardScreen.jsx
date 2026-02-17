@@ -158,7 +158,7 @@ const DashboardScreen = ({ navigation }) => {
   }, [navigation]);
 
   const handleStartTraining = useCallback(() => {
-    navigation.navigate('Practice');
+    navigation.navigate('TrainingSetup');
   }, [navigation]);
 
   /* --------------- derived display values --------------- */
