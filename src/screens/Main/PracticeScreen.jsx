@@ -91,8 +91,13 @@ const PracticeScreen = ({ navigation }) => {
   };
 
   const handleScriptPress = (script) => {
-    // TODO: Navigate to practice session with selected script.
+    // Navigate to training scripted screen for practice
     console.info('Selected script:', script?.id);
+    navigation.navigate('TrainingScripted', {
+      scriptId: script.id,
+      focusMode: 'free',
+      scriptType: 'prewritten',
+    });
   };
 
   const handleOpenGenerate = () => {

@@ -98,9 +98,13 @@ const TrainingSetupScreen = ({ navigation }) => {
     }
     setIsStarting(true);
     try {
-      // TODO: Fetch selected script from Supabase and navigate to practice/training session with it.
+      // Navigate to TrainingScripted screen with script ID and focus mode
       console.info('Start training', { selectedScriptId, selectedFocus, selectedScriptType });
-      // TODO: navigation.navigate('TrainingSession', { scriptId: selectedScriptId, focusMode: selectedFocus });
+      navigation.navigate('TrainingScripted', {
+        scriptId: selectedScriptId,
+        focusMode: selectedFocus,
+        scriptType: selectedScriptType,
+      });
     } finally {
       setIsStarting(false);
     }

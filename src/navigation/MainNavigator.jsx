@@ -6,6 +6,7 @@ import EditProfileScreen from '../screens/Main/EditProfileScreen';
 import PracticeScreen from '../screens/Main/PracticeScreen';
 import GenerateScriptScreen from '../screens/Main/GenerateScriptScreen';
 import TrainingSetupScreen from '../screens/Main/TrainingSetupScreen';
+import TrainingScriptedScreen from '../screens/Main/TrainingScriptedScreen';
 import HistoryScreen from '../screens/Main/HistoryScreen';
 import AllSessionsScreen from '../screens/Main/AllSessionsScreen';
 import ScriptEditorScreen from '../screens/Main/ScriptEditorScreen';
@@ -29,6 +30,7 @@ const MainNavigator = () => {
       <Stack.Screen name="Practice" component={PracticeScreen} />
       <Stack.Screen name="GenerateScript" component={GenerateScriptScreen} />
       <Stack.Screen name="TrainingSetup" component={TrainingSetupScreen} />
+      <Stack.Screen name="TrainingScripted" component={TrainingScriptedScreen} />
       <Stack.Screen name="History" component={HistoryScreen} />
       <Stack.Screen name="AllSessions" component={AllSessionsScreen} />
       <Stack.Screen name="ScriptEditor" component={ScriptEditorScreen} />
