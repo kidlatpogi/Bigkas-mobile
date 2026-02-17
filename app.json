@@ -12,6 +12,21 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Bigkas to access your camera for video recording during training sessions.",
+          "photosPermission": "Allow Bigkas to save photos from the camera."
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow Bigkas to access your microphone for recording your training voice."
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": true
     },
