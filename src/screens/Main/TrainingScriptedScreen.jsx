@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Camera } from 'expo-camera';
+import { Camera, CameraType } from 'expo-camera';
 import { Audio } from 'expo-audio';
 import Typography from '../../components/common/Typography';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -340,8 +340,8 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
           <Camera
             ref={setCameraRef}
             style={styles.cameraFeed}
-            type={Camera.Constants.Type.front}
-            autoFocus={Camera.Constants.AutoFocus.on}
+            type={CameraType.front}
+            autoFocus="on"
           />
           <TouchableOpacity
             style={styles.cameraButton}
