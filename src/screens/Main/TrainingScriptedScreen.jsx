@@ -58,8 +58,9 @@ const { width: screenWidth } = Dimensions.get('window');
  */
 const TrainingScriptedScreen = ({ navigation, route }) => {
   // Route params
-  const { scriptId, focusMode, autoStart } = route?.params || {};
+  const { scriptId, focusMode, autoStart, entryPoint } = route?.params || {};
   const isFreeMode = focusMode === 'free';
+  const resultMode = entryPoint === 'practice' ? 'practice' : 'training';
 
   // Script state
   const [scriptData, setScriptData] = useState(null);
@@ -301,6 +302,7 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
         pitchStability: 'GOOD',
         paceWpm: 145,
         paceRating: 'NEEDS WORK',
+        resultMode,
       });
     } else {
       // Start countdown

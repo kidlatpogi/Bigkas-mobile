@@ -34,6 +34,7 @@ const TrainingSetupScreen = ({ navigation }) => {
   const [selectedFocus, setSelectedFocus] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
+  const isFreeFocus = selectedFocus === 'free';
 
   useEffect(() => {
     const loadScripts = async () => {
@@ -83,13 +84,6 @@ const TrainingSetupScreen = ({ navigation }) => {
     setSelectedScriptId(scriptDropdownOptions[0].value);
   }, [selectedFocus, selectedScriptType, selectedScriptId, scriptDropdownOptions]);
 
-  useEffect(() => {
-    if (selectedFocus !== 'accuracy') return;
-    if (selectedScriptId) return;
-    if (scriptDropdownOptions.length === 0) return;
-    setSelectedScriptId(scriptDropdownOptions[0].value);
-  }, [selectedFocus, selectedScriptId, scriptDropdownOptions]);
-
   const handleGoBack = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
@@ -120,6 +114,7 @@ const TrainingSetupScreen = ({ navigation }) => {
       const params = {
         focusMode: selectedFocus,
         autoStart: true,
+        entryPoint: 'training',
       };
       if (selectedFocus === 'accuracy') {
         params.scriptId = selectedScriptId;
@@ -207,15 +202,25 @@ const TrainingSetupScreen = ({ navigation }) => {
             </>
           ) : (
             <>
-              <Typography variant="caption" color="textSecondary" weight="medium" style={styles.selectorLabel}>
+              <Typography
+                variant="caption"
+                color="textSecondary"
+                weight="medium"
+                style={[styles.selectorLabel, isFreeFocus && styles.selectorLabelDisabled]}
+              >
                 Selected from your library
               </Typography>
-              <Dropdown
-                value={selectedScriptId}
-                options={scriptDropdownOptions}
-                onSelect={setSelectedScriptId}
-                placeholder="Choose a script..."
-              />
+              <View
+                style={[styles.dropdownWrap, isFreeFocus && styles.dropdownDisabled]}
+                pointerEvents={isFreeFocus ? 'none' : 'auto'}
+              >
+                <Dropdown
+                  value={selectedScriptId}
+                  options={scriptDropdownOptions}
+                  onSelect={setSelectedScriptId}
+                  placeholder="Choose a script..."
+                />
+              </View>
             </>
           )}
 
@@ -339,6 +344,15 @@ const styles = StyleSheet.create({
   selectorLabel: {
     marginTop: spacing.sm,
     marginBottom: spacing.xs,
+  },
+  selectorLabelDisabled: {
+    opacity: 0.5,
+  },
+  dropdownWrap: {
+    width: '100%',
+  },
+  dropdownDisabled: {
+    opacity: 0.5,
   },
   focusTitle: {
     marginTop: spacing.lg,

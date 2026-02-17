@@ -15,6 +15,7 @@ const SessionResultScreen = ({ route, navigation }) => {
     pitchStability = 'GOOD',
     paceWpm = 145,
     paceRating = 'NEEDS WORK',
+    resultMode = 'training',
   } = route.params || {};
 
   const waveBars = [
@@ -30,6 +31,10 @@ const SessionResultScreen = ({ route, navigation }) => {
   };
 
   const handlePracticeAgain = () => {
+    if (resultMode === 'practice') {
+      navigation.navigate('Practice');
+      return;
+    }
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
@@ -39,6 +44,47 @@ const SessionResultScreen = ({ route, navigation }) => {
 
   const handleCancel = () => {
     navigation.navigate('Dashboard');
+  };
+
+  const handleViewDetailedFeedback = () => {
+    navigation.navigate('DetailedFeedback', {
+      resultMode,
+      timelinePoints: [
+        { time: '1:00', value: 32 },
+        { time: '2:00', value: 62 },
+        { time: '3:00', value: 38 },
+        { time: '4:00', value: 52 },
+      ],
+      eyeContact: { score: 67, status: 'MAINTAINED', note: 'Focus needs more practice' },
+      bodyGestures: { status: 'GOOD', note: 'Natural hand movements detected' },
+      voice: { status: 'EXCELLENT', note: 'Pronunciation and diction are improving' },
+      feedbackItems: [
+        {
+          title: 'Strong Eye Contact',
+          time: '0:12',
+          body: 'Excellent start. You maintained direct eye contact with the camera during your entire opening statement.',
+          tone: 'primary',
+        },
+        {
+          title: 'Confident Vocal Energy',
+          time: '0:18',
+          body: 'Great enthusiasm. You projected your voice clearly and kept your tone engaging throughout the key points.',
+          tone: 'info',
+        },
+        {
+          title: 'Clear Pace and Pauses',
+          time: '0:24',
+          body: 'You slowed down on important ideas and used brief pauses, which made your message easier to follow.',
+          tone: 'warning',
+        },
+        {
+          title: 'Effective Hand Gestures',
+          time: '0:31',
+          body: 'You used open palms while explaining core concept. This helped emphasize your points naturally.',
+          tone: 'primary',
+        },
+      ],
+    });
   };
 
   return (
@@ -112,12 +158,16 @@ const SessionResultScreen = ({ route, navigation }) => {
           </Typography>
         </Card>
 
-        <TouchableOpacity style={styles.detailLink} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.detailLink} activeOpacity={0.7} onPress={handleViewDetailedFeedback}>
           <Typography variant="bodySmall" color="textSecondary">View Detailed Feedback</Typography>
           <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
         </TouchableOpacity>
 
-        <PrimaryButton title="Practice Again" onPress={handlePracticeAgain} style={styles.primaryButton} />
+        <PrimaryButton
+          title={resultMode === 'training' ? 'Train Again' : 'Practice Again'}
+          onPress={handlePracticeAgain}
+          style={styles.primaryButton}
+        />
         <PrimaryButton title="Cancel" onPress={handleCancel} variant="outline" style={styles.secondaryButton} />
       </ScrollView>
     </SafeAreaView>

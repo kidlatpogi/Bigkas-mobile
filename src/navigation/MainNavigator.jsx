@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SessionDetailScreen from '../screens/Session/SessionDetailScreen';
 import SessionResultScreen from '../screens/Session/SessionResultScreen';
+import DetailedFeedbackScreen from '../screens/Session/DetailedFeedbackScreen';
 import EditProfileScreen from '../screens/Main/EditProfileScreen';
 import PracticeScreen from '../screens/Main/PracticeScreen';
 import GenerateScriptScreen from '../screens/Main/GenerateScriptScreen';
@@ -47,9 +48,14 @@ const MainNavigator = () => {
         name="SessionResult"
         component={SessionResultScreen}
         options={{
-          headerShown: true,
-          headerTitle: 'Results',
-          headerBackTitle: 'Back',
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="DetailedFeedback"
+        component={DetailedFeedbackScreen}
+        options={{
+          headerShown: false,
         }}
       />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
