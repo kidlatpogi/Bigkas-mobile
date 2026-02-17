@@ -64,6 +64,12 @@ const LoginScreen = ({ navigation }) => {
     Alert.alert('Forgot Password', 'Password reset will be available soon.');
   };
 
+  const handleGoBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -72,7 +78,15 @@ const LoginScreen = ({ navigation }) => {
       >
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <View style={styles.contentWrap}>
-            <BrandLogo style={styles.logo} />
+            <View style={styles.topBar}>
+              <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
+                <Ionicons name="arrow-back" size={24} color={colors.black} />
+              </TouchableOpacity>
+              <View style={styles.logoContainer}>
+                <BrandLogo style={styles.headerLogo} />
+              </View>
+              <View style={styles.spacer} />
+            </View>
 
             <Typography variant="h1" style={styles.title}>
               Login
@@ -179,6 +193,29 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     alignSelf: 'center',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  logoContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  spacer: {
+    width: 40,
+  },
+  headerLogo: {
+    marginBottom: 0,
   },
   logo: {
     alignSelf: 'center',
