@@ -5,9 +5,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TouchableOpacity,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import Typography from '../../components/common/Typography';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import BrandLogo from '../../components/common/BrandLogo';
@@ -64,12 +66,6 @@ const LoginScreen = ({ navigation }) => {
     Alert.alert('Forgot Password', 'Password reset will be available soon.');
   };
 
-  const handleGoBack = () => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -78,14 +74,8 @@ const LoginScreen = ({ navigation }) => {
       >
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <View style={styles.contentWrap}>
-            <View style={styles.topBar}>
-              <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
-                <Ionicons name="arrow-back" size={24} color={colors.black} />
-              </TouchableOpacity>
-              <View style={styles.logoContainer}>
-                <BrandLogo style={styles.headerLogo} />
-              </View>
-              <View style={styles.spacer} />
+            <View style={styles.logoWrapper}>
+              <BrandLogo style={styles.logo} />
             </View>
 
             <Typography variant="h1" style={styles.title}>
@@ -193,6 +183,10 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     alignSelf: 'center',
+  },
+  logoWrapper: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
   },
   backButton: {
     width: 40,
