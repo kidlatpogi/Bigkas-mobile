@@ -109,7 +109,10 @@ const RegisterScreen = ({ navigation }) => {
               <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
                 <Ionicons name="arrow-back" size={24} color={colors.black} />
               </TouchableOpacity>
-              <BrandLogo style={styles.headerLogo} />
+              <View style={styles.logoContainer}>
+                <BrandLogo style={styles.headerLogo} />
+              </View>
+              <View style={styles.spacer} />
             </View>
 
             <Typography variant="h1" style={styles.title}>
@@ -243,8 +246,14 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     marginBottom: spacing.lg,
+  },
+  logoContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  spacer: {
+    width: 40,
   },
   headerLogo: {
     marginBottom: 0,
