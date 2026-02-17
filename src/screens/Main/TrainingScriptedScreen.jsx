@@ -292,8 +292,16 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
     if (isRecording) {
       // Stop recording
       setIsRecording(false);
+      setIsPaused(false);
       // TODO: Upload audio to Supabase with scriptId + focusMode.
       console.info('Stop recording', { scriptId, focusMode, duration: recordingDuration });
+      navigation.navigate('SessionResult', {
+        confidenceScore: 72,
+        summary: 'Great effort! You\'re consistently improving your delivery.',
+        pitchStability: 'GOOD',
+        paceWpm: 145,
+        paceRating: 'NEEDS WORK',
+      });
     } else {
       // Start countdown
       handleStartCountdown();

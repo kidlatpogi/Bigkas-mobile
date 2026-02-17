@@ -71,6 +71,25 @@ const TrainingSetupScreen = ({ navigation }) => {
     []
   );
 
+  useEffect(() => {
+    if (selectedFocus !== 'accuracy') return;
+    if (selectedScriptType !== 'prewritten') {
+      setSelectedScriptType('prewritten');
+      setSelectedScriptId('');
+      return;
+    }
+    if (selectedScriptId) return;
+    if (scriptDropdownOptions.length === 0) return;
+    setSelectedScriptId(scriptDropdownOptions[0].value);
+  }, [selectedFocus, selectedScriptType, selectedScriptId, scriptDropdownOptions]);
+
+  useEffect(() => {
+    if (selectedFocus !== 'accuracy') return;
+    if (selectedScriptId) return;
+    if (scriptDropdownOptions.length === 0) return;
+    setSelectedScriptId(scriptDropdownOptions[0].value);
+  }, [selectedFocus, selectedScriptId, scriptDropdownOptions]);
+
   const handleGoBack = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
