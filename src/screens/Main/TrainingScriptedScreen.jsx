@@ -94,6 +94,12 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
   // WPM highlighting state
   const [highlightedWordIndex, setHighlightedWordIndex] = useState(0);
 
+  // Memoize words array so it doesn't re-split on every render
+  const scriptWords = useMemo(() => {
+    if (!scriptData?.body) return [];
+    return scriptData.body.split(/\s+/);
+  }, [scriptData]);
+
   // Audio effect refs
   const audioLevelRefs = useRef([]);
   const recordingTimerRef = useRef(null);
@@ -201,15 +207,12 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
 
   // WPM highlighting effect - update highlighted word based on WPM and recording time
   useEffect(() => {
-    if (isRecording && !isPaused && scriptData) {
-      const words = scriptData.body.split(/\s+/);
-      // Calculate words elapsed based on WPM and recording duration
-      // WPM / 60 = words per second
+    if (isRecording && !isPaused && scriptWords.length > 0) {
       const wordsPerSecond = wpm / 60;
       const wordsElapsed = Math.floor(recordingDuration * wordsPerSecond);
-      setHighlightedWordIndex(Math.min(wordsElapsed, words.length - 1));
+      setHighlightedWordIndex(Math.min(wordsElapsed, scriptWords.length - 1));
     }
-  }, [recordingDuration, wpm, isRecording, isPaused, scriptData]);
+  }, [recordingDuration, wpm, isRecording, isPaused, scriptWords]);
 
   const handleGoBack = () => {
     if (navigation.canGoBack()) {
@@ -408,13 +411,13 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
             showsVerticalScrollIndicator={false}
           >
             {/* Render script with highlighted words */}
-            <Text style={[styles.scriptBody, { fontSize }]}>
-              {scriptData?.body.split(/\s+/).map((word, idx) => (
+            <Text style={[styles.scriptBody, { fontSize, lineHeight: fontSize * 1.8 }]}>
+              {scriptWords.map((word, idx) => (
                 <Text
-                  key={idx}
+                  key={`${idx}-${word}`}
                   style={[
                     styles.scriptWord,
-                    { fontSize },
+                    { fontSize, lineHeight: fontSize * 1.8 },
                     isRecording && !isPaused && idx < highlightedWordIndex && styles.scriptWordPassed,
                     isRecording && !isPaused && idx === highlightedWordIndex && styles.scriptWordCurrent,
                     isRecording && !isPaused && idx > highlightedWordIndex && styles.scriptWordFuture,
@@ -753,10 +756,16 @@ const styles = StyleSheet.create({
   // Camera styles
   mainArea: {
     flex: 1,
+    position: 'relative',
+    overflow: 'hidden',
   },
   cameraBackground: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.28,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
   },
   cameraButton: {
     position: 'absolute',
@@ -790,6 +799,8 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
+    backgroundColor: 'transparent',
+    zIndex: 1,
   },
   title: {
     marginBottom: spacing.md,
@@ -806,7 +817,7 @@ const styles = StyleSheet.create({
   },
   teleprompter: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.75)',
     borderRadius: borderRadius.lg,
     marginBottom: spacing.md,
   },
@@ -814,11 +825,10 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   scriptBody: {
-    lineHeight: 24,
     textAlign: 'left',
+    flexWrap: 'wrap',
   },
   scriptWord: {
-    lineHeight: 24,
     textAlign: 'left',
     color: colors.textSecondary,
   },
@@ -828,7 +838,7 @@ const styles = StyleSheet.create({
   scriptWordCurrent: {
     backgroundColor: colors.primary,
     color: colors.black,
-    fontWeight: 'bold',
+    borderRadius: 2,
   },
   scriptWordFuture: {
     color: colors.textSecondary,
