@@ -58,6 +58,7 @@ const { width: screenWidth } = Dimensions.get('window');
 const TrainingScriptedScreen = ({ navigation, route }) => {
   // Route params
   const { scriptId, focusMode, autoStart } = route?.params || {};
+  const isFreeMode = focusMode === 'free';
 
   // Script state
   const [scriptData, setScriptData] = useState(null);
@@ -121,6 +122,11 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
 
   // Load script on mount
   useEffect(() => {
+    if (isFreeMode) {
+      setScriptData(null);
+      setIsLoadingScript(false);
+      return;
+    }
     const loadScript = async () => {
       setIsLoadingScript(true);
       try {
@@ -141,7 +147,7 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
     };
 
     loadScript();
-  }, [scriptId]);
+  }, [scriptId, isFreeMode]);
 
   // Countdown timer effect
   useEffect(() => {
@@ -164,10 +170,10 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
   useEffect(() => {
     if (!autoStart) return;
     if (hasAutoStartedRef.current) return;
-    if (isRecording || showCountdown || isLoadingScript) return;
+    if (isRecording || showCountdown || (!isFreeMode && isLoadingScript)) return;
     hasAutoStartedRef.current = true;
     handleStartCountdown();
-  }, [autoStart, isRecording, showCountdown, isLoadingScript]);
+  }, [autoStart, isRecording, showCountdown, isLoadingScript, isFreeMode]);
 
   // Recording duration timer effect
   useEffect(() => {
@@ -334,16 +340,18 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
         </TouchableOpacity>
 
         <Typography variant="bodySmall" color="textSecondary" style={styles.scriptTitle}>
-          {scriptData?.title || 'Loading...'}
+          {isFreeMode ? 'Free Speech' : scriptData?.title || 'Loading...'}
         </Typography>
 
-        <TouchableOpacity
-          style={styles.settingsButton}
-          onPress={handleOpenSettings}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="settings" size={22} color={colors.black} />
-        </TouchableOpacity>
+        {!isFreeMode && (
+          <TouchableOpacity
+            style={styles.settingsButton}
+            onPress={handleOpenSettings}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="settings" size={22} color={colors.black} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Main Content */}
@@ -366,7 +374,7 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
         )}
 
         {/* Teleprompter Script Area */}
-        {isLoadingScript ? (
+        {isLoadingScript && !isFreeMode ? (
           <View style={styles.loadingWrap}>
             <Typography variant="body" color="textSecondary">
               Loading script...
@@ -376,7 +384,12 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
           <View style={styles.teleprompterCameraWrap}>
             {/* Camera Feed as background */}
             {hasCamera && cameraPermission && (
-              <View style={styles.cameraContainer}>
+              <View
+                style={[
+                  styles.cameraContainer,
+                  isFreeMode && styles.cameraContainerFull,
+                ]}
+              >
                 <CameraView
                   ref={setCameraRef}
                   style={styles.cameraFeed}
@@ -386,30 +399,32 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
             )}
 
             {/* Teleprompter text overlay on top of camera */}
-            <ScrollView
-              ref={scrollViewRef}
-              style={styles.teleprompter}
-              contentContainerStyle={styles.teleprompterContent}
-              showsVerticalScrollIndicator={false}
-            >
-              <Text style={[styles.scriptBody, { fontSize, lineHeight: fontSize * 1.8 }]}>
-                {scriptWords.map((word, idx) => (
-                  <Text
-                    key={`${idx}-${word}`}
-                    style={[
-                      styles.scriptWord,
-                      { fontSize, lineHeight: fontSize * 1.8 },
-                      isRecording && !isPaused && idx < highlightedWordIndex && styles.scriptWordPassed,
-                      isRecording && !isPaused && idx === highlightedWordIndex && styles.scriptWordCurrent,
-                      isRecording && !isPaused && idx > highlightedWordIndex && styles.scriptWordFuture,
-                      !isRecording && styles.scriptWordFuture,
-                    ]}
-                  >
-                    {word}{' '}
-                  </Text>
-                ))}
-              </Text>
-            </ScrollView>
+            {!isFreeMode && (
+              <ScrollView
+                ref={scrollViewRef}
+                style={styles.teleprompter}
+                contentContainerStyle={styles.teleprompterContent}
+                showsVerticalScrollIndicator={false}
+              >
+                <Text style={[styles.scriptBody, { fontSize, lineHeight: fontSize * 1.8 }]}>
+                  {scriptWords.map((word, idx) => (
+                    <Text
+                      key={`${idx}-${word}`}
+                      style={[
+                        styles.scriptWord,
+                        { fontSize, lineHeight: fontSize * 1.8 },
+                        isRecording && !isPaused && idx < highlightedWordIndex && styles.scriptWordPassed,
+                        isRecording && !isPaused && idx === highlightedWordIndex && styles.scriptWordCurrent,
+                        isRecording && !isPaused && idx > highlightedWordIndex && styles.scriptWordFuture,
+                        !isRecording && styles.scriptWordFuture,
+                      ]}
+                    >
+                      {word}{' '}
+                    </Text>
+                  ))}
+                </Text>
+              </ScrollView>
+            )}
           </View>
         )}
 
@@ -738,6 +753,9 @@ const styles = StyleSheet.create({
   cameraContainer: {
     ...StyleSheet.absoluteFillObject,
     opacity: 0.45,
+  },
+  cameraContainerFull: {
+    opacity: 1,
   },
   cameraFeed: {
     flex: 1,
