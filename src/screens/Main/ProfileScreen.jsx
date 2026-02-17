@@ -15,6 +15,7 @@ import PrimaryButton from '../../components/common/PrimaryButton';
 import TextField from '../../components/common/TextField';
 import AvatarPicker from '../../components/common/AvatarPicker';
 import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../api/supabaseClient';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 
@@ -37,17 +38,18 @@ import { spacing, borderRadius } from '../../styles/spacing';
  * @param {{ navigation: import('@react-navigation/native').NavigationProp }} props
  */
 const ProfileScreen = ({ navigation }) => {
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout, isLoading, updateNickname } = useAuth();
 
-  /** @type {[{firstName:string,lastName:string,email:string,avatarUri:string|null}, Function]} */
   const [formData, setFormData] = useState({
     firstName: user?.name?.split(' ')[0] || '',
     lastName: user?.name?.split(' ').slice(1).join(' ') || '',
+    nickname: user?.nickname || '',
     email: user?.email || '',
     avatarUri: user?.avatar_url || null,
   });
 
   const [errors, setErrors] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
 
   /** Update a single form field and clear its error. */
   const updateField = (field, value) => {
@@ -57,7 +59,7 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
-  /** Validate & save — wired for Supabase profile update. */
+  /** Validate & save profile to Supabase. */
   const handleSaveChanges = async () => {
     const newErrors = {};
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
@@ -68,17 +70,84 @@ const ProfileScreen = ({ navigation }) => {
       return;
     }
 
-    // TODO: Wire Supabase profile update when backend is ready
-    Alert.alert('Success', 'Profile updated successfully!', [
-      { text: 'OK' },
-    ]);
+    try {
+      setIsSaving(true);
+
+      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+
+      // Upload avatar if changed (local URI means new pick)
+      let avatarUrl = formData.avatarUri;
+      if (formData.avatarUri && formData.avatarUri !== user?.avatar_url && formData.avatarUri.startsWith('file')) {
+        avatarUrl = await uploadAvatar(formData.avatarUri);
+      }
+
+      // Update Supabase user metadata
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+          full_name: fullName,
+          nickname: formData.nickname.trim() || null,
+          avatar_url: avatarUrl,
+        },
+      });
+
+      if (updateError) throw updateError;
+
+      // Also update nickname via context so local state stays in sync
+      if (formData.nickname.trim()) {
+        await updateNickname(formData.nickname.trim());
+      }
+
+      Alert.alert('Success', 'Profile updated successfully!', [
+        { text: 'OK' },
+      ]);
+    } catch (err) {
+      console.error('Profile save error:', err);
+      Alert.alert('Error', err.message || 'Failed to update profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  /**
+   * Upload avatar image to Supabase Storage.
+   * @param {string} localUri - Local file URI from image picker
+   * @returns {Promise<string>} Public URL of uploaded avatar
+   */
+  const uploadAvatar = async (localUri) => {
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (!currentUser) throw new Error('Not authenticated');
+
+    const fileExt = localUri.split('.').pop() || 'jpg';
+    const fileName = `${currentUser.id}/avatar.${fileExt}`;
+
+    // Fetch file as blob
+    const response = await fetch(localUri);
+    const blob = await response.blob();
+
+    // Convert blob to ArrayBuffer for Supabase upload
+    const arrayBuffer = await new Response(blob).arrayBuffer();
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, arrayBuffer, {
+        contentType: `image/${fileExt}`,
+        upsert: true,
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
   };
 
   const handleCancel = () => {
-    // Reset form to initial values
     setFormData({
       firstName: user?.name?.split(' ')[0] || '',
       lastName: user?.name?.split(' ').slice(1).join(' ') || '',
+      nickname: user?.nickname || '',
       email: user?.email || '',
       avatarUri: user?.avatar_url || null,
     });
@@ -94,7 +163,7 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleChangePassword = () => {
-    Alert.alert('Change Password', 'Password change flow will be available soon.');
+    navigation.navigate('ChangePassword');
   };
 
   const handleAccountSettings = () => {
@@ -195,6 +264,16 @@ const ProfileScreen = ({ navigation }) => {
                 error={errors.email}
               />
 
+              {/* Nickname */}
+              <TextField
+                label="NICKNAME"
+                placeholder="Enter your nickname"
+                value={formData.nickname}
+                onChangeText={(v) => updateField('nickname', v)}
+                autoCapitalize="words"
+                error={errors.nickname}
+              />
+
               {/* Change Password */}
               <TouchableOpacity style={styles.settingRow} onPress={handleChangePassword}>
                 <Typography variant="body" style={styles.settingLabel}>
@@ -217,7 +296,7 @@ const ProfileScreen = ({ navigation }) => {
               <PrimaryButton
                 title="Save Changes"
                 onPress={handleSaveChanges}
-                loading={isLoading}
+                loading={isSaving}
                 variant="secondary"
                 size="large"
                 style={styles.saveButton}
