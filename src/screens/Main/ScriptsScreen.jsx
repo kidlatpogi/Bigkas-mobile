@@ -119,7 +119,11 @@ const ScriptsScreen = ({ navigation }) => {
   }, [scripts, filterType]);
 
   const handleGoBack = () => {
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Dashboard');
+    }
   };
 
   const handleWriteScript = () => {

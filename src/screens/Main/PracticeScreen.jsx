@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import Typography from '../../components/common/Typography';
 import Card from '../../components/common/Card';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -8,7 +9,7 @@ import AudioRecordButton from '../../components/audio/AudioRecordButton';
 import AudioLevelIndicator from '../../components/audio/AudioLevelIndicator';
 import { useSessions } from '../../hooks/useSessions';
 import { colors } from '../../styles/colors';
-import { spacing } from '../../styles/spacing';
+import { spacing, borderRadius } from '../../styles/spacing';
 
 const PracticeScreen = ({ navigation }) => {
   const { practiceWords, fetchPracticeWords, uploadAudio, isLoading } = useSessions();
@@ -26,6 +27,12 @@ const PracticeScreen = ({ navigation }) => {
     text: 'Kumusta',
     translation: 'Hello / How are you?',
     difficulty: 'easy',
+  };
+
+  const handleGoBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
   };
 
   const handleRecordPress = async () => {
@@ -78,13 +85,22 @@ const PracticeScreen = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={handleGoBack}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.black} />
+          </TouchableOpacity>
           <Typography variant="h3" align="center">
             Practice
           </Typography>
-          <Typography variant="bodySmall" color="textSecondary" align="center">
-            Speak the word clearly
-          </Typography>
+          <View style={styles.headerSpacer} />
         </View>
+
+        <Typography variant="bodySmall" color="textSecondary" align="center">
+          Speak the word clearly
+        </Typography>
 
         {/* Word Card */}
         <Card style={styles.wordCard}>
@@ -175,7 +191,21 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: spacing.md,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerSpacer: {
+    width: 40,
   },
   wordCard: {
     padding: spacing.lg,

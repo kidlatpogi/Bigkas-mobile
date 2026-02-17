@@ -24,7 +24,9 @@ const SessionDetailScreen = ({ route, navigation }) => {
   }, [sessionId, fetchSessionById, clearCurrentSession]);
 
   const handleGoBack = () => {
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
   };
 
   const handlePracticeAgain = () => {

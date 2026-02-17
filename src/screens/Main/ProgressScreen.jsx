@@ -152,7 +152,11 @@ const ProgressScreen = ({ navigation }) => {
   }, [sessions]);
 
   const handleGoBack = () => {
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Dashboard');
+    }
   };
 
   const handleSessionPress = (sessionId) => {

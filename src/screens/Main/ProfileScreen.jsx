@@ -86,7 +86,11 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleGoBack = () => {
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Dashboard');
+    }
   };
 
   const handleChangePassword = () => {
@@ -133,8 +137,8 @@ const ProfileScreen = ({ navigation }) => {
         >
           <View style={styles.contentWrap}>
             {/* ──── Back button ──── */}
-            <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-              <Ionicons name="arrow-back" size={18} color={colors.textPrimary} />
+            <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
+              <Ionicons name="arrow-back" size={24} color={colors.black} />
             </TouchableOpacity>
 
             {/* ──── Title ──── */}
@@ -260,8 +264,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: borderRadius.full,
-    borderWidth: 1.5,
-    borderColor: colors.borderDark,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,

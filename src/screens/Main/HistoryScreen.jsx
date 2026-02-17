@@ -7,11 +7,12 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import Typography from '../../components/common/Typography';
 import Card from '../../components/common/Card';
 import { useSessions } from '../../hooks/useSessions';
 import { colors } from '../../styles/colors';
-import { spacing } from '../../styles/spacing';
+import { spacing, borderRadius } from '../../styles/spacing';
 import { formatDate, formatScore } from '../../utils/formatters';
 
 const HistoryScreen = ({ navigation }) => {
@@ -26,6 +27,12 @@ const HistoryScreen = ({ navigation }) => {
   useEffect(() => {
     fetchSessions();
   }, [fetchSessions]);
+
+  const handleGoBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  };
 
   const handleRefresh = useCallback(() => {
     fetchSessions(1, true);
@@ -99,7 +106,15 @@ const HistoryScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={handleGoBack}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.black} />
+        </TouchableOpacity>
         <Typography variant="h3">History</Typography>
+        <View style={styles.headerSpacer} />
         <Typography variant="bodySmall" color="textSecondary">
           {sessions.length} session{sessions.length !== 1 ? 's' : ''}
         </Typography>
@@ -134,6 +149,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerSpacer: {
+    width: 40,
   },
   listContent: {
     padding: spacing.sm,

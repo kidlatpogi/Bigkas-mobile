@@ -26,7 +26,9 @@ const SessionResultScreen = ({ route, navigation }) => {
   };
 
   const handleTryAgain = () => {
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
   };
 
   const handleNextWord = () => {
