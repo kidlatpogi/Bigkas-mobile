@@ -85,7 +85,7 @@ const EditProfileScreen = ({ navigation }) => {
   };
 
   const handleAccountSettings = () => {
-    Alert.alert('Account Settings', 'Account settings will be available soon.');
+    navigation.navigate('AccountSettings');
   };
 
   return (

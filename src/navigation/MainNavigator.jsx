@@ -4,6 +4,7 @@ import SessionDetailScreen from '../screens/Session/SessionDetailScreen';
 import SessionResultScreen from '../screens/Session/SessionResultScreen';
 import DetailedFeedbackScreen from '../screens/Session/DetailedFeedbackScreen';
 import EditProfileScreen from '../screens/Main/EditProfileScreen';
+import AccountSettingsScreen from '../screens/Main/AccountSettingsScreen';
 import PracticeScreen from '../screens/Main/PracticeScreen';
 import GenerateScriptScreen from '../screens/Main/GenerateScriptScreen';
 import TrainingSetupScreen from '../screens/Main/TrainingSetupScreen';
@@ -66,6 +67,7 @@ const MainNavigator = () => {
         }}
       />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+      <Stack.Screen name="AccountSettings" component={AccountSettingsScreen} />
       <Stack.Screen name="AudioCameraTest" component={AudioCameraTestScreen} />
     </Stack.Navigator>
   );
