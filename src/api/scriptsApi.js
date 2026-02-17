@@ -34,7 +34,7 @@ export const fetchScripts = async () => {
 
     const { data, error } = await supabase
       .from('scripts')
-      .select('*')
+      .select('id, user_id, title, content, type, created_at, updated_at')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false });
 
@@ -55,7 +55,7 @@ export const fetchScriptById = async (scriptId) => {
   try {
     const { data, error } = await supabase
       .from('scripts')
-      .select('*')
+      .select('id, user_id, title, content, type, created_at, updated_at')
       .eq('id', scriptId)
       .single();
 
@@ -85,7 +85,7 @@ export const createScript = async ({ title, content, type = 'self-authored' }) =
         content,
         type,
       })
-      .select()
+      .select('id, user_id, title, content, type, created_at, updated_at')
       .single();
 
     if (error) throw error;
@@ -108,7 +108,7 @@ export const updateScript = async (scriptId, updates) => {
       .from('scripts')
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', scriptId)
-      .select()
+      .select('id, user_id, title, content, type, created_at, updated_at')
       .single();
 
     if (error) throw error;
