@@ -19,7 +19,8 @@
    - [HistoryScreen](#46-historyscreen)
    - [SessionDetailScreen](#47-sessiondetailscreen)
    - [SessionResultScreen](#48-sessionresultscreen)
-  - [DetailedFeedbackScreen](#481-detailedfeedbackscreen)
+   - [DetailedFeedbackScreen](#481-detailedfeedbackscreen)
+   - [AudioCameraTestScreen](#482-audiocameratestscreen)
    - [ProfileScreen](#49-profilescreen)
    - [EditProfileScreen](#410-editprofilescreen)
    - [ProgressScreen](#411-progressscreen)
@@ -29,6 +30,7 @@
    - [GenerateScriptScreen](#415-generatescriptscreen)
    - [TrainingScriptedScreen](#416-trainingscriptedscreen)
 5. [Reusable Component Props](#5-reusable-component-props)
+5b. [API Modules](#5b-api-modules)
 6. [Utility Functions](#6-utility-functions)
 7. [Navigation Map](#7-navigation-map)
 
@@ -725,13 +727,33 @@ No local state — all data comes from route params.
 | `audioLevel`       | `number`  | `0`           | Current simulated mic level (0–1)     |
 | `cameraReady`      | `boolean` | `false`       | Whether CameraView has initialised    |
 
+#### Refs
+
+| Ref                   | Type     | Description                                        |
+| --------------------- | -------- | -------------------------------------------------- |
+| `micIntervalRef`      | `number` | setInterval ID for audio level polling              |
+| `soundStartTimeRef`   | `number` | Timestamp when sound first exceeded threshold       |
+| `autoStopTimeoutRef`  | `number` | setTimeout ID for deferred auto-stop                |
+
+#### Constants
+
+| Constant          | Value  | Description                                         |
+| ----------------- | ------ | --------------------------------------------------- |
+| `SOUND_THRESHOLD` | `0.15` | Audio level above which "sound" is considered detected |
+| `AUTO_STOP_DELAY` | `3000` | Milliseconds of continuous sound before auto-stopping  |
+
 #### Handlers
 
 | Handler                | Trigger                    | Action                                     |
 | ---------------------- | -------------------------- | ------------------------------------------ |
-| `handleGoBack()`       | Back arrow / Done press    | Stops mic test, `navigation.goBack()`      |
+| `handleGoBack()`       | Back arrow / Done press    | Stops mic test, clears timeouts, `navigation.goBack()` |
 | `handleFlipCamera()`   | Flip camera icon press     | Toggles `facing` between front and back    |
-| `handleToggleMicTest()`| Start / Stop Mic Test btn  | Starts/stops simulated audio level polling |
+| `handleToggleMicTest()`| Start / Stop Mic Test btn  | Starts/stops simulated audio level polling with auto-stop logic |
+| `stopMicTest()`        | Auto-stop timer / manual   | Clears interval, timeout, refs; resets audioLevel and isMicTesting |
+
+#### Auto-Stop Mic Behaviour
+
+When mic test is active, the audio level is polled every 120 ms. If the level stays above `SOUND_THRESHOLD` (0.15) for `AUTO_STOP_DELAY` (3 000 ms), `stopMicTest()` is scheduled on the next tick to cleanly stop the test. If the level drops below the threshold, the timer resets.
 
 #### Components Used
 
@@ -943,32 +965,35 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 **File**: `src/screens/Main/ScriptsScreen.jsx`  
 **Route**: `Scripts` (MainNavigator stack)
 
+> **Data source**: All script data comes from Supabase via `src/api/scriptsApi.js`.  
+> Scripts are reloaded on every screen focus (`navigation.addListener('focus')`).
+
 #### State Variables
 
 | Variable     | Type                                | Initial Value      | Description                           |
 | ------------ | ----------------------------------- | ------------------ | ------------------------------------- |
 | `filterType` | `'self-authored' \| 'auto-generated'` | `'self-authored'` | Selected script type filter           |
-| `scripts`    | `Script[]`                          | `[]`               | Array of all script objects           |
-| `isLoading`  | `boolean`                           | `false`            | Data loading indicator                |
+| `scripts`    | `Script[]`                          | `[]`               | Array of all script objects from Supabase |
+| `isLoading`  | `boolean`                           | `false`            | Data loading indicator (shows ActivityIndicator) |
 
-#### Script Object Shape
+#### Script Object Shape (from Supabase `scripts` table)
 
-| Property      | Type                                | Description                          |
-| ------------- | ----------------------------------- | ------------------------------------ |
-| `id`          | `string`                            | Unique script identifier             |
-| `title`       | `string`                            | Script title/name                    |
-| `description` | `string`                            | Script body preview text             |
-| `type`        | `'self-authored' \| 'auto-generated'` | Script source type                 |
-| `editedAt`    | `string`                            | ISO 8601 timestamp of last edit      |
-| `content`     | `string`                            | Full script content                  |
-| `createdAt`   | `string`                            | ISO 8601 timestamp of creation       |
+| Property      | Type           | Description                          |
+| ------------- | -------------- | ------------------------------------ |
+| `id`          | `uuid`         | Primary key                          |
+| `user_id`     | `uuid`         | FK → `profiles.id`                   |
+| `title`       | `text`         | Script title/name                    |
+| `content`     | `text`         | Full script body text                |
+| `type`        | `text`         | `'self-authored'` \| `'auto-generated'` |
+| `created_at`  | `timestamptz`  | Creation timestamp                   |
+| `updated_at`  | `timestamptz`  | Last update timestamp                |
 
 #### Derived Variables
 
 | Variable          | Type            | Derivation                                    | Description                           |
 | ----------------- | --------------- | --------------------------------------------- | ------------------------------------- |
 | `filteredScripts` | `Script[]`      | Filtered by `filterType`                      | Scripts matching current filter       |
-| `filterTabs`      | `TabOption[]`   | `[{value, label}, ...]`                       | Filter tab options                    |
+| `filterTabs`      | `TabOption[]`   | `[{value, label}, ...]`                       | Filter tab options (memoized)         |
 
 #### TabOption Shape
 
@@ -979,14 +1004,23 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 
 #### Handlers
 
-| Handler                   | Trigger                    | Action                                                  |
-| ------------------------- | -------------------------- | ------------------------------------------------------- |
-| `handleGoBack()`          | Back arrow press           | `navigation.goBack()`                                   |
-| `handleWriteScript()`     | "Write Script" button      | Navigate to script creation screen (placeholder)        |
-| `handleGenerateScript()`  | "Generate Script" button   | Trigger AI script generation (placeholder)              |
-| `handleEditScript(id)`    | "Edit" button on card      | Navigate to script editor with script ID (placeholder)  |
-| `handleFilterChange(val)` | Filter tab selection       | Updates `filterType` state                              |
-| `formatEditedTime(iso)`   | Called during render       | Converts ISO timestamp to readable format               |
+| Handler                    | Trigger                     | Action                                                  |
+| -------------------------- | --------------------------- | ------------------------------------------------------- |
+| `handleGoBack()`           | Back arrow press            | `navigation.goBack()`                                   |
+| `handleWriteScript()`      | "Write Script" button       | `navigate('ScriptEditor', { isNew: true })`             |
+| `handleGenerateScript()`   | "Generate Script" button    | `navigate('GenerateScript', { entryPoint: 'scripts' })` |
+| `handleEditScript(id)`     | "Edit" in ScriptCard menu   | `navigate('ScriptEditor', { scriptId, script })`        |
+| `handleDeleteScript(id)`   | "Delete" in ScriptCard menu | Alert confirmation → `deleteScript(id)` → removes from state |
+| `handleFilterChange(val)`  | Filter tab selection        | Updates `filterType` state                              |
+| `loadScripts()`            | Screen focus event          | `fetchScripts()` → sets `scripts` state (useCallback)  |
+| `formatEditedTime(iso)`    | Called during render        | Converts ISO timestamp to readable format               |
+
+#### API Calls
+
+| Call                  | Module         | Trigger            | Description                           |
+| --------------------- | -------------- | ------------------ | ------------------------------------- |
+| `fetchScripts()`      | `scriptsApi`   | Screen focus       | Fetches all user scripts, ordered by `updated_at` desc |
+| `deleteScript(id)`    | `scriptsApi`   | Delete confirmation| Deletes a single script by ID         |
 
 #### formatEditedTime Return Values
 
@@ -999,11 +1033,12 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 
 #### Components Used
 
-| Component      | Props                                                      | Description                    |
-| -------------- | ---------------------------------------------------------- | ------------------------------ |
-| `PrimaryButton`| `title`, `onPress`, `variant`, `style`                     | Write/Generate action buttons  |
-| `FilterTabs`   | `tabs`, `selected`, `onSelect`                             | Self-Authored/Auto-Generated filter |
-| `ScriptCard`   | `title`, `description`, `editedTime`, `onEdit` | Script display card  |
+| Component      | Props                                                       | Description                    |
+| -------------- | ----------------------------------------------------------- | ------------------------------ |
+| `PrimaryButton`| `title`, `onPress`, `variant`, `style`                      | Write/Generate action buttons  |
+| `FilterTabs`   | `tabs`, `selected`, `onSelect`                              | Self-Authored/Auto-Generated filter |
+| `ScriptCard`   | `title`, `description`, `editedTime`, `onEdit`, `onDelete`  | Script card with 3-dot overflow menu |
+| `ActivityIndicator` | —                                                      | Loading spinner while fetching |
 
 ---
 
@@ -1161,6 +1196,12 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 **File**: `src/screens/Main/GenerateScriptScreen.jsx`  
 **Route**: `GenerateScript` (MainNavigator stack)
 
+#### Route Params
+
+| Param        | Type                       | Default      | Description                                |
+| ------------ | -------------------------- | ------------ | ------------------------------------------ |
+| `entryPoint` | `'scripts'` \| `'training'` | `'training'` | Determines save-only vs save-and-train flow |
+
 #### Layout
 
 1. Back button
@@ -1168,7 +1209,7 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 3. Multiline prompt input + "Random Topic" action
 4. "What's the vibe?" section + ChoiceChips (Professional, Casual, Humorous, Inspirational)
 5. "Approx. Duration" section + ChoiceChips (Short 1-2m, Medium 3-5m, Long 5m+)
-6. "Generate and Start" button
+6. Dynamic primary button: "Generate and Save" (scripts) or "Generate and Start" (training)
 
 #### State Variables
 
@@ -1178,42 +1219,60 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 | `selectedVibe`     | `string`  | `'inspirational'` | `'professional'` \| `'casual'` \| `'humorous'` \| `'inspirational'` |
 | `selectedDuration` | `string`  | `'medium'`    | `'short'` \| `'medium'` \| `'long'`     |
 | `isGenerating`     | `boolean` | `false`       | Supabase Edge Function call in progress  |
+| `modalVisible`     | `boolean` | `false`       | Whether generated-script review modal is shown |
+| `generatedTitle`   | `string`  | `''`          | Title of the generated script (editable in modal) |
+| `generatedContent` | `string`  | `''`          | Body of the generated script (editable in modal)  |
+| `isSaving`         | `boolean` | `false`       | Whether script is being saved to Supabase |
 
 #### Derived Variables
 
-| Variable        | Type     | Derivation                                         | Description                              |
-| --------------- | -------- | -------------------------------------------------- | ---------------------------------------- |
-| `vibeOptions`   | `array`  | Static array of 4 vibe options                     | Memoized vibe choices                    |
-| `durationOptions` | `array`| Static array of 3 duration options                 | Memoized duration choices                |
+| Variable             | Type     | Derivation                                         | Description                              |
+| -------------------- | -------- | -------------------------------------------------- | ---------------------------------------- |
+| `vibeOptions`        | `array`  | Static array of 4 vibe options                     | Memoized vibe choices                    |
+| `durationOptions`    | `array`  | Static array of 3 duration options                 | Memoized duration choices                |
+| `primaryButtonLabel` | `string` | `entryPoint === 'scripts' ? 'Generate and Save' : 'Generate and Start'` | Dynamic button text |
 
 #### Handlers
 
-| Handler              | Trigger                    | Action                                                                     |
-| -------------------- | -------------------------- | -------------------------------------------------------------------------- |
-| `handleGoBack()`     | Back button press          | Navigate back or to Dashboard                                             |
-| `handleRandomTopic()`| "Random Topic" action      | TODO: Call Supabase function; set `promptText` to random topic            |
-| `handleGenerateStart()` | "Generate and Start" button | TODO: Call Supabase Edge Function with promptText, vibe, duration; navigate to TrainingScripted |
+| Handler                   | Trigger                        | Action                                                                     |
+| ------------------------- | ------------------------------ | -------------------------------------------------------------------------- |
+| `handleGoBack()`          | Back button press              | Navigate back or to Dashboard                                             |
+| `handleRandomTopic()`     | "Random Topic" action          | TODO: Call Supabase function; set `promptText` to random topic            |
+| `handleGenerateStart()`   | Primary button press           | Calls Supabase Edge Function (TODO); opens review Modal with generated content |
+| `handleRegenerate()`      | "Regenerate" button in modal   | Re-calls generation (TODO); replaces modal content with new result        |
+| `handleConfirmGenerated()`| "Save" / "Save & Start" button | Saves script to Supabase via `createScript`, then navigates              |
 
 #### Navigation Actions
 
-| Action                             | Destination          | Params                                                 |
-| ---------------------------------- | -------------------- | ------------------------------------------------------ |
-| `navigate('TrainingScripted', ...)` | TrainingScriptedScreen | `{focusMode: 'free', autoStart: true, scriptType: 'autogenerated', entryPoint: 'training'}` |
+| Condition                  | Action                              | Destination            | Params                                                 |
+| -------------------------- | ----------------------------------- | ---------------------- | ------------------------------------------------------ |
+| `entryPoint === 'scripts'` | `navigation.goBack()`               | ScriptsScreen          | —  (Scripts reloads on focus)                          |
+| `entryPoint === 'training'`| `navigate('TrainingScripted', ...)` | TrainingScriptedScreen | `{focusMode: 'free', autoStart: true, scriptType: 'autogenerated', entryPoint: 'training', scriptId}` |
 
-#### API Calls (TODOs)
+#### API Calls
 
-| Call                        | Params                                           | Returns                           |
-| --------------------------- | ------------------------------------------------ | --------------------------------- |
-| Supabase Edge Function      | `{promptText, selectedVibe, selectedDuration}`   | `{id, body, type: 'autogenerated'}` |
+| Call                        | Module       | Params                                           | Returns                           |
+| --------------------------- | ------------ | ------------------------------------------------ | --------------------------------- |
+| Supabase Edge Function (TODO) | —          | `{promptText, selectedVibe, selectedDuration}`   | `{title, body}`                   |
+| `createScript()`            | `scriptsApi` | `{title, content, type: 'auto-generated'}`       | `{success, script?, error?}`      |
+
+#### Review Modal
+
+After generation, a bottom-sheet-style Modal is displayed with:
+- **Title input** — editable TextInput prefilled with generated title
+- **Content editor** — multiline TextInput in a ScrollView, prefilled with generated body
+- **Regenerate button** — outline style, calls `handleRegenerate()`
+- **Save / Save & Start button** — primary, calls `handleConfirmGenerated()`
 
 #### Components Used
 
 | Component      | Props                                 | Description                      |
 | -------------- | ------------------------------------- | -------------------------------- |
 | `ChoiceChips`  | `options`, `selected`, `onSelect`     | Vibe / Duration selector         |
-| `PrimaryButton`| `title`, `onPress`, `loading`         | Generate and Start button        |
-| `TextInput`    | `value`, `onChangeText`, `multiline`  | Prompt input                     |
+| `PrimaryButton`| `title`, `onPress`, `loading`         | Primary action + modal buttons   |
+| `TextInput`    | `value`, `onChangeText`, `multiline`  | Prompt input + modal editors     |
 | `Typography`   | `variant`, `color`, `align`           | Headers and labels               |
+| `Modal`        | `visible`, `transparent`, `animationType` | Review/edit generated script |
 
 ---
 
@@ -1487,21 +1546,44 @@ Data structure:
 
 ### FilterTabs (`src/components/common/FilterTabs.jsx`)
 
-| Prop       | Type                                  | Default | Description                           |
-| ---------- | ------------------------------------- | ------- | ------------------------------------- |
-| `tabs`     | `Array<{value: string, label: string}>` | `[]`  | Array of tab options                  |
-| `selected` | `string`                              | —       | Currently selected tab value          |
-| `onSelect` | `function`                            | —       | Callback when a tab is selected       |
+| Prop              | Type                                    | Default | Description                           |
+| ----------------- | --------------------------------------- | ------- | ------------------------------------- |
+| `tabs`            | `Array<{value: string, label: string}>` | `[]`    | Array of tab options                  |
+| `selected`        | `string`                                | —       | Currently selected tab value          |
+| `onSelect`        | `function`                              | —       | Callback when a tab is selected       |
+| `containerStyle`  | `object`                                | —       | Optional container style override     |
+| `tabStyle`        | `object`                                | —       | Optional tab style override           |
+| `activeTabStyle`  | `object`                                | —       | Optional active tab style override    |
+| `labelStyle`      | `object`                                | —       | Optional label style override         |
+| `activeLabelStyle`| `object`                                | —       | Optional active label style override  |
+
+**Default Pill Design:**
+- Container: `borderRadius.full`, `gray100` bg, `1px gray300` border, 3px padding
+- Tab: `borderRadius.full`, `paddingVertical: xs + 2`
+- Active tab: `primary` background
+- Label: `fontSize: 13`, `bodySmall` variant, `medium` weight
 
 ### ScriptCard (`src/components/common/ScriptCard.jsx`)
 
-| Prop              | Type       | Default | Description                              |
-| ----------------- | ---------- | ------- | ---------------------------------------- |
-| `title`           | `string`   | —       | Script title/name                        |
-| `description`     | `string`   | —       | Script description/preview text          |
-| `editedTime`      | `string`   | —       | Last edited timestamp text               |
-| `onEdit`          | `function` | —       | Handler for Edit button                  |
-| `onPress`         | `function` | —       | Handler for card press (optional)        |
+| Prop              | Type       | Default           | Description                              |
+| ----------------- | ---------- | ----------------- | ---------------------------------------- |
+| `title`           | `string`   | —                 | Script title/name                        |
+| `description`     | `string`   | —                 | Script description/preview text          |
+| `editedTime`      | `string`   | —                 | Last edited timestamp text               |
+| `type`            | `string`   | `'self-authored'` | Script type (`'self-authored'` \| `'auto-generated'`) |
+| `onEdit`          | `function` | —                 | Handler for Edit action (from 3-dot menu) |
+| `onDelete`        | `function` | —                 | Handler for Delete action (from 3-dot menu) |
+| `onPress`         | `function` | —                 | Handler for card press (optional)        |
+
+**Internal State:**
+- `menuVisible`: boolean — controls visibility of the overflow menu Modal
+
+**3-Dot Overflow Menu:**
+- Triggered by tapping the ellipsis-vertical icon in the top-right corner of the card
+- Modal with fade animation shows two options:
+  - **Edit** (create-outline icon) → calls `onEdit()`
+  - **Delete** (trash-outline icon, red text) → calls `onDelete()`
+- Menu closes on backdrop press or option selection
 
 ### Dropdown (`src/components/common/Dropdown.jsx`)
 
@@ -1520,6 +1602,55 @@ Data structure:
 - Displays options in a scrollable list
 - Selected option is highlighted with checkmark icon
 - Close on overlay tap or option selection
+
+---
+
+## 5b. API Modules
+
+### scriptsApi (`src/api/scriptsApi.js`)
+
+> Supabase CRUD operations for user scripts. Requires a `scripts` table in Supabase (see DDL below).
+
+#### Exported Functions
+
+| Function                     | Signature                                              | Returns                                  | Description                                          |
+| ---------------------------- | ------------------------------------------------------ | ---------------------------------------- | ---------------------------------------------------- |
+| `fetchScripts()`             | `() → Promise<{success, scripts?, error?}>`            | All scripts for current user, ordered by `updated_at` desc | Fetches all rows from `scripts` where `user_id` matches auth user |
+| `fetchScriptById(scriptId)`  | `(string) → Promise<{success, script?, error?}>`       | Single script object                     | Fetches one script by primary key                    |
+| `createScript(scriptData)`   | `({title, content, type}) → Promise<{success, script?, error?}>` | Newly created script row      | Inserts a new row with `user_id` auto-set from auth  |
+| `updateScript(scriptId, updates)` | `(string, {title?, content?, type?}) → Promise<{success, script?, error?}>` | Updated script row | Patches a script and sets `updated_at` to `now()` |
+| `deleteScript(scriptId)`     | `(string) → Promise<{success, error?}>`                | Success/error                            | Deletes a script by ID                               |
+
+#### Required Supabase Table
+
+```sql
+CREATE TABLE public.scripts (
+  id          uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id     uuid NOT NULL,
+  title       text NOT NULL,
+  content     text NOT NULL DEFAULT '',
+  type        text NOT NULL DEFAULT 'self-authored'
+                CHECK (type IN ('self-authored','auto-generated')),
+  created_at  timestamptz DEFAULT now(),
+  updated_at  timestamptz DEFAULT now(),
+  CONSTRAINT scripts_pkey PRIMARY KEY (id),
+  CONSTRAINT scripts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
+```
+
+> RLS policies should scope rows to the authenticated user's `user_id`.
+
+### supabaseClient (`src/api/supabaseClient.js`)
+
+Exports a configured `supabase` client instance used by all API modules. Uses `@supabase/supabase-js` with AsyncStorage for session persistence.
+
+### authApi (`src/api/authApi.js`)
+
+Handles authentication operations (login, register, logout, profile updates) via Supabase Auth.
+
+### sessionApi (`src/api/sessionApi.js`)
+
+Handles analysis session CRUD operations (fetch sessions, upload audio recordings, get session details).
 
 ---
 
@@ -1588,7 +1719,7 @@ AppNavigator (root stack)
 | Route              | Params                                                    |
 | ------------------ | --------------------------------------------------------- |
 | `TrainingSetup`    | None (context from Dashboard "Start Training")           |
-| `GenerateScript`   | None (context from TrainingSetup or Practice)            |
+| `GenerateScript`   | `{entryPoint?: 'scripts' \| 'training'}`                 |
 | `TrainingScripted` | `{focusMode, autoStart, scriptId?, scriptType?, entryPoint?}` |
 | `Practice`         | None                                                      |
 | `SessionDetail`    | `{sessionId}`                                             |
@@ -1610,9 +1741,9 @@ Dashboard
   │    │
   │    └─→ Auto-Generated tab → Generate Speech button
   │         ↓
-  │        GenerateScript
+  │        GenerateScript (entryPoint: 'training')
   │         ↓
-  │        [Generate] → Audio upload to Supabase
+  │        [Generate] → Review/Edit Modal → Save to Supabase
   │         ↓
   │        TrainingScripted (focusMode: 'free')
   │
@@ -1624,9 +1755,19 @@ Dashboard
   │    │
   │    └─→ Generate tab → Generate Speech button
   │         ↓
-  │        GenerateScript
+  │        GenerateScript (entryPoint: 'training')
   │         ↓
   │        TrainingScripted (focusMode: 'free')
+  │
+Scripts (tab 1)
+  ├─→ "Generate Script" button
+  │    ↓
+  │   GenerateScript (entryPoint: 'scripts')
+  │    ↓
+  │   [Generate] → Review/Edit Modal → Save to Supabase → goBack()
+  │
+  ├─→ ScriptCard 3-dot → Edit → ScriptEditor
+  └─→ ScriptCard 3-dot → Delete → Alert confirm → deleteScript()
   │
   └─→ [Other navigation paths...]
 ```

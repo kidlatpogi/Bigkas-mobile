@@ -135,11 +135,6 @@ const PracticeScreen = ({ navigation }) => {
             tabs={tabOptions}
             selected={selectedTab}
             onSelect={setSelectedTab}
-            containerStyle={styles.tabsContainer}
-            tabStyle={styles.tab}
-            activeTabStyle={styles.tabActive}
-            labelStyle={styles.tabLabel}
-            activeLabelStyle={styles.tabLabelActive}
           />
 
           {selectedTab === 'generate' && (
@@ -231,27 +226,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginBottom: spacing.md,
-  },
-  tabsContainer: {
-    backgroundColor: colors.gray100,
-    borderRadius: borderRadius.full,
-    padding: 3,
-    borderWidth: 1,
-    borderColor: colors.gray300,
-  },
-  tab: {
-    paddingVertical: spacing.xs + 2,
-    borderRadius: borderRadius.full,
-  },
-  tabActive: {
-    backgroundColor: colors.primary,
-  },
-  tabLabel: {
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
-  tabLabelActive: {
-    color: colors.black,
   },
   listWrap: {
     marginTop: spacing.md,

@@ -47,6 +47,8 @@ const AudioCameraTestScreen = ({ navigation }) => {
   const [cameraReady, setCameraReady] = useState(false);
 
   const micIntervalRef = useRef(null);
+  const soundStartTimeRef = useRef(null);
+  const autoStopTimeoutRef = useRef(null);
 
   // Request permissions on mount
   useEffect(() => {
@@ -62,6 +64,9 @@ const AudioCameraTestScreen = ({ navigation }) => {
       if (micIntervalRef.current) {
         clearInterval(micIntervalRef.current);
       }
+      if (autoStopTimeoutRef.current) {
+        clearTimeout(autoStopTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -70,6 +75,9 @@ const AudioCameraTestScreen = ({ navigation }) => {
     if (micIntervalRef.current) {
       clearInterval(micIntervalRef.current);
     }
+    if (autoStopTimeoutRef.current) {
+      clearTimeout(autoStopTimeoutRef.current);
+    }
     navigation.goBack();
   };
 
@@ -77,26 +85,60 @@ const AudioCameraTestScreen = ({ navigation }) => {
     setFacing((prev) => (prev === 'front' ? 'back' : 'front'));
   };
 
+  /** Threshold above which we consider "sound detected" */
+  const SOUND_THRESHOLD = 0.15;
+  /** Auto-stop after this many ms of continuous sound detection */
+  const AUTO_STOP_DELAY = 3000;
+
+  const stopMicTest = useCallback(() => {
+    if (micIntervalRef.current) {
+      clearInterval(micIntervalRef.current);
+      micIntervalRef.current = null;
+    }
+    if (autoStopTimeoutRef.current) {
+      clearTimeout(autoStopTimeoutRef.current);
+      autoStopTimeoutRef.current = null;
+    }
+    soundStartTimeRef.current = null;
+    setAudioLevel(0);
+    setIsMicTesting(false);
+  }, []);
+
   const handleToggleMicTest = useCallback(() => {
     if (isMicTesting) {
-      // Stop
-      if (micIntervalRef.current) {
-        clearInterval(micIntervalRef.current);
-        micIntervalRef.current = null;
-      }
-      setAudioLevel(0);
-      setIsMicTesting(false);
+      stopMicTest();
     } else {
       // Start — simulate audio level fluctuation (matches TrainingScriptedScreen pattern)
       setIsMicTesting(true);
+      soundStartTimeRef.current = null;
+
       micIntervalRef.current = setInterval(() => {
         setAudioLevel((prev) => {
           const delta = (Math.random() - 0.45) * 0.35;
-          return Math.max(0.05, Math.min(0.95, prev + delta));
+          const next = Math.max(0.05, Math.min(0.95, prev + delta));
+
+          // Auto-stop logic: if level stays above threshold for 3s
+          if (next >= SOUND_THRESHOLD) {
+            if (!soundStartTimeRef.current) {
+              soundStartTimeRef.current = Date.now();
+            } else if (Date.now() - soundStartTimeRef.current >= AUTO_STOP_DELAY) {
+              // Schedule stop on next tick to avoid setState-in-setState
+              if (!autoStopTimeoutRef.current) {
+                autoStopTimeoutRef.current = setTimeout(() => {
+                  stopMicTest();
+                }, 0);
+              }
+            }
+          } else {
+            // Level dropped, reset timer
+            soundStartTimeRef.current = null;
+          }
+
+          return next;
         });
       }, 120);
     }
-  }, [isMicTesting]);
+  }, [isMicTesting, stopMicTest]);
 
   // ----------------------------------------------------------------
   // Render

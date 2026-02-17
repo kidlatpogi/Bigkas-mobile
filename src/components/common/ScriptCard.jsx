@@ -1,20 +1,21 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, Modal, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Typography from './Typography';
-import PrimaryButton from './PrimaryButton';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 
 /**
  * Script card component for displaying individual script items.
- * Shows title, description, edit timestamp, and action buttons.
+ * Shows title, description, edit timestamp, and a 3-dot overflow menu.
  * 
  * @param {Object} props
  * @param {string} props.title - Script title/name
  * @param {string} props.description - Script description/preview text
  * @param {string} props.editedTime - Last edited timestamp text
  * @param {string} props.type - Script type ('self-authored' | 'auto-generated')
- * @param {Function} props.onEdit - Handler for Edit button
+ * @param {Function} props.onEdit - Handler for Edit action
+ * @param {Function} props.onDelete - Handler for Delete action
  * @param {Function} props.onPress - Handler for card press (optional)
  * 
  * Variables for web version:
@@ -22,7 +23,8 @@ import { spacing, borderRadius } from '../../styles/spacing';
  * - description: script body preview
  * - editedTime: formatted timestamp (e.g., "EDITED YESTERDAY")
  * - type: 'self-authored' or 'auto-generated'
- * - onEdit: edit button callback
+ * - onEdit: edit menu callback
+ * - onDelete: delete menu callback
  */
 const ScriptCard = ({
   title,
@@ -30,8 +32,10 @@ const ScriptCard = ({
   editedTime,
   type = 'self-authored',
   onEdit,
+  onDelete,
   onPress,
 }) => {
+  const [menuVisible, setMenuVisible] = useState(false);
   const getBadgeStyle = () => {
     if (type === 'auto-generated') {
       return { backgroundColor: colors.gray200, text: colors.textSecondary };
@@ -50,15 +54,26 @@ const ScriptCard = ({
       disabled={!onPress}
     >
       <View style={styles.content}>
-        {/* Badge */}
-        <View style={[styles.badge, { backgroundColor: badge.backgroundColor }]}>
-          <Typography 
-            variant="caption" 
-            weight="medium" 
-            style={{ color: badge.text, fontSize: 12 }}
+        {/* Top row: badge + 3-dot menu */}
+        <View style={styles.topRow}>
+          <View style={[styles.badge, { backgroundColor: badge.backgroundColor }]}>
+            <Typography 
+              variant="caption" 
+              weight="medium" 
+              style={{ color: badge.text, fontSize: 12 }}
+            >
+              {badgeLabel}
+            </Typography>
+          </View>
+
+          <TouchableOpacity
+            style={styles.menuTrigger}
+            onPress={() => setMenuVisible(true)}
+            activeOpacity={0.6}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            {badgeLabel}
-          </Typography>
+            <Ionicons name="ellipsis-vertical" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
         </View>
 
         <Typography variant="body" weight="bold" style={styles.title}>
@@ -82,17 +97,47 @@ const ScriptCard = ({
         >
           {editedTime}
         </Typography>
-
-        <View style={styles.buttonsRow}>
-          <PrimaryButton
-            title="Edit"
-            onPress={onEdit}
-            variant="outline"
-            size="small"
-            style={styles.editButton}
-          />
-        </View>
       </View>
+
+      {/* Overflow menu modal */}
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <Pressable style={styles.menuOverlay} onPress={() => setMenuVisible(false)}>
+          <View style={styles.menuContainer}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                onEdit?.();
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="create-outline" size={20} color={colors.textPrimary} />
+              <Typography variant="body" style={styles.menuItemText}>Edit</Typography>
+            </TouchableOpacity>
+
+            <View style={styles.menuDivider} />
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                onDelete?.();
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="trash-outline" size={20} color={colors.error} />
+              <Typography variant="body" style={[styles.menuItemText, { color: colors.error }]}>
+                Delete
+              </Typography>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </TouchableOpacity>
   );
 };
@@ -107,12 +152,24 @@ const styles = StyleSheet.create({
   content: {
     padding: spacing.md,
   },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
   badge: {
     alignSelf: 'flex-start',
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
-    marginBottom: spacing.sm,
+  },
+  menuTrigger: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: borderRadius.full,
   },
   title: {
     marginBottom: spacing.sm,
@@ -122,15 +179,40 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   editedTime: {
-    marginBottom: spacing.md,
     letterSpacing: 0.5,
   },
-  buttonsRow: {
+  /* Overflow menu */
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  menuContainer: {
+    width: 200,
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.xs,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+  },
+  menuItem: {
     flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md,
     gap: spacing.sm,
   },
-  editButton: {
+  menuItemText: {
     flex: 1,
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: colors.gray200,
+    marginHorizontal: spacing.md,
   },
 });
 

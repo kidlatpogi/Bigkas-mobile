@@ -53,7 +53,7 @@ const FilterTabs = ({
               variant="bodySmall"
               weight="medium"
               color={isActive ? 'black' : 'textSecondary'}
-              style={[labelStyle, isActive && activeLabelStyle]}
+              style={[styles.tabLabel, labelStyle, isActive && activeLabelStyle]}
             >
               {tab.label}
             </Typography>
@@ -67,22 +67,27 @@ const FilterTabs = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.md,
-    padding: spacing.xs / 2,
+    backgroundColor: colors.gray100,
+    borderRadius: borderRadius.full,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: colors.gray300,
     width: '100%',
   },
   tab: {
     flex: 1,
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.sm,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: borderRadius.full,
     marginHorizontal: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   tabActive: {
     backgroundColor: colors.primary,
+  },
+  tabLabel: {
+    fontSize: 13,
   },
 });
 
