@@ -116,7 +116,7 @@ const AccountSettingsScreen = ({ navigation }) => {
     }
   };
 
-  const isConfirmDeleteValid = password.trim() && confirmText === 'confirm delete';
+  const isConfirmDeleteValid = password.trim() && confirmText === 'CONFIRM DELETE';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -207,7 +207,7 @@ const AccountSettingsScreen = ({ navigation }) => {
             </Typography>
 
             <Typography variant="body" color="textSecondary" style={styles.modalDesc}>
-              This action cannot be undone. Enter your password and type "confirm delete" to proceed.
+              This action cannot be undone. Enter your password and type "CONFIRM DELETE" to proceed.
             </Typography>
 
             {/* ── Password input ── */}
@@ -230,7 +230,7 @@ const AccountSettingsScreen = ({ navigation }) => {
             </Typography>
             <TextInput
               style={styles.textInput}
-              placeholder="Type 'confirm delete'"
+              placeholder="Type 'CONFIRM DELETE'"
               value={confirmText}
               onChangeText={setConfirmText}
               editable={!isDeleting}
@@ -334,6 +334,7 @@ const styles = StyleSheet.create({
   deleteButton: {
     width: '100%',
     backgroundColor: colors.error,
+    color: colors.white,
   },
 
   /* ── Bottom button container ── */
