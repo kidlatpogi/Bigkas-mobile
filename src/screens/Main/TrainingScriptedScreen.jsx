@@ -8,6 +8,7 @@ import {
   Text,
   Animated,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -220,6 +221,31 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
   }, [recordingDuration, wpm, isRecording, isPaused, scriptWords]);
 
   const handleGoBack = () => {
+    if (isRecording) {
+      if (!isPaused) {
+        setIsPaused(true);
+      }
+      Alert.alert(
+        'Session paused',
+        'Your session is paused. Do you want to exit and lose this recording?',
+        [
+          { text: 'Stay', style: 'cancel' },
+          {
+            text: 'Exit',
+            style: 'destructive',
+            onPress: () => {
+              setIsRecording(false);
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                navigation.navigate('Dashboard');
+              }
+            },
+          },
+        ]
+      );
+      return;
+    }
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
@@ -915,13 +941,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: spacing.lg,
   },
   countdownBox: {
     alignItems: 'center',
     padding: spacing.xl,
+    paddingVertical: spacing.xl,
+    minWidth: 220,
   },
   countdownNumber: {
     fontSize: 120,
+    lineHeight: 132,
     color: colors.primary,
     fontWeight: 'bold',
   },
@@ -931,6 +961,7 @@ const styles = StyleSheet.create({
   startText: {
     color: colors.success,
     fontSize: 64,
+    lineHeight: 72,
   },
 
   // Settings Modal
