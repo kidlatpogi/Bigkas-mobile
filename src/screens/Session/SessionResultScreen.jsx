@@ -16,6 +16,7 @@ const SessionResultScreen = ({ route, navigation }) => {
     paceWpm = 145,
     paceRating = 'NEEDS WORK',
     resultMode = 'training',
+    trainingParams,
   } = route.params || {};
 
   const waveBars = [
@@ -35,11 +36,11 @@ const SessionResultScreen = ({ route, navigation }) => {
       navigation.navigate('Practice');
       return;
     }
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    } else {
-      navigation.navigate('TrainingSetup');
+    if (trainingParams) {
+      navigation.replace('TrainingScripted', trainingParams);
+      return;
     }
+    navigation.navigate('TrainingSetup');
   };
 
   const handleCancel = () => {
@@ -49,6 +50,7 @@ const SessionResultScreen = ({ route, navigation }) => {
   const handleViewDetailedFeedback = () => {
     navigation.navigate('DetailedFeedback', {
       resultMode,
+      trainingParams,
       timelinePoints: [
         { time: '1:00', value: 32 },
         { time: '2:00', value: 62 },

@@ -58,7 +58,7 @@ const { width: screenWidth } = Dimensions.get('window');
  */
 const TrainingScriptedScreen = ({ navigation, route }) => {
   // Route params
-  const { scriptId, focusMode, autoStart, entryPoint } = route?.params || {};
+  const { scriptId, focusMode, autoStart, entryPoint, scriptType } = route?.params || {};
   const isFreeMode = focusMode === 'free';
   const resultMode = entryPoint === 'practice' ? 'practice' : 'training';
 
@@ -291,19 +291,42 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
 
   const handleRecordPress = () => {
     if (isRecording) {
-      // Stop recording
-      setIsRecording(false);
-      setIsPaused(false);
-      // TODO: Upload audio to Supabase with scriptId + focusMode.
-      console.info('Stop recording', { scriptId, focusMode, duration: recordingDuration });
-      navigation.navigate('SessionResult', {
-        confidenceScore: 72,
-        summary: 'Great effort! You\'re consistently improving your delivery.',
-        pitchStability: 'GOOD',
-        paceWpm: 145,
-        paceRating: 'NEEDS WORK',
-        resultMode,
-      });
+      if (!isPaused) {
+        setIsPaused(true);
+      }
+      Alert.alert(
+        'Stop recording?',
+        'Your session will end and your results will be generated.',
+        [
+          { text: 'Continue', style: 'cancel', onPress: () => setIsPaused(false) },
+          {
+            text: 'Stop',
+            style: 'destructive',
+            onPress: () => {
+              // Stop recording
+              setIsRecording(false);
+              setIsPaused(false);
+              // TODO: Upload audio to Supabase with scriptId + focusMode.
+              console.info('Stop recording', { scriptId, focusMode, duration: recordingDuration });
+              navigation.navigate('SessionResult', {
+                confidenceScore: 72,
+                summary: 'Great effort! You\'re consistently improving your delivery.',
+                pitchStability: 'GOOD',
+                paceWpm: 145,
+                paceRating: 'NEEDS WORK',
+                resultMode,
+                trainingParams: {
+                  scriptId,
+                  focusMode,
+                  scriptType,
+                  autoStart: true,
+                  entryPoint,
+                },
+              });
+            },
+          },
+        ]
+      );
     } else {
       // Start countdown
       handleStartCountdown();

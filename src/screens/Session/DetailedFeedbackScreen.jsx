@@ -19,6 +19,7 @@ const DetailedFeedbackScreen = ({ route, navigation }) => {
     eyeContact = { score: 67, status: 'MAINTAINED', note: 'Focus needs more practice' },
     bodyGestures = { status: 'GOOD', note: 'Natural hand movements detected' },
     voice = { status: 'EXCELLENT', note: 'Pronunciation and diction are improving' },
+    trainingParams,
     feedbackItems = [
       {
         title: 'Strong Eye Contact',
@@ -60,11 +61,11 @@ const DetailedFeedbackScreen = ({ route, navigation }) => {
       navigation.navigate('Practice');
       return;
     }
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    } else {
-      navigation.navigate('TrainingSetup');
+    if (trainingParams) {
+      navigation.replace('TrainingScripted', trainingParams);
+      return;
     }
+    navigation.navigate('TrainingSetup');
   };
 
   const handleCancel = () => {

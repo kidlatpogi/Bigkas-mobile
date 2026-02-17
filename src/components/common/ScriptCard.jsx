@@ -15,7 +15,6 @@ import { spacing, borderRadius } from '../../styles/spacing';
  * @param {string} props.editedTime - Last edited timestamp text
  * @param {string} props.type - Script type ('self-authored' | 'auto-generated')
  * @param {Function} props.onEdit - Handler for Edit button
- * @param {Function} props.onUseInPractice - Handler for Use in Practice button
  * @param {Function} props.onPress - Handler for card press (optional)
  * 
  * Variables for web version:
@@ -24,7 +23,6 @@ import { spacing, borderRadius } from '../../styles/spacing';
  * - editedTime: formatted timestamp (e.g., "EDITED YESTERDAY")
  * - type: 'self-authored' or 'auto-generated'
  * - onEdit: edit button callback
- * - onUseInPractice: use in practice button callback
  */
 const ScriptCard = ({
   title,
@@ -32,7 +30,6 @@ const ScriptCard = ({
   editedTime,
   type = 'self-authored',
   onEdit,
-  onUseInPractice,
   onPress,
 }) => {
   const getBadgeStyle = () => {
@@ -94,13 +91,6 @@ const ScriptCard = ({
             size="small"
             style={styles.editButton}
           />
-          <PrimaryButton
-            title="Use in Practice"
-            onPress={onUseInPractice}
-            variant="secondary"
-            size="small"
-            style={styles.practiceButton}
-          />
         </View>
       </View>
     </TouchableOpacity>
@@ -140,9 +130,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   editButton: {
-    flex: 1,
-  },
-  practiceButton: {
     flex: 1,
   },
 });

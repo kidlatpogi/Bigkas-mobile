@@ -234,10 +234,10 @@ const ProgressScreen = ({ navigation }) => {
               color="textSecondary"
               align="center"
               style={styles.statLabel}
+              numberOfLines={1}
+              adjustsFontSizeToFit
             >
-              BETTER THAN LAST
-              {'\n'}
-              WEEK
+              BETTER THAN LAST WEEK
             </Typography>
           </Card>
 
@@ -358,6 +358,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: spacing.lg,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   statLabel: {
     marginTop: spacing.xs,

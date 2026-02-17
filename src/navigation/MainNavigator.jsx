@@ -11,6 +11,7 @@ import TrainingScriptedScreen from '../screens/Main/TrainingScriptedScreen';
 import HistoryScreen from '../screens/Main/HistoryScreen';
 import AllSessionsScreen from '../screens/Main/AllSessionsScreen';
 import ScriptEditorScreen from '../screens/Main/ScriptEditorScreen';
+import AudioCameraTestScreen from '../screens/Main/AudioCameraTestScreen';
 import BottomTabNavigator from './BottomTabNavigator';
 
 const Stack = createNativeStackNavigator();
@@ -26,7 +27,13 @@ const Stack = createNativeStackNavigator();
  */
 const MainNavigator = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        animation: 'slide_from_right',
+        animationDuration: 200,
+      }}
+    >
       <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
       <Stack.Screen name="Practice" component={PracticeScreen} />
       <Stack.Screen name="GenerateScript" component={GenerateScriptScreen} />
@@ -59,6 +66,7 @@ const MainNavigator = () => {
         }}
       />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+      <Stack.Screen name="AudioCameraTest" component={AudioCameraTestScreen} />
     </Stack.Navigator>
   );
 };

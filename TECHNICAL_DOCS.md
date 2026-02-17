@@ -639,6 +639,7 @@ const { currentSession, fetchSessionById, isLoading, clearCurrentSession } = use
 | `paceWpm`          | `number` | Speaking pace in WPM                  |
 | `paceRating`      | `string` | Speaking pace badge text              |
 | `resultMode`      | `string` | `'training'` \| `'practice'`        |
+| `trainingParams`  | `object` | Params to restart training session    |
 
 #### Derived Variables
 
@@ -691,6 +692,7 @@ No local state — all data comes from route params.
 | Param            | Type     | Description                           |
 | ---------------- | -------- | ------------------------------------- |
 | `resultMode`     | `string` | `'training'` \| `'practice'`         |
+| `trainingParams` | `object` | Params to restart training session     |
 | `timelinePoints` | `Array<{time: string, value: number}>` | Timeline points for chart      |
 | `eyeContact`     | `{ score: number, status: string, note: string }` | Eye contact metric      |
 | `bodyGestures`   | `{ status: string, note: string }` | Body gesture metric             |
@@ -704,6 +706,49 @@ No local state — all data comes from route params.
 | `handleGoBack()`      | Back arrow press       | `navigation.goBack()` or Dashboard |
 | `handlePracticeAgain()` | "Practice/Train Again" press | `navigate('Practice')` when practice; otherwise `goBack()` or `navigate('TrainingSetup')` |
 | `handleCancel()`      | "Cancel" press        | `navigation.navigate('Dashboard')` |
+
+---
+
+### 4.8.2 AudioCameraTestScreen
+
+**File**: `src/screens/Main/AudioCameraTestScreen.jsx`  
+**Route**: `AudioCameraTest` (MainNavigator stack — opened from Settings → "Test Audio / Video")
+
+#### State Variables
+
+| Variable           | Type      | Initial Value | Description                           |
+| ------------------ | --------- | ------------- | ------------------------------------- |
+| `cameraPermission` | `boolean` | `false`       | Whether camera permission is granted  |
+| `audioPermission`  | `boolean` | `false`       | Whether microphone permission granted |
+| `facing`           | `string`  | `'front'`     | Active camera direction (`'front'` \| `'back'`) |
+| `isMicTesting`     | `boolean` | `false`       | Whether microphone level test is running |
+| `audioLevel`       | `number`  | `0`           | Current simulated mic level (0–1)     |
+| `cameraReady`      | `boolean` | `false`       | Whether CameraView has initialised    |
+
+#### Handlers
+
+| Handler                | Trigger                    | Action                                     |
+| ---------------------- | -------------------------- | ------------------------------------------ |
+| `handleGoBack()`       | Back arrow / Done press    | Stops mic test, `navigation.goBack()`      |
+| `handleFlipCamera()`   | Flip camera icon press     | Toggles `facing` between front and back    |
+| `handleToggleMicTest()`| Start / Stop Mic Test btn  | Starts/stops simulated audio level polling |
+
+#### Components Used
+
+| Component             | Props                                       | Description                 |
+| --------------------- | ------------------------------------------- | --------------------------- |
+| `CameraView`          | `facing`, `onCameraReady`                   | Live camera preview         |
+| `AudioLevelIndicator` | `level`, `isActive`, `barCount=20`, `width` | Mic waveform visualiser     |
+| `PrimaryButton`       | `title`, `onPress`, `variant`, `disabled`   | Mic toggle + Done buttons   |
+
+#### UI Sections (top → bottom)
+
+| Section           | Content                                                        |
+| ----------------- | -------------------------------------------------------------- |
+| Header            | Back button + "Test Audio / Video" title                       |
+| Camera Preview    | Live CameraView with flip-camera overlay + status dot          |
+| Microphone Test   | 20-bar AudioLevelIndicator + status dot + Start/Stop button    |
+| Done              | Full-width "Done" button returning to Settings                 |
 
 ---
 
@@ -940,7 +985,6 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 | `handleWriteScript()`     | "Write Script" button      | Navigate to script creation screen (placeholder)        |
 | `handleGenerateScript()`  | "Generate Script" button   | Trigger AI script generation (placeholder)              |
 | `handleEditScript(id)`    | "Edit" button on card      | Navigate to script editor with script ID (placeholder)  |
-| `handleUseInPractice(id)` | "Use in Practice" button   | Navigate to Practice with script content                |
 | `handleFilterChange(val)` | Filter tab selection       | Updates `filterType` state                              |
 | `formatEditedTime(iso)`   | Called during render       | Converts ISO timestamp to readable format               |
 
@@ -959,7 +1003,7 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 | -------------- | ---------------------------------------------------------- | ------------------------------ |
 | `PrimaryButton`| `title`, `onPress`, `variant`, `style`                     | Write/Generate action buttons  |
 | `FilterTabs`   | `tabs`, `selected`, `onSelect`                             | Self-Authored/Auto-Generated filter |
-| `ScriptCard`   | `title`, `description`, `editedTime`, `onEdit`, `onUseInPractice` | Script display card  |
+| `ScriptCard`   | `title`, `description`, `editedTime`, `onEdit` | Script display card  |
 
 ---
 
@@ -1011,7 +1055,7 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 | `handleGoBack()`            | Back arrow press            | `navigation.goBack()`                                   |
 | `handleMicrophoneChange(val)` | Microphone dropdown change | Updates `microphoneSource` state and AsyncStorage      |
 | `handleCameraChange(val)`   | Camera dropdown change      | Updates `cameraSource` state and AsyncStorage           |
-| `handleTestAudioVideo()`    | Test Audio/Video button     | Shows alert to test hardware settings (placeholder)    |
+| `handleTestAudioVideo()`    | Test Audio/Video button     | `navigation.navigate('AudioCameraTest')` — opens hardware test screen |
 | `handleClearCache()`        | Clear Cache button          | Shows confirmation, then clears non-essential AsyncStorage keys |
 | `handleLogout()`            | Logout button               | Shows confirmation, then calls `reset()` and `logout()` |
 
@@ -1457,7 +1501,6 @@ Data structure:
 | `description`     | `string`   | —       | Script description/preview text          |
 | `editedTime`      | `string`   | —       | Last edited timestamp text               |
 | `onEdit`          | `function` | —       | Handler for Edit button                  |
-| `onUseInPractice` | `function` | —       | Handler for Use in Practice button       |
 | `onPress`         | `function` | —       | Handler for card press (optional)        |
 
 ### Dropdown (`src/components/common/Dropdown.jsx`)
@@ -1513,7 +1556,7 @@ Data structure:
 AppNavigator (root stack)
 │
 ├── [Not Authenticated]
-│   └── AuthNavigator (stack)
+│   └── AuthNavigator (stack, animation: slide_from_right 200ms)
 │       ├── Login        → LoginScreen
 │       └── Register     → RegisterScreen
 │
@@ -1521,7 +1564,7 @@ AppNavigator (root stack)
 │   └── Nickname         → NicknameScreen
 │
 └── [Authenticated + Has Nickname]
-    └── MainNavigator (stack)
+    └── MainNavigator (stack, animation: slide_from_right 200ms)
         ├── MainTabs     → BottomTabNavigator
         │   ├── Scripts   → ScriptsScreen      (tab 1)
         │   ├── Progress  → ProgressScreen     (tab 2)
@@ -1536,6 +1579,7 @@ AppNavigator (root stack)
         ├── SessionDetail → SessionDetailScreen
         ├── SessionResult → SessionResultScreen
         ├── DetailedFeedback → DetailedFeedbackScreen
+        ├── AudioCameraTest → AudioCameraTestScreen
         └── EditProfile   → EditProfileScreen
 ```
 
@@ -1549,7 +1593,8 @@ AppNavigator (root stack)
 | `Practice`         | None                                                      |
 | `SessionDetail`    | `{sessionId}`                                             |
 | `SessionResult`    | `{confidenceScore, summary, pitchStability, paceWpm, paceRating, resultMode}` |
-| `DetailedFeedback` | `{resultMode, timelinePoints, eyeContact, bodyGestures, voice, feedbackItems}` |
+| `DetailedFeedback` | `{resultMode, trainingParams, timelinePoints, eyeContact, bodyGestures, voice, feedbackItems}` |
+| `AudioCameraTest`  | None (opened from Settings "Test Audio / Video")              |
 | All others         | No params                                                 |
 
 ### Screen Flow Diagram

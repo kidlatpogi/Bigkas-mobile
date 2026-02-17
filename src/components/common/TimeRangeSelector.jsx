@@ -54,20 +54,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: colors.white,
     borderRadius: borderRadius.full,
-    padding: spacing.xs,
+    padding: 3,
     alignSelf: 'flex-start',
   },
   tab: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
     borderRadius: borderRadius.full,
-    marginHorizontal: 2,
+    marginHorizontal: 1,
   },
   tabActive: {
     backgroundColor: colors.primary,
   },
   tabText: {
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
+    fontSize: 10,
   },
 });
 

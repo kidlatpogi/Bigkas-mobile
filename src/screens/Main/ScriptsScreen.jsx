@@ -242,7 +242,6 @@ const ScriptsScreen = ({ navigation }) => {
                 type={script.type}
                 editedTime={formatEditedTime(script.editedAt)}
                 onEdit={() => handleEditScript(script.id)}
-                onUseInPractice={() => handleUseInPractice(script.id)}
               />
             ))
           )}
