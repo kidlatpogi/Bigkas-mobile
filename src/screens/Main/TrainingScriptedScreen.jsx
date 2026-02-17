@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Camera } from 'expo-camera';
-import { Audio } from 'expo-av';
+import { Audio } from 'expo-audio';
 import Typography from '../../components/common/Typography';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import AudioLevelIndicator from '../../components/audio/AudioLevelIndicator';
@@ -227,10 +227,13 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
 
   const handleStartRecordingAuto = async () => {
     try {
-      // TODO: Start real audio recording using expo-av
-      // const { recording } = await Audio.Recording.createAsync(
-      //   Audio.RecordingOptionsPresets.HIGH_QUALITY
-      // );
+      // TODO: Start real audio recording using expo-audio
+      // const { recording } = await Audio.createRecordingAsync({
+      //   isMeteringEnabled: true,
+      //   android: { extension: '.m4a', outputFormat: 2, audioEncoder: 1 },
+      //   ios: { extension: '.caf', outputFormat: Audio.RecordingPresets.HIGH_QUALITY.ios.outputFormat },
+      // });
+      // await recording.startAsync();
       setIsRecording(true);
       setIsPaused(false);
       setRecordingDuration(0);

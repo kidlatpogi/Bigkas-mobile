@@ -1228,7 +1228,7 @@ Calculation: `wordsElapsed = Math.floor(recordingDuration * (wpm / 60))`
 | Front Camera     | `expo-camera` with front-facing type, auto-focus on |
 | Camera Photo     | Captured at 0.6 quality, stored as `cameraUri` |
 | Photo Display    | Positioned under teleprompter, 30% opacity    |
-| Phone Microphone | `expo-av` Audio.Recording (TODO: integrate)   |
+| Phone Microphone | `expo-audio` Audio.Recording (TODO: integrate)   |
 | Audio Level      | Simulates realistic levels with peaks/valleys  |
 
 #### Countdown Sequence
