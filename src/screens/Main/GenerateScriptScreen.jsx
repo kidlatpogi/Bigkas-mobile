@@ -1,0 +1,222 @@
+import React, { useMemo, useState } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import Typography from '../../components/common/Typography';
+import PrimaryButton from '../../components/common/PrimaryButton';
+import ChoiceChips from '../../components/common/ChoiceChips';
+import { colors } from '../../styles/colors';
+import { spacing, borderRadius } from '../../styles/spacing';
+
+/**
+ * GenerateScriptScreen — Generate Script Practice.
+ *
+ * Layout (top -> bottom):
+ * 1. Back button
+ * 2. "Generate Script" header
+ * 3. Multiline prompt input + Random Topic action
+ * 4. Vibe chips
+ * 5. Duration chips
+ * 6. Generate and Start button
+ */
+const GenerateScriptScreen = ({ navigation }) => {
+  /** @type {string} promptText - user prompt for script generation */
+  const [promptText, setPromptText] = useState('');
+  /** @type {string} selectedVibe - selected vibe tag */
+  const [selectedVibe, setSelectedVibe] = useState('inspirational');
+  /** @type {string} selectedDuration - selected duration tag */
+  const [selectedDuration, setSelectedDuration] = useState('medium');
+  /** @type {boolean} isGenerating - loading state while calling Supabase */
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  /** @type {Array<{value: string, label: string}>} */
+  const vibeOptions = useMemo(
+    () => [
+      { value: 'professional', label: 'Professional' },
+      { value: 'casual', label: 'Casual' },
+      { value: 'humorous', label: 'Humorous' },
+      { value: 'inspirational', label: 'Inspirational' },
+    ],
+    []
+  );
+
+  /** @type {Array<{value: string, label: string}>} */
+  const durationOptions = useMemo(
+    () => [
+      { value: 'short', label: 'Short (1-2m)' },
+      { value: 'medium', label: 'Medium (3-5m)' },
+      { value: 'long', label: 'Long (5m+)' },
+    ],
+    []
+  );
+
+  const handleGoBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Dashboard');
+    }
+  };
+
+  const handleRandomTopic = () => {
+    // TODO: Replace with a Supabase function or table lookup for random topics.
+    setPromptText('Generate a short speech about resilience and new beginnings.');
+  };
+
+  const handleGenerateStart = async () => {
+    setIsGenerating(true);
+    try {
+      // TODO: Call Supabase Edge Function for script generation with promptText, selectedVibe, selectedDuration.
+      // TODO: On success, navigate to practice session with the generated script.
+      console.info('Generate script', { promptText, selectedVibe, selectedDuration });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.content}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {/* Back button */}
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={handleGoBack}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="arrow-back" size={22} color={colors.black} />
+          </TouchableOpacity>
+
+          {/* Header */}
+          <Typography variant="h1" align="center" style={styles.title}>
+            Generate{"\n"}Script
+          </Typography>
+
+          {/* Prompt Input */}
+          <View style={styles.inputWrap}>
+            <TextInput
+              value={promptText}
+              onChangeText={setPromptText}
+              placeholder="What are you talking about? Be specific about your main message and who the audience is."
+              placeholderTextColor={colors.textSecondary}
+              style={styles.textArea}
+              multiline
+              textAlignVertical="top"
+            />
+            <TouchableOpacity
+              style={styles.randomTopic}
+              onPress={handleRandomTopic}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="shuffle" size={14} color={colors.black} />
+              <Typography variant="caption" weight="medium" style={styles.randomTopicText}>
+                Random Topic
+              </Typography>
+            </TouchableOpacity>
+          </View>
+
+          {/* Vibe */}
+          <Typography variant="body" weight="bold" style={styles.sectionTitle}>
+            What's the vibe?
+          </Typography>
+          <ChoiceChips
+            options={vibeOptions}
+            selected={selectedVibe}
+            onSelect={setSelectedVibe}
+            containerStyle={styles.chipsRow}
+          />
+
+          {/* Duration */}
+          <Typography variant="body" weight="bold" style={styles.sectionTitle}>
+            Approx. Duration
+          </Typography>
+          <ChoiceChips
+            options={durationOptions}
+            selected={selectedDuration}
+            onSelect={setSelectedDuration}
+            containerStyle={styles.chipsRow}
+          />
+        </ScrollView>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <PrimaryButton
+            title="Generate and Start"
+            onPress={handleGenerateStart}
+            loading={isGenerating}
+            variant="primary"
+            size="large"
+            style={styles.generateButton}
+          />
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xl,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  title: {
+    marginBottom: spacing.md,
+  },
+  inputWrap: {
+    marginBottom: spacing.md,
+  },
+  textArea: {
+    minHeight: 120,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    padding: spacing.md,
+    backgroundColor: colors.white,
+    color: colors.textPrimary,
+    fontFamily: 'Inter-Regular',
+    fontSize: 14,
+  },
+  randomTopic: {
+    marginTop: spacing.xs,
+    alignSelf: 'flex-end',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  randomTopicText: {
+    color: colors.textPrimary,
+  },
+  sectionTitle: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  chipsRow: {
+    marginBottom: spacing.sm,
+  },
+  footer: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+  },
+  generateButton: {
+    backgroundColor: colors.primary,
+  },
+});
+
+export default GenerateScriptScreen;

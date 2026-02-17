@@ -95,6 +95,10 @@ const PracticeScreen = ({ navigation }) => {
     console.info('Selected script:', script?.id);
   };
 
+  const handleOpenGenerate = () => {
+    navigation.navigate('GenerateScript');
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
@@ -131,6 +135,16 @@ const PracticeScreen = ({ navigation }) => {
             labelStyle={styles.tabLabel}
             activeLabelStyle={styles.tabLabelActive}
           />
+
+          {selectedTab === 'generate' && (
+            <PrimaryButton
+              title="Generate Speech"
+              onPress={handleOpenGenerate}
+              variant="primary"
+              size="medium"
+              style={styles.generateButton}
+            />
+          )}
 
           {/* List */}
           <View style={styles.listWrap}>
@@ -236,6 +250,9 @@ const styles = StyleSheet.create({
   listWrap: {
     marginTop: spacing.md,
     marginBottom: spacing.xl,
+  },
+  generateButton: {
+    marginTop: spacing.md,
   },
   scriptCard: {
     marginBottom: spacing.md,
