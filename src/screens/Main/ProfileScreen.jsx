@@ -98,7 +98,7 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleAccountSettings = () => {
-    Alert.alert('Account Settings', 'Account settings will be available soon.');
+    navigation.navigate('AccountSettings');
   };
 
   const handleLogout = async () => {
