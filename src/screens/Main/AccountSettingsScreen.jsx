@@ -176,16 +176,18 @@ const AccountSettingsScreen = ({ navigation }) => {
                 style={styles.deleteButton}
               />
             </View>
-
-            {/* ── Cancel button ── */}
-            <PrimaryButton
-              title="Cancel"
-              onPress={handleGoBack}
-              variant="outline"
-              style={styles.cancelButton}
-            />
           </View>
         </ScrollView>
+
+        {/* ── Cancel button (fixed at bottom) ── */}
+        <View style={styles.bottomButtonContainer}>
+          <PrimaryButton
+            title="Cancel"
+            onPress={handleGoBack}
+            variant="outline"
+            style={styles.cancelButton}
+          />
+        </View>
       </KeyboardAvoidingView>
 
       {/* ── Delete Account Modal ── */}
@@ -301,15 +303,13 @@ const styles = StyleSheet.create({
 
   /* ── Title ── */
   title: {
-    textAlign: 'center',
     marginBottom: spacing.sm,
     fontWeight: '700',
   },
 
   /* ── Description ── */
   description: {
-    textAlign: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xxl,
     lineHeight: 20,
   },
 
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     marginBottom: spacing.xs,
-    fontWeight: '600',
+    fontWeight: '900',
   },
   sectionDesc: {
     marginBottom: spacing.md,
@@ -336,10 +336,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.error,
   },
 
+  /* ── Bottom button container ── */
+  bottomButtonContainer: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+
   /* ── Cancel button ── */
   cancelButton: {
     width: '100%',
-    marginTop: spacing.lg,
   },
 
   /* ── Modal ── */

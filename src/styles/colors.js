@@ -25,7 +25,7 @@ export const colors = {
   // Semantic colors
   success: '#22C55E',
   warning: '#F59E0B',
-  error: '#EF4444',
+  error: '#ff0000',
   info: '#3B82F6',
 
   // Background colors
