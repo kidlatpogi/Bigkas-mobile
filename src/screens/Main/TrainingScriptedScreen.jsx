@@ -374,7 +374,18 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
           </View>
         ) : (
           <View style={styles.teleprompterCameraWrap}>
-            {/* Teleprompter text */}
+            {/* Camera Feed as background */}
+            {hasCamera && cameraPermission && (
+              <View style={styles.cameraContainer}>
+                <CameraView
+                  ref={setCameraRef}
+                  style={styles.cameraFeed}
+                  facing="front"
+                />
+              </View>
+            )}
+
+            {/* Teleprompter text overlay on top of camera */}
             <ScrollView
               ref={scrollViewRef}
               style={styles.teleprompter}
@@ -399,17 +410,6 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
                 ))}
               </Text>
             </ScrollView>
-
-            {/* Camera Feed below teleprompter */}
-            {hasCamera && cameraPermission && (
-              <View style={styles.cameraContainer}>
-                <CameraView
-                  ref={setCameraRef}
-                  style={styles.cameraFeed}
-                  facing="front"
-                />
-              </View>
-            )}
           </View>
         )}
 
@@ -734,13 +734,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  // Camera styles
+  // Camera styles — absolute background behind teleprompter
   cameraContainer: {
-    width: '100%',
-    aspectRatio: 3 / 4,
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-    marginTop: -spacing.md,
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.45,
   },
   cameraFeed: {
     flex: 1,
@@ -767,15 +764,14 @@ const styles = StyleSheet.create({
   teleprompterCameraWrap: {
     flex: 1,
     borderRadius: borderRadius.lg,
-    overflow: 'hidden',
     marginBottom: spacing.md,
+    overflow: 'hidden',
+    backgroundColor: colors.white,
   },
   teleprompter: {
-    maxHeight: 180,
-    backgroundColor: colors.white,
-    borderTopLeftRadius: borderRadius.lg,
-    borderTopRightRadius: borderRadius.lg,
-    zIndex: 1,
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.55)',
+    zIndex: 2,
   },
   teleprompterContent: {
     padding: spacing.md,
