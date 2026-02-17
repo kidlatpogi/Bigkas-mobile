@@ -1,153 +1,176 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import Typography from '../../components/common/Typography';
 import Card from '../../components/common/Card';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import { colors } from '../../styles/colors';
-import { spacing } from '../../styles/spacing';
-import { formatScore } from '../../utils/formatters';
+import { spacing, borderRadius } from '../../styles/spacing';
 
 const SessionResultScreen = ({ route, navigation }) => {
-  const { word, score, feedback } = route.params || {};
+  const {
+    confidenceScore = 72,
+    summary = "Great effort! You're consistently improving your delivery.",
+    pitchStability = 'GOOD',
+    paceWpm = 145,
+    paceRating = 'NEEDS WORK',
+    resultMode = 'training',
+    trainingParams,
+  } = route.params || {};
 
-  const getScoreColor = () => {
-    if (score >= 0.8) return 'success';
-    if (score >= 0.6) return 'warning';
-    return 'error';
+  const waveBars = [
+    10, 18, 14, 22, 12, 20, 16, 26, 14, 20, 12, 24, 16, 22, 12, 18,
+  ];
+
+  const handleGoBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Dashboard');
+    }
   };
 
-  const getScoreMessage = () => {
-    if (score >= 0.9) return 'Excellent! Perfect pronunciation!';
-    if (score >= 0.8) return 'Great job! Very good pronunciation!';
-    if (score >= 0.7) return 'Good effort! Keep practicing!';
-    if (score >= 0.6) return 'Not bad! Try again for better results.';
-    return 'Keep practicing! You\'ll improve with time.';
+  const handlePracticeAgain = () => {
+    if (resultMode === 'practice') {
+      navigation.navigate('Practice');
+      return;
+    }
+    if (trainingParams) {
+      navigation.replace('TrainingScripted', trainingParams);
+      return;
+    }
+    navigation.navigate('TrainingSetup');
   };
 
-  const handleTryAgain = () => {
-    navigation.goBack();
-  };
-
-  const handleNextWord = () => {
-    navigation.navigate('Practice');
-  };
-
-  const handleViewHistory = () => {
-    navigation.navigate('History');
-  };
-
-  const handleGoToDashboard = () => {
+  const handleCancel = () => {
     navigation.navigate('Dashboard');
+  };
+
+  const handleViewDetailedFeedback = () => {
+    navigation.navigate('DetailedFeedback', {
+      resultMode,
+      trainingParams,
+      timelinePoints: [
+        { time: '1:00', value: 32 },
+        { time: '2:00', value: 62 },
+        { time: '3:00', value: 38 },
+        { time: '4:00', value: 52 },
+      ],
+      eyeContact: { score: 67, status: 'MAINTAINED', note: 'Focus needs more practice' },
+      bodyGestures: { status: 'GOOD', note: 'Natural hand movements detected' },
+      voice: { status: 'EXCELLENT', note: 'Pronunciation and diction are improving' },
+      feedbackItems: [
+        {
+          title: 'Strong Eye Contact',
+          time: '0:12',
+          body: 'Excellent start. You maintained direct eye contact with the camera during your entire opening statement.',
+          tone: 'primary',
+        },
+        {
+          title: 'Confident Vocal Energy',
+          time: '0:18',
+          body: 'Great enthusiasm. You projected your voice clearly and kept your tone engaging throughout the key points.',
+          tone: 'info',
+        },
+        {
+          title: 'Clear Pace and Pauses',
+          time: '0:24',
+          body: 'You slowed down on important ideas and used brief pauses, which made your message easier to follow.',
+          tone: 'warning',
+        },
+        {
+          title: 'Effective Hand Gestures',
+          time: '0:31',
+          body: 'You used open palms while explaining core concept. This helped emphasize your points naturally.',
+          tone: 'primary',
+        },
+      ],
+    });
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
         <View style={styles.header}>
-          <Typography variant="h3" align="center">
-            Results
+          <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={20} color={colors.black} />
+          </TouchableOpacity>
+        </View>
+
+        <Typography variant="h1" align="center" style={styles.title}>
+          Analysis
+          {'\n'}Result
+        </Typography>
+
+        <View style={styles.scoreBlock}>
+          <View style={styles.scoreRow}>
+            <Typography variant="display" style={styles.scoreValue}>
+              {confidenceScore}
+            </Typography>
+            <Typography variant="body" color="textSecondary" style={styles.scoreSuffix}>
+              /100
+            </Typography>
+          </View>
+          <Typography variant="caption" color="textSecondary" align="center">
+            VOCAL CONFIDENCE SCORE
+          </Typography>
+          <Typography variant="body" color="textSecondary" align="center" style={styles.summaryText}>
+            {summary}
           </Typography>
         </View>
 
-        {/* Score Card */}
-        <Card style={styles.scoreCard}>
-          <Typography variant="caption" color="textSecondary" align="center">
-            Your Score
-          </Typography>
-          <Typography
-            variant="display"
-            color={getScoreColor()}
-            align="center"
-            style={styles.scoreText}
-          >
-            {formatScore(score || 0)}
-          </Typography>
-          <Typography variant="body" color="textSecondary" align="center">
-            {getScoreMessage()}
-          </Typography>
-        </Card>
-
-        {/* Word Card */}
-        <Card style={styles.wordCard}>
-          <Typography variant="caption" color="textSecondary" align="center">
-            Word Practiced
-          </Typography>
-          <Typography variant="h2" align="center" style={styles.wordText}>
-            {word || 'N/A'}
-          </Typography>
-        </Card>
-
-        {/* Feedback Card */}
-        {feedback && (
-          <Card style={styles.feedbackCard}>
-            <Typography variant="h4" style={styles.cardTitle}>
-              Pronunciation Tips
+        <Card style={styles.analysisCard}>
+          <View style={styles.cardHeaderRow}>
+            <Typography variant="bodySmall" weight="bold" style={styles.cardTitle}>
+              PITCH STABILITY
             </Typography>
-            <Typography variant="body" color="textSecondary">
-              {feedback}
-            </Typography>
-          </Card>
-        )}
-
-        {/* Score Breakdown (Placeholder) */}
-        <Card style={styles.breakdownCard}>
-          <Typography variant="h4" style={styles.cardTitle}>
-            Score Breakdown
+            <View style={[styles.badge, styles.badgeGood]}>
+              <Typography variant="caption" style={styles.badgeText}>{pitchStability}</Typography>
+            </View>
+          </View>
+          <View style={styles.waveformRow}>
+            {waveBars.map((height, idx) => (
+              <View key={`bar-${idx}`} style={[styles.waveBar, { height }]} />
+            ))}
+          </View>
+          <Typography variant="caption" color="textSecondary">
+            Steady tone maintained throughout
           </Typography>
-          
-          <View style={styles.breakdownRow}>
-            <Typography variant="body">Accuracy</Typography>
-            <View style={styles.progressContainer}>
-              <View style={[styles.progressBar, { width: `${(score || 0) * 100}%` }]} />
-            </View>
-            <Typography variant="bodySmall">{formatScore(score || 0)}</Typography>
-          </View>
-
-          <View style={styles.breakdownRow}>
-            <Typography variant="body">Fluency</Typography>
-            <View style={styles.progressContainer}>
-              <View style={[styles.progressBar, { width: `${((score || 0) * 0.9) * 100}%` }]} />
-            </View>
-            <Typography variant="bodySmall">{formatScore((score || 0) * 0.9)}</Typography>
-          </View>
-
-          <View style={styles.breakdownRow}>
-            <Typography variant="body">Clarity</Typography>
-            <View style={styles.progressContainer}>
-              <View style={[styles.progressBar, { width: `${((score || 0) * 0.95) * 100}%` }]} />
-            </View>
-            <Typography variant="bodySmall">{formatScore((score || 0) * 0.95)}</Typography>
-          </View>
         </Card>
 
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <PrimaryButton
-            title="Try Again"
-            onPress={handleTryAgain}
-            style={styles.actionButton}
-          />
-          <PrimaryButton
-            title="Next Word"
-            onPress={handleNextWord}
-            variant="secondary"
-            style={styles.actionButton}
-          />
-          <PrimaryButton
-            title="View History"
-            onPress={handleViewHistory}
-            variant="outline"
-            style={styles.actionButton}
-          />
-          <PrimaryButton
-            title="Go to Dashboard"
-            onPress={handleGoToDashboard}
-            variant="outline"
-            style={styles.actionButton}
-          />
-        </View>
+        <Card style={styles.analysisCard}>
+          <View style={styles.cardHeaderRow}>
+            <Typography variant="bodySmall" weight="bold" style={styles.cardTitle}>
+              SPEAKING PACE
+            </Typography>
+            <View style={[styles.badge, styles.badgeWarn]}>
+              <Typography variant="caption" style={styles.badgeText}>{paceRating}</Typography>
+            </View>
+          </View>
+          <View style={styles.paceRow}>
+            <Typography variant="h2" style={styles.paceValue}>{paceWpm}</Typography>
+            <Typography variant="caption" color="textSecondary" style={styles.paceUnit}>WPM</Typography>
+          </View>
+          <View style={styles.paceTrack}>
+            <View style={[styles.paceFill, { width: '72%' }]} />
+          </View>
+          <Typography variant="caption" color="textSecondary">
+            Slightly faster than recommended 120-130 wpm.
+          </Typography>
+        </Card>
+
+        <TouchableOpacity style={styles.detailLink} activeOpacity={0.7} onPress={handleViewDetailedFeedback}>
+          <Typography variant="bodySmall" color="textSecondary">View Detailed Feedback</Typography>
+          <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
+        </TouchableOpacity>
+
+        <PrimaryButton
+          title={resultMode === 'training' ? 'Train Again' : 'Practice Again'}
+          onPress={handlePracticeAgain}
+          style={styles.primaryButton}
+        />
+        <PrimaryButton title="Cancel" onPress={handleCancel} variant="outline" style={styles.secondaryButton} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -160,56 +183,118 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: spacing.md,
+    paddingBottom: spacing.xl,
   },
   header: {
-    marginBottom: spacing.lg,
-    paddingTop: spacing.md,
-  },
-  scoreCard: {
-    padding: spacing.xl,
-    marginBottom: spacing.md,
-  },
-  scoreText: {
-    marginVertical: spacing.md,
-  },
-  wordCard: {
-    marginBottom: spacing.md,
-    padding: spacing.lg,
-  },
-  wordText: {
-    marginTop: spacing.sm,
-  },
-  feedbackCard: {
-    marginBottom: spacing.md,
-  },
-  breakdownCard: {
-    marginBottom: spacing.md,
-  },
-  cardTitle: {
-    marginBottom: spacing.md,
-  },
-  breakdownRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: spacing.sm,
   },
-  progressContainer: {
-    flex: 1,
-    height: 8,
-    backgroundColor: colors.gray200,
-    borderRadius: 4,
-    marginHorizontal: spacing.sm,
-    overflow: 'hidden',
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  progressBar: {
+  title: {
+    marginBottom: spacing.md,
+  },
+  scoreBlock: {
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  scoreRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  scoreValue: {
+    fontSize: 56,
+    fontWeight: '700',
+    color: colors.black,
+  },
+  scoreSuffix: {
+    marginLeft: spacing.xs,
+  },
+  summaryText: {
+    marginTop: spacing.sm,
+  },
+  analysisCard: {
+    borderWidth: 1,
+    borderColor: colors.primary,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  cardTitle: {
+    letterSpacing: 0.4,
+  },
+  badge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: 999,
+  },
+  badgeGood: {
+    backgroundColor: 'rgba(251, 175, 0, 0.15)',
+  },
+  badgeWarn: {
+    backgroundColor: 'rgba(251, 175, 0, 0.08)',
+  },
+  badgeText: {
+    color: colors.black,
+    fontWeight: '700',
+  },
+  waveformRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 2,
+    marginBottom: spacing.sm,
+  },
+  waveBar: {
+    width: 3,
+    backgroundColor: colors.black,
+    borderRadius: 2,
+  },
+  paceRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginBottom: spacing.sm,
+  },
+  paceValue: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.black,
+  },
+  paceUnit: {
+    marginLeft: spacing.xs,
+    marginBottom: 2,
+  },
+  paceTrack: {
+    height: 6,
+    backgroundColor: colors.background,
+    borderRadius: 999,
+    overflow: 'hidden',
+    marginBottom: spacing.sm,
+  },
+  paceFill: {
     height: '100%',
     backgroundColor: colors.primary,
-    borderRadius: 4,
   },
-  actionButtons: {
-    marginTop: spacing.lg,
+  detailLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.xs,
   },
-  actionButton: {
+  primaryButton: {
+    marginBottom: spacing.sm,
+  },
+  secondaryButton: {
     marginBottom: spacing.sm,
   },
 });

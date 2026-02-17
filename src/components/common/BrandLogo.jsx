@@ -1,26 +1,30 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { colors } from '../../styles/colors';
-import { spacing } from '../../styles/spacing';
-import { textStyles } from '../../styles/typography';
+
+// Pre-require the logo so bundler includes it
+const logoSource = require('../../../assets/logo.png');
 
 /**
- * Brand logo mark + wordmark for consistent auth headers.
+ * Brand logo with waveform mark + wordmark "Bigkas".
+ * Matches the Figma reference: logo image on left, bold "Bigkas" text on right.
+ *
  * @param {Object} props
- * @param {string} [props.title] - Brand name text.
+ * @param {number} [props.size] - Logo mark size in pixels (default: 28).
+ * @param {boolean} [props.showText] - Whether to show "Bigkas" text (default: true).
  * @param {Object} [props.style] - Optional wrapper styles.
  */
-const BrandLogo = ({ title = 'Bigkas', style }) => {
+const BrandLogo = ({ size = 28, showText = true, style }) => {
   return (
     <View style={[styles.container, style]}>
-      <View style={styles.mark}>
-        <View style={[styles.bar, styles.barSm]} />
-        <View style={[styles.bar, styles.barMd]} />
-        <View style={[styles.bar, styles.barLg]} />
-        <View style={[styles.bar, styles.barMd]} />
-        <View style={[styles.bar, styles.barSm]} />
-      </View>
-      <Text style={styles.title}>{title}</Text>
+      <Image
+        source={logoSource}
+        style={{ width: size, height: size }}
+        resizeMode="contain"
+      />
+      {showText && (
+        <Text style={[styles.title, { fontSize: size * 0.75 }]}>Bigkas</Text>
+      )}
     </View>
   );
 };
@@ -29,30 +33,12 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  mark: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    marginRight: spacing.sm,
-  },
-  bar: {
-    width: 4,
-    marginHorizontal: 1,
-    borderRadius: 2,
-    backgroundColor: colors.primary,
-  },
-  barSm: {
-    height: 10,
-  },
-  barMd: {
-    height: 16,
-  },
-  barLg: {
-    height: 22,
+    gap: 6,
   },
   title: {
-    ...textStyles.h3,
     color: colors.textPrimary,
+    fontWeight: '700',
+    letterSpacing: -0.3,
   },
 });
 

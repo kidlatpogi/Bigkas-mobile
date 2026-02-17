@@ -47,9 +47,11 @@ const BottomTabNavigator = () => {
   return (
     <Tab.Navigator
       initialRouteName="Dashboard"
+      backBehavior="initialRoute"
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: false,
+        tabBarHideOnKeyboard: true,
         tabBarIcon: ({ focused }) => {
           const icons = TAB_ICONS[route.name];
           const iconName = focused ? icons.focused : icons.outline;

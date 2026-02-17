@@ -19,12 +19,20 @@
    - [HistoryScreen](#46-historyscreen)
    - [SessionDetailScreen](#47-sessiondetailscreen)
    - [SessionResultScreen](#48-sessionresultscreen)
+   - [DetailedFeedbackScreen](#481-detailedfeedbackscreen)
+   - [AudioCameraTestScreen](#482-audiocameratestscreen)
    - [ProfileScreen](#49-profilescreen)
    - [EditProfileScreen](#410-editprofilescreen)
    - [ProgressScreen](#411-progressscreen)
    - [ScriptsScreen](#412-scriptsscreen)
    - [SettingsScreen](#413-settingsscreen)
+   - [TrainingSetupScreen](#414-trainingsetupscreen)
+   - [GenerateScriptScreen](#415-generatescriptscreen)
+   - [TrainingScriptedScreen](#416-trainingscriptedscreen)
+   - [ChangePasswordScreen](#417-changepasswordscreen)
+   - [AccountSettingsScreen](#418-accountsettingsscreen)
 5. [Reusable Component Props](#5-reusable-component-props)
+5b. [API Modules](#5b-api-modules)
 6. [Utility Functions](#6-utility-functions)
 7. [Navigation Map](#7-navigation-map)
 
@@ -508,7 +516,7 @@ const { practiceWords, fetchPracticeWords, uploadAudio, isLoading } = useSession
 
 | Action                                           | Destination          |
 | ------------------------------------------------ | -------------------- |
-| `navigation.navigate('SessionResult', { word, score })` | SessionResultScreen |
+| `navigation.navigate('TrainingScripted', { scriptId, focusMode, scriptType, autoStart, entryPoint })` | TrainingScriptedScreen |
 
 #### Components Used
 
@@ -627,39 +635,144 @@ const { currentSession, fetchSessionById, isLoading, clearCurrentSession } = use
 
 #### Route Params
 
-| Param      | Type     | Description                           |
-| ---------- | -------- | ------------------------------------- |
-| `word`     | `string` | The word that was practiced           |
-| `score`    | `number` | Pronunciation score (0–1)            |
-| `feedback` | `string` | Optional AI feedback text            |
+| Param             | Type     | Description                           |
+| ----------------- | -------- | ------------------------------------- |
+| `confidenceScore` | `number` | Vocal confidence score (0–100)        |
+| `summary`         | `string` | Summary message under the score       |
+| `pitchStability`  | `string` | Pitch stability badge text            |
+| `paceWpm`          | `number` | Speaking pace in WPM                  |
+| `paceRating`      | `string` | Speaking pace badge text              |
+| `resultMode`      | `string` | `'training'` \| `'practice'`        |
+| `trainingParams`  | `object` | Params to restart training session    |
 
 #### Derived Variables
 
 No local state — all data comes from route params.
 
-#### Helper Functions (inline)
+#### UI Sections
 
-| Function           | Returns                              | Logic                                       |
-| ------------------ | ------------------------------------ | ------------------------------------------- |
-| `getScoreColor()`  | `'success' \| 'warning' \| 'error'` | `≥0.8` → success, `≥0.6` → warning, else error |
-| `getScoreMessage()`| `string`                             | 5-tier message: Excellent (≥0.9), Great (≥0.8), Good (≥0.7), Not bad (≥0.6), Keep practicing |
+| Section            | Content                                         |
+| ------------------ | ----------------------------------------------- |
+| Header             | Back button + "Analysis Result" title          |
+| Score block        | Score number, `/100`, and summary text          |
+| Pitch Stability    | Waveform strip + `pitchStability` badge         |
+| Speaking Pace      | WPM value + `paceRating` badge + pace bar       |
+| Actions            | "Practice Again" and "Cancel" buttons          |
 
-#### Score Breakdown (Placeholder)
+#### Analysis Cards (UI)
 
-| Metric    | Computation             | Description                |
-| --------- | ----------------------- | -------------------------- |
-| Accuracy  | `score`                 | Direct score               |
-| Fluency   | `score * 0.9`           | 90% of score (placeholder) |
-| Clarity   | `score * 0.95`          | 95% of score (placeholder) |
+| Card            | Description                              |
+| --------------- | ---------------------------------------- |
+| Pitch Stability | Waveform + `pitchStability` badge        |
+| Speaking Pace   | `paceWpm` + `paceRating` badge + progress |
 
 #### Handlers
 
 | Handler               | Trigger                | Action                              |
 | --------------------- | ---------------------- | ----------------------------------- |
-| `handleTryAgain()`    | "Try Again" press      | `navigation.goBack()`              |
-| `handleNextWord()`    | "Next Word" press      | `navigation.navigate('Practice')`  |
-| `handleViewHistory()` | "View History" press   | `navigation.navigate('History')`   |
-| `handleGoToDashboard()` | "Go to Dashboard"   | `navigation.navigate('Dashboard')` |
+| `handlePracticeAgain()` | "Practice Again" press | `navigate('Practice')` when `resultMode = 'practice'`; otherwise `goBack()` or `navigate('TrainingSetup')` |
+| `handleCancel()`      | "Cancel" press        | `navigation.navigate('Dashboard')` |
+| `handleGoBack()`      | Back arrow press       | `navigation.goBack()` or Dashboard |
+| `handleViewDetailedFeedback()` | "View Detailed Feedback" press | `navigation.navigate('DetailedFeedback', params)` |
+
+---
+
+### 4.8.1 DetailedFeedbackScreen
+
+**File**: `src/screens/Session/DetailedFeedbackScreen.jsx`  
+**Route**: `DetailedFeedback` (MainNavigator stack)
+
+#### Layout
+
+1. Back button
+2. "Detailed Feedback" title
+3. Performance flow timeline card + legend
+4. Metrics cards (Eye Contact, Body Gestures, Voice)
+5. Feedback list cards with timestamps
+6. "Train Again" / "Practice Again" button + Cancel
+
+#### Route Params
+
+| Param            | Type     | Description                           |
+| ---------------- | -------- | ------------------------------------- |
+| `resultMode`     | `string` | `'training'` \| `'practice'`         |
+| `trainingParams` | `object` | Params to restart training session     |
+| `timelinePoints` | `Array<{time: string, value: number}>` | Timeline points for chart      |
+| `eyeContact`     | `{ score: number, status: string, note: string }` | Eye contact metric      |
+| `bodyGestures`   | `{ status: string, note: string }` | Body gesture metric             |
+| `voice`          | `{ status: string, note: string }` | Voice metric                     |
+| `feedbackItems`  | `Array<{ title: string, time: string, body: string, tone: string }>` | Detailed feedback list |
+
+#### Handlers
+
+| Handler               | Trigger                | Action                              |
+| --------------------- | ---------------------- | ----------------------------------- |
+| `handleGoBack()`      | Back arrow press       | `navigation.goBack()` or Dashboard |
+| `handlePracticeAgain()` | "Practice/Train Again" press | `navigate('Practice')` when practice; otherwise `goBack()` or `navigate('TrainingSetup')` |
+| `handleCancel()`      | "Cancel" press        | `navigation.navigate('Dashboard')` |
+
+---
+
+### 4.8.2 AudioCameraTestScreen
+
+**File**: `src/screens/Main/AudioCameraTestScreen.jsx`  
+**Route**: `AudioCameraTest` (MainNavigator stack — opened from Settings → "Test Audio / Video")
+
+#### State Variables
+
+| Variable           | Type      | Initial Value | Description                           |
+| ------------------ | --------- | ------------- | ------------------------------------- |
+| `cameraPermission` | `boolean` | `false`       | Whether camera permission is granted  |
+| `audioPermission`  | `boolean` | `false`       | Whether microphone permission granted |
+| `facing`           | `string`  | `'front'`     | Active camera direction (`'front'` \| `'back'`) |
+| `isMicTesting`     | `boolean` | `false`       | Whether microphone level test is running |
+| `audioLevel`       | `number`  | `0`           | Current simulated mic level (0–1)     |
+| `cameraReady`      | `boolean` | `false`       | Whether CameraView has initialised    |
+
+#### Refs
+
+| Ref                   | Type     | Description                                        |
+| --------------------- | -------- | -------------------------------------------------- |
+| `micIntervalRef`      | `number` | setInterval ID for audio level polling              |
+| `soundStartTimeRef`   | `number` | Timestamp when sound first exceeded threshold       |
+| `autoStopTimeoutRef`  | `number` | setTimeout ID for deferred auto-stop                |
+
+#### Constants
+
+| Constant          | Value  | Description                                         |
+| ----------------- | ------ | --------------------------------------------------- |
+| `SOUND_THRESHOLD` | `0.15` | Audio level above which "sound" is considered detected |
+| `AUTO_STOP_DELAY` | `3000` | Milliseconds of continuous sound before auto-stopping  |
+
+#### Handlers
+
+| Handler                | Trigger                    | Action                                     |
+| ---------------------- | -------------------------- | ------------------------------------------ |
+| `handleGoBack()`       | Back arrow / Done press    | Stops mic test, clears timeouts, `navigation.goBack()` |
+| `handleFlipCamera()`   | Flip camera icon press     | Toggles `facing` between front and back    |
+| `handleToggleMicTest()`| Start / Stop Mic Test btn  | Starts/stops simulated audio level polling with auto-stop logic |
+| `stopMicTest()`        | Auto-stop timer / manual   | Clears interval, timeout, refs; resets audioLevel and isMicTesting |
+
+#### Auto-Stop Mic Behaviour
+
+When mic test is active, the audio level is polled every 120 ms. If the level stays above `SOUND_THRESHOLD` (0.15) for `AUTO_STOP_DELAY` (3 000 ms), `stopMicTest()` is scheduled on the next tick to cleanly stop the test. If the level drops below the threshold, the timer resets.
+
+#### Components Used
+
+| Component             | Props                                       | Description                 |
+| --------------------- | ------------------------------------------- | --------------------------- |
+| `CameraView`          | `facing`, `onCameraReady`                   | Live camera preview         |
+| `AudioLevelIndicator` | `level`, `isActive`, `barCount=20`, `width` | Mic waveform visualiser     |
+| `PrimaryButton`       | `title`, `onPress`, `variant`, `disabled`   | Mic toggle + Done buttons   |
+
+#### UI Sections (top → bottom)
+
+| Section           | Content                                                        |
+| ----------------- | -------------------------------------------------------------- |
+| Header            | Back button + "Test Audio / Video" title                       |
+| Camera Preview    | Live CameraView with flip-camera overlay + status dot          |
+| Microphone Test   | 20-bar AudioLevelIndicator + status dot + Start/Stop button    |
+| Done              | Full-width "Done" button returning to Settings                 |
 
 ---
 
@@ -671,41 +784,70 @@ No local state — all data comes from route params.
 #### Hook Destructuring
 
 ```js
-const { user, logout, isLoading } = useAuth();
-const { reset: resetSessions } = useSessions();
+const { user, logout, isLoading, updateNickname } = useAuth();
 ```
+
+#### State Variables
+
+| Variable   | Type     | Initial Value                                   | Description                   |
+| ---------- | -------- | ----------------------------------------------- | ----------------------------- |
+| `formData` | `object` | (see below)                                     | Editable profile fields       |
+| `errors`   | `object` | `{}`                                            | Per-field validation errors   |
+| `isSaving` | `boolean`| `false`                                         | Save operation in progress    |
+
+#### `formData` Shape
+
+| Key          | Type              | Initial Value                          | Description               |
+| ------------ | ----------------- | -------------------------------------- | ------------------------- |
+| `firstName`  | `string`          | `user?.name?.split(' ')[0] \|\| ''`    | First name input          |
+| `lastName`   | `string`          | `user?.name?.split(' ').slice(1).join(' ') \|\| ''` | Last name input (optional) |
+| `nickname`   | `string`          | `user?.nickname \|\| ''`               | Display nickname input    |
+| `email`      | `string`          | `user?.email \|\| ''`                  | Email input (read-only)   |
+| `avatarUri`  | `string \| null`  | `user?.avatar_url \|\| null`           | Selected avatar image URI |
+
+#### Validation
+
+| Key         | Message                         | Required? |
+| ----------- | ------------------------------- | --------- |
+| `firstName` | `'First name is required'`      | Yes       |
+| `lastName`  | —                               | No (optional) |
 
 #### From Hooks
 
-| Variable         | Source           | Type       | Description                      |
-| ---------------- | ---------------- | ---------- | -------------------------------- |
-| `user`           | `useAuth()`      | `object`   | Current user                     |
-| `logout`         | `useAuth()`      | `function` | Clears auth state + storage      |
-| `isLoading`      | `useAuth()`      | `boolean`  | Loading indicator                |
-| `resetSessions`  | `useSessions()`  | `function` | Clear session state on logout    |
-
-#### Displayed User Fields
-
-| Field                               | Section          | Display                        |
-| ----------------------------------- | ---------------- | ------------------------------ |
-| `user?.name?.charAt(0)?.toUpperCase()` | Avatar circle | Initial letter                 |
-| `user?.name`                        | Below avatar     | Full name                      |
-| `user?.email`                       | Below name       | Email address                  |
+| Variable         | Source       | Type       | Description                       |
+| ---------------- | ------------ | ---------- | --------------------------------- |
+| `user`           | `useAuth()`  | `object`   | Pre-populate form fields          |
+| `logout`         | `useAuth()`  | `function` | Clears auth state + storage       |
+| `isLoading`      | `useAuth()`  | `boolean`  | Loading indicator                 |
+| `updateNickname` | `useAuth()`  | `function` | Update nickname in context + Supabase |
 
 #### Handlers
 
-| Handler           | Trigger                  | Action                                         |
-| ----------------- | ------------------------ | ---------------------------------------------- |
-| `handleEditProfile()` | "Edit Profile" press | `navigation.navigate('EditProfile')`           |
-| `handleLogout()`  | "Logout" button press    | Shows Alert; on confirm: `resetSessions()` + `logout()` |
+| Handler                   | Trigger                    | Action                                              |
+| ------------------------- | -------------------------- | --------------------------------------------------- |
+| `updateField(field, value)` | Any input change         | Updates `formData[field]`, clears matching error    |
+| `handleSaveChanges()`     | "Save Changes" press       | Validates, uploads avatar if changed, updates Supabase user_metadata (full_name, nickname, avatar_url), syncs nickname via context |
+| `handleCancel()`          | "Cancel" press             | Resets form to initial user values                  |
+| `handleGoBack()`          | Back arrow press           | `navigation.goBack()` or `navigation.navigate('Dashboard')` |
+| `handleChangePassword()`  | "Change Password" row     | `navigation.navigate('ChangePassword')`             |
+| `handleAccountSettings()` | "Account Settings" row    | `navigation.navigate('AccountSettings')`            |
+| `uploadAvatar(localUri)`  | Called by handleSaveChanges | Uploads image to Supabase Storage `avatars` bucket, returns public URL |
 
-#### UI Cards
+#### Avatar Upload Flow
 
-| Card Section     | Static Content                       |
-| ---------------- | ------------------------------------ |
-| Stats Card       | Total Sessions (0), Avg Score (—), Streak (0) — placeholders |
-| Settings Card    | Notifications, Language, Dark Mode — placeholder rows |
-| About Card       | Version, Terms, Privacy — placeholder rows |
+1. User picks image via `AvatarPicker` → local URI stored in `formData.avatarUri`
+2. On save, if URI changed and starts with `file`, `uploadAvatar()` is called
+3. Image fetched as blob → converted to ArrayBuffer
+4. Uploaded to `avatars/{userId}/avatar.{ext}` with `upsert: true`
+5. Public URL returned and saved to `user_metadata.avatar_url`
+
+#### Components Used
+
+| Component      | Props                                        | Description               |
+| -------------- | -------------------------------------------- | ------------------------- |
+| `AvatarPicker` | `uri`, `username`, `size`, `editable`, `onImageSelect` | Avatar selection with camera icon |
+| `TextField`    | `label`, `value`, `onChangeText`, `error`    | Form inputs               |
+| `PrimaryButton`| `title`, `onPress`, `loading`, `variant`     | Save/Cancel buttons       |
 
 ---
 
@@ -759,8 +901,8 @@ const { user, updateNickname, isLoading } = useAuth();
 | `handleSaveChanges()`   | "Save Changes" press       | Validates, shows success Alert + navigates back     |
 | `handleCancel()`        | "Cancel" press             | `navigation.goBack()`                               |
 | `handleGoBack()`        | Back arrow press           | `navigation.goBack()`                               |
-| `handleChangePassword()` | "Change Password" row    | Placeholder Alert                                   |
-| `handleAccountSettings()` | "Account Settings" row  | Placeholder Alert                                   |
+| `handleChangePassword()` | "Change Password" row    | `navigation.navigate('ChangePassword')`             |
+| `handleAccountSettings()` | "Account Settings" row  | `navigation.navigate('AccountSettings')`            |
 
 #### Components Used
 
@@ -854,32 +996,35 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 **File**: `src/screens/Main/ScriptsScreen.jsx`  
 **Route**: `Scripts` (MainNavigator stack)
 
+> **Data source**: All script data comes from Supabase via `src/api/scriptsApi.js`.  
+> Scripts are reloaded on every screen focus (`navigation.addListener('focus')`).
+
 #### State Variables
 
 | Variable     | Type                                | Initial Value      | Description                           |
 | ------------ | ----------------------------------- | ------------------ | ------------------------------------- |
 | `filterType` | `'self-authored' \| 'auto-generated'` | `'self-authored'` | Selected script type filter           |
-| `scripts`    | `Script[]`                          | `[]`               | Array of all script objects           |
-| `isLoading`  | `boolean`                           | `false`            | Data loading indicator                |
+| `scripts`    | `Script[]`                          | `[]`               | Array of all script objects from Supabase |
+| `isLoading`  | `boolean`                           | `false`            | Data loading indicator (shows ActivityIndicator) |
 
-#### Script Object Shape
+#### Script Object Shape (from Supabase `scripts` table)
 
-| Property      | Type                                | Description                          |
-| ------------- | ----------------------------------- | ------------------------------------ |
-| `id`          | `string`                            | Unique script identifier             |
-| `title`       | `string`                            | Script title/name                    |
-| `description` | `string`                            | Script body preview text             |
-| `type`        | `'self-authored' \| 'auto-generated'` | Script source type                 |
-| `editedAt`    | `string`                            | ISO 8601 timestamp of last edit      |
-| `content`     | `string`                            | Full script content                  |
-| `createdAt`   | `string`                            | ISO 8601 timestamp of creation       |
+| Property      | Type           | Description                          |
+| ------------- | -------------- | ------------------------------------ |
+| `id`          | `uuid`         | Primary key                          |
+| `user_id`     | `uuid`         | FK → `profiles.id`                   |
+| `title`       | `text`         | Script title/name                    |
+| `content`     | `text`         | Full script body text                |
+| `type`        | `text`         | `'self-authored'` \| `'auto-generated'` |
+| `created_at`  | `timestamptz`  | Creation timestamp                   |
+| `updated_at`  | `timestamptz`  | Last update timestamp                |
 
 #### Derived Variables
 
 | Variable          | Type            | Derivation                                    | Description                           |
 | ----------------- | --------------- | --------------------------------------------- | ------------------------------------- |
 | `filteredScripts` | `Script[]`      | Filtered by `filterType`                      | Scripts matching current filter       |
-| `filterTabs`      | `TabOption[]`   | `[{value, label}, ...]`                       | Filter tab options                    |
+| `filterTabs`      | `TabOption[]`   | `[{value, label}, ...]`                       | Filter tab options (memoized)         |
 
 #### TabOption Shape
 
@@ -890,15 +1035,23 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 
 #### Handlers
 
-| Handler                   | Trigger                    | Action                                                  |
-| ------------------------- | -------------------------- | ------------------------------------------------------- |
-| `handleGoBack()`          | Back arrow press           | `navigation.goBack()`                                   |
-| `handleWriteScript()`     | "Write Script" button      | Navigate to script creation screen (placeholder)        |
-| `handleGenerateScript()`  | "Generate Script" button   | Trigger AI script generation (placeholder)              |
-| `handleEditScript(id)`    | "Edit" button on card      | Navigate to script editor with script ID (placeholder)  |
-| `handleUseInPractice(id)` | "Use in Practice" button   | Navigate to Practice with script content                |
-| `handleFilterChange(val)` | Filter tab selection       | Updates `filterType` state                              |
-| `formatEditedTime(iso)`   | Called during render       | Converts ISO timestamp to readable format               |
+| Handler                    | Trigger                     | Action                                                  |
+| -------------------------- | --------------------------- | ------------------------------------------------------- |
+| `handleGoBack()`           | Back arrow press            | `navigation.goBack()`                                   |
+| `handleWriteScript()`      | "Write Script" button       | `navigate('ScriptEditor', { isNew: true })`             |
+| `handleGenerateScript()`   | "Generate Script" button    | `navigate('GenerateScript', { entryPoint: 'scripts' })` |
+| `handleEditScript(id)`     | "Edit" in ScriptCard menu   | `navigate('ScriptEditor', { scriptId, script })`        |
+| `handleDeleteScript(id)`   | "Delete" in ScriptCard menu | Alert confirmation → `deleteScript(id)` → removes from state |
+| `handleFilterChange(val)`  | Filter tab selection        | Updates `filterType` state                              |
+| `loadScripts()`            | Screen focus event          | `fetchScripts()` → sets `scripts` state (useCallback)  |
+| `formatEditedTime(iso)`    | Called during render        | Converts ISO timestamp to readable format               |
+
+#### API Calls
+
+| Call                  | Module         | Trigger            | Description                           |
+| --------------------- | -------------- | ------------------ | ------------------------------------- |
+| `fetchScripts()`      | `scriptsApi`   | Screen focus       | Fetches all user scripts, ordered by `updated_at` desc |
+| `deleteScript(id)`    | `scriptsApi`   | Delete confirmation| Deletes a single script by ID         |
 
 #### formatEditedTime Return Values
 
@@ -911,11 +1064,12 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 
 #### Components Used
 
-| Component      | Props                                                      | Description                    |
-| -------------- | ---------------------------------------------------------- | ------------------------------ |
-| `PrimaryButton`| `title`, `onPress`, `variant`, `style`                     | Write/Generate action buttons  |
-| `FilterTabs`   | `tabs`, `selected`, `onSelect`                             | Self-Authored/Auto-Generated filter |
-| `ScriptCard`   | `title`, `description`, `editedTime`, `onEdit`, `onUseInPractice` | Script display card  |
+| Component      | Props                                                       | Description                    |
+| -------------- | ----------------------------------------------------------- | ------------------------------ |
+| `PrimaryButton`| `title`, `onPress`, `variant`, `style`                      | Write/Generate action buttons  |
+| `FilterTabs`   | `tabs`, `selected`, `onSelect`                              | Self-Authored/Auto-Generated filter |
+| `ScriptCard`   | `title`, `description`, `editedTime`, `onEdit`, `onDelete`  | Script card with 3-dot overflow menu |
+| `ActivityIndicator` | —                                                      | Loading spinner while fetching |
 
 ---
 
@@ -967,7 +1121,7 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 | `handleGoBack()`            | Back arrow press            | `navigation.goBack()`                                   |
 | `handleMicrophoneChange(val)` | Microphone dropdown change | Updates `microphoneSource` state and AsyncStorage      |
 | `handleCameraChange(val)`   | Camera dropdown change      | Updates `cameraSource` state and AsyncStorage           |
-| `handleTestAudioVideo()`    | Test Audio/Video button     | Shows alert to test hardware settings (placeholder)    |
+| `handleTestAudioVideo()`    | Test Audio/Video button     | `navigation.navigate('AudioCameraTest')` — opens hardware test screen |
 | `handleClearCache()`        | Clear Cache button          | Shows confirmation, then clears non-essential AsyncStorage keys |
 | `handleLogout()`            | Logout button               | Shows confirmation, then calls `reset()` and `logout()` |
 
@@ -996,6 +1150,423 @@ const { sessions, isLoading, fetchSessions } = useSessions();
 | `Dropdown`     | `value`, `options`, `onSelect`             | Microphone/camera selectors    |
 | `PrimaryButton`| `title`, `onPress`, `variant`, `style`     | Test Audio/Video button        |
 | `TouchableOpacity` | `onPress`, `style`                     | Clear Cache and Logout buttons |
+
+---
+
+### 4.14 TrainingSetupScreen
+
+**File**: `src/screens/Main/TrainingSetupScreen.jsx`  
+**Route**: `TrainingSetup` (MainNavigator stack)
+
+#### Layout
+
+1. Back button
+2. "Training Setup" header (split line)
+3. Script type selector tabs (Pre-written / Auto-Generated)
+4. Script dropdown selector OR Generate Speech button (conditionally rendered)
+5. Focus mode radio buttons (Scripted Accuracy / Free Speech)
+6. Start Training + Cancel buttons
+
+#### State Variables
+
+| Variable           | Type      | Initial Value | Description                              |
+| ------------------ | --------- | ------------- | ---------------------------------------- |
+| `selectedScriptType` | `string` | `'prewritten'` | `'prewritten'` \| `'autogenerated'`     |
+| `allScripts`       | `array`   | `[]`          | Available scripts matching type         |
+| `selectedScriptId` | `string`  | `''`          | Currently selected script ID             |
+| `selectedFocus`    | `string \| null`  | `null`      | `'accuracy'` \| `'free'` \| `null`       |
+| `isLoading`        | `boolean` | `false`       | Supabase fetch in progress              |
+| `isStarting`       | `boolean` | `false`       | Start action in progress                |
+
+#### Derived Variables
+
+| Variable                | Type     | Derivation                                      | Description                          |
+| ----------------------- | -------- | ----------------------------------------------- | ------------------------------------ |
+| `scriptDropdownOptions` | `array`  | `allScripts.filter(s => s.type === selectedScriptType).map(...)` | Filtered scripts for dropdown |
+| `focusOptions`          | `array`  | `[{value: 'accuracy', label: 'Scripted Accuracy'}, {value: 'free', label: 'Free Speech'}]` | Static options |
+
+#### Handlers
+
+| Handler              | Trigger                    | Action                                                                     |
+| -------------------- | -------------------------- | -------------------------------------------------------------------------- |
+| `handleGoBack()`     | Back button press          | Navigate back or to Dashboard                                             |
+| `handleCancel()`     | Cancel button press        | Navigate back or to Dashboard                                             |
+| `handleStartTraining()` | Start Training button     | Navigate to `TrainingScripted` with focusMode, autoStart, script params  |
+| `handleOpenGenerate()` | Generate Speech button    | Navigate to `GenerateScript` screen                                       |
+
+#### Navigation Actions
+
+| Action                             | Destination          | Params                                                 |
+| ---------------------------------- | -------------------- | ------------------------------------------------------ |
+| `navigate('TrainingScripted', ...)`| TrainingScriptedScreen | `{focusMode, autoStart, scriptId?, scriptType?}`                  |
+| `navigate('GenerateScript')`       | GenerateScriptScreen | None                                                   |
+
+#### Conditional UI
+
+| Condition | Rendered                              | Hidden                      |
+| --------- | ------------------------------------- | --------------------------- |
+| `selectedScriptType === 'autogenerated'` | PrimaryButton "Generate Speech" | Dropdown component |
+| `selectedScriptType === 'prewritten'`    | Dropdown component                | PrimaryButton               |
+| `selectedFocus` not set                  | Start Training button disabled   | —                          |
+| `selectedFocus === 'accuracy'`           | Auto-switch to prewritten + auto-select first script | — |
+| `selectedFocus === 'free'`               | Script dropdown disabled         | — |
+
+#### Components Used
+
+| Component      | Props                                 | Description                  |
+| -------------- | ------------------------------------- | ---------------------------- |
+| `FilterTabs`   | `tabs`, `selected`, `onSelect`        | Pre-written / Auto-Generated |
+| `Dropdown`     | `value`, `options`, `onSelect`        | Script selector              |
+| `PrimaryButton`| `title`, `onPress`, `loading`         | Generate Speech / Start      |
+| `Typography`   | `variant`, `color`, `align`           | Headers and labels           |
+
+---
+
+### 4.15 GenerateScriptScreen
+
+**File**: `src/screens/Main/GenerateScriptScreen.jsx`  
+**Route**: `GenerateScript` (MainNavigator stack)
+
+#### Route Params
+
+| Param        | Type                       | Default      | Description                                |
+| ------------ | -------------------------- | ------------ | ------------------------------------------ |
+| `entryPoint` | `'scripts'` \| `'training'` | `'training'` | Determines save-only vs save-and-train flow |
+
+#### Layout
+
+1. Back button
+2. "Generate Script" header (split line)
+3. Multiline prompt input + "Random Topic" action
+4. "What's the vibe?" section + ChoiceChips (Professional, Casual, Humorous, Inspirational)
+5. "Approx. Duration" section + ChoiceChips (Short 1-2m, Medium 3-5m, Long 5m+)
+6. Dynamic primary button: "Generate and Save" (scripts) or "Generate and Start" (training)
+
+#### State Variables
+
+| Variable           | Type      | Initial Value | Description                              |
+| ------------------ | --------- | ------------- | ---------------------------------------- |
+| `promptText`       | `string`  | `''`          | User input for script generation         |
+| `selectedVibe`     | `string`  | `'inspirational'` | `'professional'` \| `'casual'` \| `'humorous'` \| `'inspirational'` |
+| `selectedDuration` | `string`  | `'medium'`    | `'short'` \| `'medium'` \| `'long'`     |
+| `isGenerating`     | `boolean` | `false`       | Supabase Edge Function call in progress  |
+| `modalVisible`     | `boolean` | `false`       | Whether generated-script review modal is shown |
+| `generatedTitle`   | `string`  | `''`          | Title of the generated script (editable in modal) |
+| `generatedContent` | `string`  | `''`          | Body of the generated script (editable in modal)  |
+| `isSaving`         | `boolean` | `false`       | Whether script is being saved to Supabase |
+
+#### Derived Variables
+
+| Variable             | Type     | Derivation                                         | Description                              |
+| -------------------- | -------- | -------------------------------------------------- | ---------------------------------------- |
+| `vibeOptions`        | `array`  | Static array of 4 vibe options                     | Memoized vibe choices                    |
+| `durationOptions`    | `array`  | Static array of 3 duration options                 | Memoized duration choices                |
+| `primaryButtonLabel` | `string` | `entryPoint === 'scripts' ? 'Generate and Save' : 'Generate and Start'` | Dynamic button text |
+
+#### Handlers
+
+| Handler                   | Trigger                        | Action                                                                     |
+| ------------------------- | ------------------------------ | -------------------------------------------------------------------------- |
+| `handleGoBack()`          | Back button press              | Navigate back or to Dashboard                                             |
+| `handleRandomTopic()`     | "Random Topic" action          | TODO: Call Supabase function; set `promptText` to random topic            |
+| `handleGenerateStart()`   | Primary button press           | Calls Supabase Edge Function (TODO); opens review Modal with generated content |
+| `handleRegenerate()`      | "Regenerate" button in modal   | Re-calls generation (TODO); replaces modal content with new result        |
+| `handleConfirmGenerated()`| "Save" / "Save & Start" button | Saves script to Supabase via `createScript`, then navigates              |
+
+#### Navigation Actions
+
+| Condition                  | Action                              | Destination            | Params                                                 |
+| -------------------------- | ----------------------------------- | ---------------------- | ------------------------------------------------------ |
+| `entryPoint === 'scripts'` | `navigation.goBack()`               | ScriptsScreen          | —  (Scripts reloads on focus)                          |
+| `entryPoint === 'training'`| `navigate('TrainingScripted', ...)` | TrainingScriptedScreen | `{focusMode: 'free', autoStart: true, scriptType: 'autogenerated', entryPoint: 'training', scriptId}` |
+
+#### API Calls
+
+| Call                        | Module       | Params                                           | Returns                           |
+| --------------------------- | ------------ | ------------------------------------------------ | --------------------------------- |
+| Supabase Edge Function (TODO) | —          | `{promptText, selectedVibe, selectedDuration}`   | `{title, body}`                   |
+| `createScript()`            | `scriptsApi` | `{title, content, type: 'auto-generated'}`       | `{success, script?, error?}`      |
+
+#### Review Modal
+
+After generation, a bottom-sheet-style Modal is displayed with:
+- **Title input** — editable TextInput prefilled with generated title
+- **Content editor** — multiline TextInput in a ScrollView, prefilled with generated body
+- **Regenerate button** — outline style, calls `handleRegenerate()`
+- **Save / Save & Start button** — primary, calls `handleConfirmGenerated()`
+
+#### Components Used
+
+| Component      | Props                                 | Description                      |
+| -------------- | ------------------------------------- | -------------------------------- |
+| `ChoiceChips`  | `options`, `selected`, `onSelect`     | Vibe / Duration selector         |
+| `PrimaryButton`| `title`, `onPress`, `loading`         | Primary action + modal buttons   |
+| `TextInput`    | `value`, `onChangeText`, `multiline`  | Prompt input + modal editors     |
+| `Typography`   | `variant`, `color`, `align`           | Headers and labels               |
+| `Modal`        | `visible`, `transparent`, `animationType` | Review/edit generated script |
+
+---
+
+### 4.16 TrainingScriptedScreen
+
+**File**: `src/screens/Main/TrainingScriptedScreen.jsx`  
+**Route**: `TrainingScripted` (MainNavigator stack)
+
+#### Enhanced Layout
+
+1. Header (back button | script title | settings icon)
+2. "Training" title
+3. Teleprompter area with camera feed behind text (free speech: camera only)
+4. **Enhanced audio waveform visualizer** (history + real-time peak)
+5. Recording indicator (red dot + "Recording" / "Paused")
+6. **Recording timer** (MM:SS format)
+7. Control buttons (Pause | Record [large red] | Restart)
+8. **Countdown modal** (3...2...1...Start)
+
+#### State Variables
+
+| Variable          | Type      | Initial Value | Description                              |
+| ----------------- | --------- | ------------- | ---------------------------------------- |
+| `scriptData`      | `object`  | `null`        | `{id, title, body, type}` fetched from Supabase |
+| `isLoadingScript` | `boolean` | `true`        | Script fetch in progress                 |
+| `isRecording`     | `boolean` | `false`       | Audio recording active                   |
+| `isPaused`        | `boolean` | `false`       | Recording paused                         |
+| `audioLevel`      | `number`  | `0`           | Current microphone level (0-1)           |
+| `recordingDuration` | `number`| `0`           | Elapsed seconds since recording started  |
+| `showCountdown`   | `boolean` | `false`       | Countdown modal visibility (3-2-1-Start) |
+| `countdownValue`  | `number`  | `3`           | Countdown display value (3, 2, 1, 0→Start) |
+| `showSettings`    | `boolean` | `false`       | Settings modal visibility                |
+| `fontSize`        | `number`  | `16`          | Teleprompter font size (12-24)           |
+| `scrollSpeed`     | `number`  | `0`           | Auto-scroll speed (0 = off, 1-10)        |
+| `autoScroll`      | `boolean` | `false`       | Enable auto-scroll during recording      |
+| `wpm`             | `number`  | `120`         | Words per minute (60-200) for highlighting |
+| `highlightedWordIndex` | `number` | `0`      | Index of currently highlighted word      |
+| `hasCamera`       | `boolean` | `false`       | Camera permission granted                |
+| `cameraPermission`| `boolean` | `null`        | Camera permission granted                      |
+| `cameraUri`       | `string`  | `null`        | Camera photo URI for display             |
+
+#### Derived Variables
+
+| Variable     | Type      | Description                              |
+| ------------ | --------- | ---------------------------------------- |
+| `isFreeMode` | `boolean` | `focusMode === 'free'` (hides teleprompter/settings) |
+
+#### Route Params
+
+| Param       | Type     | Source                | Description                      |
+| ----------- | -------- | --------------------- | -------------------------------- |
+| `scriptId`  | `string` | TrainingSetup / Practice / GenerateScript | Script to fetch (required for scripted accuracy) |
+| `focusMode` | `string` | TrainingSetup / GenerateScript | `'accuracy'` \| `'free'`         |
+| `scriptType`| `string` | TrainingSetup / GenerateScript | `'prewritten'` \| `'autogenerated'` |
+| `autoStart` | `boolean` | TrainingSetup / Practice / GenerateScript | Auto-start 3-2-1 countdown on entry |
+| `entryPoint` | `string` | TrainingSetup / Practice | `'training'` \| `'practice'` (used to label results) |
+
+#### Ref Variables
+
+| Ref                | Type      | Purpose                                     |
+| ------------------ | --------- | ------------------------------------------- |
+| `cameraRef`        | `Camera`  | Reference to camera component for photo capture |
+| `audioLevelRefs`   | `array`   | History of recent audio levels (50pt array) |
+| `scrollViewRef`    | `ScrollView` | Reference to teleprompter scroll view    |
+| `countdownTimerRef`| `timeout` | Countdown timer interval                    |
+| `recordingTimerRef`| `interval` | Recording duration timer                    |
+
+#### Handlers
+
+| Handler                | Trigger                    | Action                                                                     |
+| ---------------------- | -------------------------- | -------------------------------------------------------------------------- |
+| `handleGoBack()`       | Back button press          | Pause active session and show exit warning before navigating              |
+| `handleCaptureCameraPhoto()` | Camera button press   | Capture front camera photo (quality: 0.6) and store as `cameraUri`        |
+| `handleStartCountdown()`| Record button 1st press    | Show countdown modal, trigger 3-2-1-Start sequence                       |
+| `handleStartRecordingAuto()` | Countdown complete  | Start audio recording, reset DurationMeter, set `isRecording = true`     |
+| `handleRecordPress()`  | Record button press        | If recording: stop and navigate to analysis result; else: start countdown |
+| `handlePausePress()`   | Pause button press         | Toggle `isPaused` (only when recording)                                   |
+| `handleRestartPress()` | Restart button press       | Reset: recording, pause, duration, audio level, highlight index, scroll top |
+| `handleOpenSettings()` | Settings icon press        | Open teleprompter settings modal                                          |
+| `handleCloseSettings()`| Modal close                | Close settings modal                                                       |
+| `formatDuration(seconds)` | Internal           | Convert seconds to MM:SS format string                                    |
+| `getHighlightedScript()` | Internal           | Get script with word indices for conditional highlighting                 |
+
+#### Settings Modal Controls
+
+| Setting         | Range       | Default | Description                              |
+| --------------- | ----------- | ------- | ---------------------------------------- |
+| Font Size       | 12–24 px    | 16      | Teleprompter text size                   |
+| WPM             | 60–200      | 120     | Words per minute for highlighting sync   |
+| Auto Scroll     | On/Off      | Off     | Toggle automatic scrolling               |
+| Scroll Speed    | 0–10        | 0       | Auto-scroll velocity (only if enabled)   |
+
+#### WPM Highlighting Feature
+
+When recording, script words are highlighted as user reads:
+- **Past words** (`idx < highlightedWordIndex`): `textMuted` color (gray)
+- **Current word** (`idx === highlightedWordIndex`): Yellow background + bold
+- **Future words** (`idx > highlightedWordIndex`): `textSecondary` color (lighter gray)
+
+Calculation: `wordsElapsed = Math.floor(recordingDuration * (wpm / 60))`
+
+#### Camera & Microphone Integration
+
+| Feature          | Implementation                                 |
+| ---------------- | ---------------------------------------------- |
+| Front Camera     | `CameraView` with `facing="front"`             |
+| Camera Overlay   | Camera sits behind teleprompter text at reduced opacity (full opacity in free speech) |
+| Phone Microphone | `expo-audio` Audio.Recording (TODO: integrate)   |
+| Audio Level      | Simulates realistic levels with peaks/valleys  |
+
+#### Countdown Sequence
+
+1. User presses Record button
+2. `showCountdown = true`, `countdownValue = 3`
+3. Every 1 second: decrement `countdownValue`
+4. When `countdownValue === 0`: "Start!" text, then auto-call `handleStartRecordingAuto()`
+5. Recording begins, countdown modal closes
+
+#### API Calls (TODOs)
+
+| Call                        | Params                                           | Returns                           |
+| --------------------------- | ------------------------------------------------ | --------------------------------- |
+| Supabase Query              | `SELECT * FROM practice_scripts WHERE id = scriptId` | `{id, title, body, type}`         |
+| Audio Upload + Scoring      | `{audioUri, scriptId, focusMode, duration}`     | `{sessionId, score, feedback}`    |
+| Audio.Recording Start       | Audio recording settings (TODO)                  | Recording object for capture      |
+| Random Topic                | Auto-called from GenerateScript                  | Script text suggestion            |
+
+#### Effects
+
+| Effect                    | Dependencies                  | Action                                                                 |
+| ------------------------- | ----------------------------- | ---------------------------------------------------------------------- |
+| Load Script               | `[scriptId, isFreeMode]`      | Fetch script from Supabase unless in free speech mode                  |
+| Request Camera Permission | `[]` (mount)                  | Call `Camera.requestCameraPermissionsAsync()`, set `hasCamera`         |
+| Countdown Timer           | `[showCountdown, countdownValue]` | Decrement countdown, trigger auto-start when 0                     |
+| Recording Duration        | `[isRecording, isPaused]`     | Increment duration timer every 1 second if recording and not paused   |
+| Audio Level Simulation    | `[isRecording, isPaused]`     | Generate realistic audio levels with sin() peaks every 100ms          |
+| WPM Highlighting          | `[recordingDuration, wpm, isRecording, isPaused, scriptWords]` | Calculate highlighted word index from elapsed time + WPM |
+
+#### Components Used
+
+| Component      | Props                                 | Description                          |
+| -------------- | ------------------------------------- | ------------------------------------ |
+| `CameraView`   | `ref`, `facing`                        | Front-facing camera feed             |
+| `ScrollView`   | `ref`, `showsVerticalScrollIndicator` | Teleprompter area                    |
+| `PrimaryButton`| `title`, `onPress`, `loading`        | Pause/Record/Restart/Settings        |
+| `Typography`   | `variant`, `color`, `align`          | Headers and labels                   |
+| `Modal`        | `visible`, `animationType`           | Countdown modal, Settings panel      |
+| `View`         | `style`, `children`                  | Layout containers                    |
+| `TouchableOpacity` | `onPress`, `activeOpacity`       | Buttons and interactions             |
+
+#### Recording Flow
+
+1. User presses red Record button → show 3-2-1 countdown overlay
+2. Countdown completes → "Start!" appears → auto-start recording
+3. `isRecording = true`, `recordingDuration` timer starts, audio captured from phone mic
+4. Scripted mode: teleprompter displays script with **WPM-based word highlighting**
+5. Free speech mode: camera only (no teleprompter)
+6. Audio waveform updates live with microphone input
+7. User can pause/resume with Pause button
+8. User presses Record button again → `isRecording = false`, navigate to analysis result
+
+---
+
+### 4.17 ChangePasswordScreen
+
+**File**: `src/screens/Main/ChangePasswordScreen.jsx`  
+**Route**: `ChangePassword` (MainNavigator stack)
+
+#### State Variables
+
+| Variable          | Type      | Initial Value | Description                          |
+| ----------------- | --------- | ------------- | ------------------------------------ |
+| `oldPassword`     | `string`  | `''`          | Current password input               |
+| `newPassword`     | `string`  | `''`          | New password input                   |
+| `confirmPassword` | `string`  | `''`          | Confirm new password input           |
+| `errors`          | `object`  | `{}`          | Per-field validation errors          |
+| `isSaving`        | `boolean` | `false`       | Save operation in progress           |
+
+#### `errors` Keys
+
+| Key               | Message Examples                              |
+| ----------------- | --------------------------------------------- |
+| `oldPassword`     | `'Old password is required'`, `'Incorrect current password'` |
+| `newPassword`     | `'New password is required'`, `'Password must be at least 6 characters'` |
+| `confirmPassword` | `'Please confirm your new password'`, `'Passwords do not match'` |
+
+#### Handlers
+
+| Handler                    | Trigger                  | Action                                              |
+| -------------------------- | ------------------------ | --------------------------------------------------- |
+| `updateField(field, value)` | Any input change        | Updates field state, clears matching error          |
+| `handleSaveNewPassword()`  | "Save New Password" press | Validates fields, verifies old password via `supabase.auth.signInWithPassword`, updates via `supabase.auth.updateUser({ password })` |
+| `handleGoBack()`           | Back arrow / Cancel press | `navigation.goBack()`                              |
+
+#### Password Change Flow
+
+1. User enters old password, new password, and confirms new password
+2. Client-side validation: all fields required, new password ≥ 6 chars, passwords match
+3. Old password verified via `supabase.auth.signInWithPassword({ email, password: oldPassword })`
+4. If incorrect, sets `errors.oldPassword = 'Incorrect current password'`
+5. If correct, calls `supabase.auth.updateUser({ password: newPassword })`
+6. Success: Alert shown, navigates back
+
+#### Components Used
+
+| Component       | Props                                        | Description               |
+| --------------- | -------------------------------------------- | ------------------------- |
+| `PasswordField` | `label`, `placeholder`, `value`, `onChangeText`, `error` | Password input with toggle visibility |
+| `PrimaryButton` | `title`, `onPress`, `loading`, `variant`     | Save/Cancel buttons       |
+
+---
+
+### 4.18 AccountSettingsScreen
+
+**File**: `src/screens/Main/AccountSettingsScreen.jsx`  
+**Route**: `AccountSettings` (MainNavigator stack)
+
+#### State Variables
+
+| Variable          | Type      | Initial Value | Description                          |
+| ----------------- | --------- | ------------- | ------------------------------------ |
+| `showDeleteModal` | `boolean` | `false`       | Whether delete confirmation modal is visible |
+| `password`        | `string`  | `''`          | Password input in delete modal       |
+| `confirmText`     | `string`  | `''`          | "CONFIRM DELETE" text input in modal |
+| `isDeleting`      | `boolean` | `false`       | Delete operation in progress         |
+
+#### Derived Variables
+
+| Variable               | Type      | Derivation                                              | Description                              |
+| ---------------------- | --------- | ------------------------------------------------------- | ---------------------------------------- |
+| `isConfirmDeleteValid` | `boolean` | `password.trim() && confirmText === 'CONFIRM DELETE'`   | Enables delete button when both valid    |
+
+#### Hook Destructuring
+
+```js
+const { logout } = useAuth();
+```
+
+#### Handlers
+
+| Handler                    | Trigger                        | Action                                              |
+| -------------------------- | ------------------------------ | --------------------------------------------------- |
+| `handleGoBack()`           | Back arrow / Cancel press      | `navigation.goBack()`                               |
+| `handleDeactivateProfile()`| "Deactivate Profile" press     | Shows Alert with confirm (TODO: Supabase integration) |
+| `handleDeleteAccountPress()` | "Delete Account" press       | Resets modal fields, opens delete confirmation modal |
+| `handleConfirmDelete()`    | Modal "Delete Account" press   | Validates password + confirmText, calls `supabase.auth.admin.deleteUser()`, then logout + navigate to Login |
+
+#### Delete Account Flow
+
+1. User clicks "Delete Account" red button
+2. Modal slides up with password input + "CONFIRM DELETE" text input
+3. Both fields must be valid for Delete button to enable
+4. On confirm: password verified, account deleted via Supabase, user logged out
+5. Navigates to Login screen
+
+#### UI Sections
+
+| Section             | Content                                                         |
+| ------------------- | --------------------------------------------------------------- |
+| Deactivate Profile  | Description + "Deactivate Profile" outline button               |
+| Delete Account      | Warning text + red "Delete Account" button (white text)         |
+| Cancel              | Fixed at bottom of screen with border separator                 |
+| Delete Modal        | Bottom-sheet style: password input, confirm text input, Cancel/Delete buttons |
 
 ---
 
@@ -1109,22 +1680,44 @@ Data structure:
 
 ### FilterTabs (`src/components/common/FilterTabs.jsx`)
 
-| Prop       | Type                                  | Default | Description                           |
-| ---------- | ------------------------------------- | ------- | ------------------------------------- |
-| `tabs`     | `Array<{value: string, label: string}>` | `[]`  | Array of tab options                  |
-| `selected` | `string`                              | —       | Currently selected tab value          |
-| `onSelect` | `function`                            | —       | Callback when a tab is selected       |
+| Prop              | Type                                    | Default | Description                           |
+| ----------------- | --------------------------------------- | ------- | ------------------------------------- |
+| `tabs`            | `Array<{value: string, label: string}>` | `[]`    | Array of tab options                  |
+| `selected`        | `string`                                | —       | Currently selected tab value          |
+| `onSelect`        | `function`                              | —       | Callback when a tab is selected       |
+| `containerStyle`  | `object`                                | —       | Optional container style override     |
+| `tabStyle`        | `object`                                | —       | Optional tab style override           |
+| `activeTabStyle`  | `object`                                | —       | Optional active tab style override    |
+| `labelStyle`      | `object`                                | —       | Optional label style override         |
+| `activeLabelStyle`| `object`                                | —       | Optional active label style override  |
+
+**Default Pill Design:**
+- Container: `borderRadius.full`, `gray100` bg, `1px gray300` border, 3px padding
+- Tab: `borderRadius.full`, `paddingVertical: xs + 2`
+- Active tab: `primary` background
+- Label: `fontSize: 13`, `bodySmall` variant, `medium` weight
 
 ### ScriptCard (`src/components/common/ScriptCard.jsx`)
 
-| Prop              | Type       | Default | Description                              |
-| ----------------- | ---------- | ------- | ---------------------------------------- |
-| `title`           | `string`   | —       | Script title/name                        |
-| `description`     | `string`   | —       | Script description/preview text          |
-| `editedTime`      | `string`   | —       | Last edited timestamp text               |
-| `onEdit`          | `function` | —       | Handler for Edit button                  |
-| `onUseInPractice` | `function` | —       | Handler for Use in Practice button       |
-| `onPress`         | `function` | —       | Handler for card press (optional)        |
+| Prop              | Type       | Default           | Description                              |
+| ----------------- | ---------- | ----------------- | ---------------------------------------- |
+| `title`           | `string`   | —                 | Script title/name                        |
+| `description`     | `string`   | —                 | Script description/preview text          |
+| `editedTime`      | `string`   | —                 | Last edited timestamp text               |
+| `type`            | `string`   | `'self-authored'` | Script type (`'self-authored'` \| `'auto-generated'`) |
+| `onEdit`          | `function` | —                 | Handler for Edit action (from 3-dot menu) |
+| `onDelete`        | `function` | —                 | Handler for Delete action (from 3-dot menu) |
+| `onPress`         | `function` | —                 | Handler for card press (optional)        |
+
+**Internal State:**
+- `menuVisible`: boolean — controls visibility of the overflow menu Modal
+
+**3-Dot Overflow Menu:**
+- Triggered by tapping the ellipsis-vertical icon in the top-right corner of the card
+- Modal with fade animation shows two options:
+  - **Edit** (create-outline icon) → calls `onEdit()`
+  - **Delete** (trash-outline icon, red text) → calls `onDelete()`
+- Menu closes on backdrop press or option selection
 
 ### Dropdown (`src/components/common/Dropdown.jsx`)
 
@@ -1143,6 +1736,55 @@ Data structure:
 - Displays options in a scrollable list
 - Selected option is highlighted with checkmark icon
 - Close on overlay tap or option selection
+
+---
+
+## 5b. API Modules
+
+### scriptsApi (`src/api/scriptsApi.js`)
+
+> Supabase CRUD operations for user scripts. Requires a `scripts` table in Supabase (see DDL below).
+
+#### Exported Functions
+
+| Function                     | Signature                                              | Returns                                  | Description                                          |
+| ---------------------------- | ------------------------------------------------------ | ---------------------------------------- | ---------------------------------------------------- |
+| `fetchScripts()`             | `() → Promise<{success, scripts?, error?}>`            | All scripts for current user, ordered by `updated_at` desc | Fetches all rows from `scripts` where `user_id` matches auth user |
+| `fetchScriptById(scriptId)`  | `(string) → Promise<{success, script?, error?}>`       | Single script object                     | Fetches one script by primary key                    |
+| `createScript(scriptData)`   | `({title, content, type}) → Promise<{success, script?, error?}>` | Newly created script row      | Inserts a new row with `user_id` auto-set from auth  |
+| `updateScript(scriptId, updates)` | `(string, {title?, content?, type?}) → Promise<{success, script?, error?}>` | Updated script row | Patches a script and sets `updated_at` to `now()` |
+| `deleteScript(scriptId)`     | `(string) → Promise<{success, error?}>`                | Success/error                            | Deletes a script by ID                               |
+
+#### Required Supabase Table
+
+```sql
+CREATE TABLE public.scripts (
+  id          uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id     uuid NOT NULL,
+  title       text NOT NULL,
+  content     text NOT NULL DEFAULT '',
+  type        text NOT NULL DEFAULT 'self-authored'
+                CHECK (type IN ('self-authored','auto-generated')),
+  created_at  timestamptz DEFAULT now(),
+  updated_at  timestamptz DEFAULT now(),
+  CONSTRAINT scripts_pkey PRIMARY KEY (id),
+  CONSTRAINT scripts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
+```
+
+> RLS policies should scope rows to the authenticated user's `user_id`.
+
+### supabaseClient (`src/api/supabaseClient.js`)
+
+Exports a configured `supabase` client instance used by all API modules. Uses `@supabase/supabase-js` with AsyncStorage for session persistence.
+
+### authApi (`src/api/authApi.js`)
+
+Handles authentication operations (login, register, logout, profile updates) via Supabase Auth.
+
+### sessionApi (`src/api/sessionApi.js`)
+
+Handles analysis session CRUD operations (fetch sessions, upload audio recordings, get session details).
 
 ---
 
@@ -1179,7 +1821,7 @@ Data structure:
 AppNavigator (root stack)
 │
 ├── [Not Authenticated]
-│   └── AuthNavigator (stack)
+│   └── AuthNavigator (stack, animation: slide_from_right 200ms)
 │       ├── Login        → LoginScreen
 │       └── Register     → RegisterScreen
 │
@@ -1187,7 +1829,7 @@ AppNavigator (root stack)
 │   └── Nickname         → NicknameScreen
 │
 └── [Authenticated + Has Nickname]
-    └── MainNavigator (stack)
+    └── MainNavigator (stack, animation: slide_from_right 200ms)
         ├── MainTabs     → BottomTabNavigator
         │   ├── Scripts   → ScriptsScreen      (tab 1)
         │   ├── Progress  → ProgressScreen     (tab 2)
@@ -1195,19 +1837,92 @@ AppNavigator (root stack)
         │   ├── Profile   → ProfileScreen      (tab 4)
         │   └── Settings  → SettingsScreen     (tab 5)
         ├── Practice      → PracticeScreen     (stack screen)
+        ├── GenerateScript → GenerateScriptScreen (stack screen)
+        ├── TrainingSetup → TrainingSetupScreen (stack screen)
+        ├── TrainingScripted → TrainingScriptedScreen (stack screen)
         ├── History       → HistoryScreen      (stack screen)
+        ├── AllSessions   → AllSessionsScreen  (stack screen)
+        ├── ScriptEditor  → ScriptEditorScreen (stack screen)
         ├── SessionDetail → SessionDetailScreen
         ├── SessionResult → SessionResultScreen
-        └── EditProfile   → EditProfileScreen
+        ├── DetailedFeedback → DetailedFeedbackScreen
+        ├── EditProfile   → EditProfileScreen
+        ├── AccountSettings → AccountSettingsScreen
+        ├── ChangePassword → ChangePasswordScreen
+        └── AudioCameraTest → AudioCameraTestScreen
 ```
+
+### BottomTabNavigator Keyboard Behavior
+
+| Option                  | Value    | Description                                         |
+| ----------------------- | -------- | --------------------------------------------------- |
+| `tabBarHideOnKeyboard`  | `true`   | Hides floating tab bar when keyboard opens           |
+
+### KeyboardAvoidingView Behavior
+
+All form screens use `KeyboardAvoidingView` with:
+- **iOS**: `behavior="padding"` — adjusts padding to keep fields visible
+- **Android**: `behavior={undefined}` — relies on system `windowSoftInputMode` to handle keyboard avoidance without pushing the bottom navigation bar up
 
 ### Route Params Summary
 
-| Route          | Params                                 |
-| -------------- | -------------------------------------- |
-| `SessionDetail`| `{ sessionId: string }`                |
-| `SessionResult`| `{ word: string, score: number, feedback?: string }` |
-| All others     | No params                              |
+| Route              | Params                                                    |
+| ------------------ | --------------------------------------------------------- |
+| `TrainingSetup`    | None (context from Dashboard "Start Training")           |
+| `GenerateScript`   | `{entryPoint?: 'scripts' \| 'training'}`                 |
+| `TrainingScripted` | `{focusMode, autoStart, scriptId?, scriptType?, entryPoint?}` |
+| `Practice`         | None                                                      |
+| `SessionDetail`    | `{sessionId}`                                             |
+| `SessionResult`    | `{confidenceScore, summary, pitchStability, paceWpm, paceRating, resultMode}` |
+| `DetailedFeedback` | `{resultMode, trainingParams, timelinePoints, eyeContact, bodyGestures, voice, feedbackItems}` |
+| `AudioCameraTest`  | None (opened from Settings "Test Audio / Video")              |
+| `ChangePassword`   | None (opened from Edit Profile "Change Password")             |
+| `AccountSettings`  | None (opened from Edit Profile "Account Settings")            |
+| All others         | No params                                                 |
+
+### Screen Flow Diagram
+
+```
+Dashboard
+  ├─→ "Start Training" button
+  │    ↓
+  │   TrainingSetup
+  │    ├─→ Pre-written tab → Dropdown selector + Start Training button
+  │    │    ↓
+  │    │   TrainingScripted (focusMode: 'accuracy'|'free')
+  │    │
+  │    └─→ Auto-Generated tab → Generate Speech button
+  │         ↓
+  │        GenerateScript (entryPoint: 'training')
+  │         ↓
+  │        [Generate] → Review/Edit Modal → Save to Supabase
+  │         ↓
+  │        TrainingScripted (focusMode: 'free')
+  │
+  ├─→ "Start Practice" button
+  │    ↓
+  │   Practice
+  │    ├─→ Pre-written tab → Script card list
+  │    │    ├─(click script)→ TrainingScripted (focusMode: 'free')
+  │    │
+  │    └─→ Generate tab → Generate Speech button
+  │         ↓
+  │        GenerateScript (entryPoint: 'training')
+  │         ↓
+  │        TrainingScripted (focusMode: 'free')
+  │
+Scripts (tab 1)
+  ├─→ "Generate Script" button
+  │    ↓
+  │   GenerateScript (entryPoint: 'scripts')
+  │    ↓
+  │   [Generate] → Review/Edit Modal → Save to Supabase → goBack()
+  │
+  ├─→ ScriptCard 3-dot → Edit → ScriptEditor
+  └─→ ScriptCard 3-dot → Delete → Alert confirm → deleteScript()
+  │
+  └─→ [Other navigation paths...]
+```
 
 ---
 

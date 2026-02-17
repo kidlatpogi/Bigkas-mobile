@@ -58,7 +58,11 @@ const SettingsScreen = ({ navigation }) => {
   ];
 
   const handleGoBack = () => {
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Dashboard');
+    }
   };
 
   const handleMicrophoneChange = async (value) => {
@@ -82,15 +86,7 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   const handleTestAudioVideo = () => {
-    // Open test modal/screen
-    Alert.alert(
-      'Test Audio / Video',
-      'This will test your microphone and camera settings.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Test Now', onPress: () => console.log('Testing hardware...') },
-      ]
-    );
+    navigation.navigate('AudioCameraTest');
   };
 
   const handleClearCache = async () => {

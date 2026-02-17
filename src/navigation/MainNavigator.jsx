@@ -2,11 +2,18 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SessionDetailScreen from '../screens/Session/SessionDetailScreen';
 import SessionResultScreen from '../screens/Session/SessionResultScreen';
+import DetailedFeedbackScreen from '../screens/Session/DetailedFeedbackScreen';
 import EditProfileScreen from '../screens/Main/EditProfileScreen';
+import AccountSettingsScreen from '../screens/Main/AccountSettingsScreen';
+import ChangePasswordScreen from '../screens/Main/ChangePasswordScreen';
 import PracticeScreen from '../screens/Main/PracticeScreen';
+import GenerateScriptScreen from '../screens/Main/GenerateScriptScreen';
+import TrainingSetupScreen from '../screens/Main/TrainingSetupScreen';
+import TrainingScriptedScreen from '../screens/Main/TrainingScriptedScreen';
 import HistoryScreen from '../screens/Main/HistoryScreen';
 import AllSessionsScreen from '../screens/Main/AllSessionsScreen';
 import ScriptEditorScreen from '../screens/Main/ScriptEditorScreen';
+import AudioCameraTestScreen from '../screens/Main/AudioCameraTestScreen';
 import BottomTabNavigator from './BottomTabNavigator';
 
 const Stack = createNativeStackNavigator();
@@ -22,9 +29,18 @@ const Stack = createNativeStackNavigator();
  */
 const MainNavigator = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        animation: 'slide_from_right',
+        animationDuration: 200,
+      }}
+    >
       <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
       <Stack.Screen name="Practice" component={PracticeScreen} />
+      <Stack.Screen name="GenerateScript" component={GenerateScriptScreen} />
+      <Stack.Screen name="TrainingSetup" component={TrainingSetupScreen} />
+      <Stack.Screen name="TrainingScripted" component={TrainingScriptedScreen} />
       <Stack.Screen name="History" component={HistoryScreen} />
       <Stack.Screen name="AllSessions" component={AllSessionsScreen} />
       <Stack.Screen name="ScriptEditor" component={ScriptEditorScreen} />
@@ -41,12 +57,20 @@ const MainNavigator = () => {
         name="SessionResult"
         component={SessionResultScreen}
         options={{
-          headerShown: true,
-          headerTitle: 'Results',
-          headerBackTitle: 'Back',
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="DetailedFeedback"
+        component={DetailedFeedbackScreen}
+        options={{
+          headerShown: false,
         }}
       />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+      <Stack.Screen name="AccountSettings" component={AccountSettingsScreen} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+      <Stack.Screen name="AudioCameraTest" component={AudioCameraTestScreen} />
     </Stack.Navigator>
   );
 };

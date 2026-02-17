@@ -1,164 +1,195 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import Typography from '../../components/common/Typography';
 import Card from '../../components/common/Card';
 import PrimaryButton from '../../components/common/PrimaryButton';
-import AudioRecordButton from '../../components/audio/AudioRecordButton';
-import AudioLevelIndicator from '../../components/audio/AudioLevelIndicator';
-import { useSessions } from '../../hooks/useSessions';
+import FilterTabs from '../../components/common/FilterTabs';
 import { colors } from '../../styles/colors';
-import { spacing } from '../../styles/spacing';
+import { spacing, borderRadius } from '../../styles/spacing';
 
+/**
+ * PracticeScreen — Practice Setup screen.
+ *
+ * Layout (top -> bottom):
+ * 1. Back button
+ * 2. "Practice Setup" title + helper text
+ * 3. Pre-written / Generate tabs
+ * 4. Script list cards
+ * 5. Cancel button
+ *
+ * State Variables (for web version reuse):
+ * - selectedTab: 'prewritten' | 'generate'
+ * - preWrittenScripts: array of script objects for the Pre-written tab
+ * - generatedScripts: array of script objects for the Generate tab
+ * - isLoading: boolean loading flag for data fetch
+ */
 const PracticeScreen = ({ navigation }) => {
-  const { practiceWords, fetchPracticeWords, uploadAudio, isLoading } = useSessions();
-
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [audioLevel, setAudioLevel] = useState(0);
+  const [selectedTab, setSelectedTab] = useState('prewritten');
+  const [preWrittenScripts, setPreWrittenScripts] = useState([]);
+  const [generatedScripts, setGeneratedScripts] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    fetchPracticeWords();
-  }, [fetchPracticeWords]);
+    const loadPracticeScripts = async () => {
+      setIsLoading(true);
+      // TODO: Replace with Supabase query (practice_scripts) and map to UI fields.
+      setPreWrittenScripts([
+        {
+          id: '1',
+          title: 'Graduation Speech',
+          body:
+            'Fellow students, teachers, and parents. Today marks the end of long journey, but also the beginning of an exciting new...',
+        },
+        {
+          id: '2',
+          title: 'Graduation Speech',
+          body:
+            'Fellow students, teachers, and parents. Today marks the end of long journey, but also the beginning of an exciting new...',
+        },
+        {
+          id: '3',
+          title: 'Graduation Speech',
+          body:
+            'Fellow students, teachers, and parents. Today marks the end of long journey, but also the beginning of an exciting new...',
+        },
+      ]);
+      setGeneratedScripts([]);
+      setIsLoading(false);
+    };
 
-  const currentWord = practiceWords[currentWordIndex] || {
-    text: 'Kumusta',
-    translation: 'Hello / How are you?',
-    difficulty: 'easy',
-  };
+    loadPracticeScripts();
+  }, []);
 
-  const handleRecordPress = async () => {
-    if (isRecording) {
-      // Stop recording
-      setIsRecording(false);
-      setIsProcessing(true);
+  /** @type {Array<{value: string, label: string}>} */
+  const tabOptions = useMemo(
+    () => [
+      { value: 'prewritten', label: 'Pre-written' },
+      { value: 'generate', label: 'Generate' },
+    ],
+    []
+  );
 
-      // TODO: Implement actual audio recording stop and upload
-      // Simulating processing delay
-      setTimeout(() => {
-        setIsProcessing(false);
-        // Navigate to results or show feedback
-        navigation.navigate('SessionResult', {
-          word: currentWord.text,
-          score: 0.85, // Placeholder score
-        });
-      }, 2000);
+  /** @type {Array<{id: string, title: string, body: string}>} */
+  const visibleScripts = selectedTab === 'prewritten' ? preWrittenScripts : generatedScripts;
+
+  const handleGoBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
     } else {
-      // Start recording
-      setIsRecording(true);
-      // TODO: Implement actual audio recording start
-      
-      // Simulate audio level changes for visualization
-      const interval = setInterval(() => {
-        setAudioLevel(Math.random() * 0.8 + 0.2);
-      }, 100);
-
-      // Store interval for cleanup
-      setTimeout(() => clearInterval(interval), 60000);
+      navigation.navigate('Dashboard');
     }
   };
 
-  const handleSkip = () => {
-    if (currentWordIndex < practiceWords.length - 1) {
-      setCurrentWordIndex((prev) => prev + 1);
+  const handleCancel = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
     } else {
-      setCurrentWordIndex(0);
+      navigation.navigate('Dashboard');
     }
   };
 
-  const handlePrevious = () => {
-    if (currentWordIndex > 0) {
-      setCurrentWordIndex((prev) => prev - 1);
-    }
+  const handleScriptPress = (script) => {
+    // Navigate to training scripted screen for practice
+    console.info('Selected script:', script?.id);
+    navigation.navigate('TrainingScripted', {
+      scriptId: script.id,
+      focusMode: 'free',
+      scriptType: 'prewritten',
+      autoStart: true,
+      entryPoint: 'practice',
+    });
+  };
+
+  const handleOpenGenerate = () => {
+    navigation.navigate('GenerateScript');
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Typography variant="h3" align="center">
-            Practice
-          </Typography>
-          <Typography variant="bodySmall" color="textSecondary" align="center">
-            Speak the word clearly
-          </Typography>
-        </View>
-
-        {/* Word Card */}
-        <Card style={styles.wordCard}>
-          <Typography variant="caption" color="textSecondary" align="center">
-            {currentWord.difficulty?.toUpperCase() || 'BEGINNER'}
-          </Typography>
-          <Typography variant="h1" align="center" style={styles.wordText}>
-            {currentWord.text}
-          </Typography>
-          <Typography variant="body" color="textSecondary" align="center">
-            {currentWord.translation}
-          </Typography>
-        </Card>
-
-        {/* Audio Visualizer */}
-        <View style={styles.visualizerContainer}>
-          <AudioLevelIndicator
-            level={audioLevel}
-            isActive={isRecording}
-            barCount={7}
-            width={200}
-            height={60}
-          />
-        </View>
-
-        {/* Recording Status */}
-        <View style={styles.statusContainer}>
-          <Typography
-            variant="body"
-            color={isRecording ? 'error' : 'textSecondary'}
-            align="center"
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.contentWrap}>
+          {/* Back button */}
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={handleGoBack}
+            activeOpacity={0.7}
           >
-            {isRecording
-              ? 'Recording...'
-              : isProcessing
-              ? 'Processing...'
-              : 'Tap to record'}
+            <Ionicons name="arrow-back" size={22} color={colors.black} />
+          </TouchableOpacity>
+
+          {/* Title */}
+          <Typography variant="h1" style={styles.title}>
+            Practice{"\n"}Setup
           </Typography>
-        </View>
+          <Typography variant="body" weight="medium" color="textSecondary" style={styles.subtitle}>
+            Choose one of these pre-written speech or generate your own to start.
+          </Typography>
 
-        {/* Record Button */}
-        <View style={styles.recordContainer}>
-          <AudioRecordButton
-            isRecording={isRecording}
-            isProcessing={isProcessing}
-            onPress={handleRecordPress}
-            size={100}
+          {/* Tabs */}
+          <FilterTabs
+            tabs={tabOptions}
+            selected={selectedTab}
+            onSelect={setSelectedTab}
           />
-        </View>
 
-        {/* Navigation Buttons */}
-        <View style={styles.navButtons}>
+          {selectedTab === 'generate' && (
+            <PrimaryButton
+              title="Generate Speech"
+              onPress={handleOpenGenerate}
+              variant="primary"
+              size="medium"
+              style={styles.generateButton}
+            />
+          )}
+
+          {/* List */}
+          <View style={styles.listWrap}>
+            {isLoading ? (
+              <Typography variant="bodySmall" color="textSecondary" align="center">
+                Loading scripts...
+              </Typography>
+            ) : visibleScripts.length === 0 ? (
+              <Typography variant="bodySmall" color="textSecondary" align="center">
+                No scripts yet.
+              </Typography>
+            ) : (
+              visibleScripts.map((script) => (
+                <TouchableOpacity
+                  key={script.id}
+                  activeOpacity={0.9}
+                  onPress={() => handleScriptPress(script)}
+                >
+                  <Card style={styles.scriptCard} padding={spacing.md}>
+                    <Typography variant="body" weight="bold" style={styles.scriptTitle}>
+                      {script.title}
+                    </Typography>
+                    <Typography
+                      variant="bodySmall"
+                      color="textSecondary"
+                      numberOfLines={3}
+                      style={styles.scriptBody}
+                    >
+                      {script.body}
+                    </Typography>
+                  </Card>
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
+
+          {/* Footer */}
           <PrimaryButton
-            title="Previous"
-            onPress={handlePrevious}
+            title="Cancel"
+            onPress={handleCancel}
             variant="outline"
-            size="small"
-            disabled={currentWordIndex === 0}
-            style={styles.navButton}
+            size="large"
+            style={styles.cancelButton}
           />
-          <PrimaryButton
-            title="Skip"
-            onPress={handleSkip}
-            variant="secondary"
-            size="small"
-            style={styles.navButton}
-          />
-        </View>
-
-        {/* Progress */}
-        <View style={styles.progress}>
-          <Typography variant="caption" color="textSecondary" align="center">
-            Word {currentWordIndex + 1} of {practiceWords.length || 1}
-          </Typography>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -172,40 +203,49 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xl,
   },
-  header: {
-    marginBottom: spacing.md,
+  contentWrap: {
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
   },
-  wordCard: {
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  wordText: {
-    marginVertical: spacing.sm,
-  },
-  visualizerContainer: {
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.white,
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.md,
   },
-  statusContainer: {
+  title: {
     marginBottom: spacing.sm,
   },
-  recordContainer: {
-    alignItems: 'center',
-    marginBottom: spacing.lg,
+  subtitle: {
+    marginBottom: spacing.md,
   },
-  navButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  navButton: {
-    marginHorizontal: spacing.sm,
-    minWidth: 100,
-  },
-  progress: {
+  listWrap: {
     marginTop: spacing.md,
+    marginBottom: spacing.xl,
+  },
+  generateButton: {
+    marginTop: spacing.md,
+  },
+  scriptCard: {
+    marginBottom: spacing.md,
+    borderRadius: borderRadius.lg,
+  },
+  scriptTitle: {
+    marginBottom: spacing.xs,
+  },
+  scriptBody: {
+    lineHeight: 18,
+  },
+  cancelButton: {
+    width: '100%',
   },
 });
 

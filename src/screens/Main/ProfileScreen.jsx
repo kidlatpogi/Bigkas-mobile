@@ -15,6 +15,7 @@ import PrimaryButton from '../../components/common/PrimaryButton';
 import TextField from '../../components/common/TextField';
 import AvatarPicker from '../../components/common/AvatarPicker';
 import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../api/supabaseClient';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 
@@ -37,17 +38,37 @@ import { spacing, borderRadius } from '../../styles/spacing';
  * @param {{ navigation: import('@react-navigation/native').NavigationProp }} props
  */
 const ProfileScreen = ({ navigation }) => {
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout, isLoading, updateNickname, updateNicknameLocal } =
+    useAuth();
 
-  /** @type {[{firstName:string,lastName:string,email:string,avatarUri:string|null}, Function]} */
   const [formData, setFormData] = useState({
     firstName: user?.name?.split(' ')[0] || '',
     lastName: user?.name?.split(' ').slice(1).join(' ') || '',
+    nickname: user?.nickname || '',
     email: user?.email || '',
     avatarUri: user?.avatar_url || null,
   });
 
   const [errors, setErrors] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+
+  /**
+   * Detect if any form field differs from the original user data.
+   * Returns true if there are unsaved changes.
+   */
+  const hasChanges = () => {
+    const originalFirstName = user?.name?.split(' ')[0] || '';
+    const originalLastName = user?.name?.split(' ').slice(1).join(' ') || '';
+    const originalNickname = user?.nickname || '';
+    const originalAvatar = user?.avatar_url || null;
+
+    return (
+      formData.firstName !== originalFirstName ||
+      formData.lastName !== originalLastName ||
+      formData.nickname !== originalNickname ||
+      formData.avatarUri !== originalAvatar
+    );
+  };
 
   /** Update a single form field and clear its error. */
   const updateField = (field, value) => {
@@ -57,28 +78,143 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
-  /** Validate & save — wired for Supabase profile update. */
+  /** Validate & save profile to Supabase with optimistic UI updates. */
   const handleSaveChanges = async () => {
     const newErrors = {};
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    // TODO: Wire Supabase profile update when backend is ready
-    Alert.alert('Success', 'Profile updated successfully!', [
-      { text: 'OK' },
-    ]);
+    try {
+      setIsSaving(true);
+
+      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+      let avatarUrl = formData.avatarUri;
+      const hasNewAvatar = formData.avatarUri && formData.avatarUri !== user?.avatar_url && formData.avatarUri.startsWith('file');
+
+      // Update Supabase user metadata immediately (without waiting for avatar)
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+          full_name: fullName,
+          nickname: formData.nickname.trim() || null,
+          avatar_url: hasNewAvatar ? formData.avatarUri : avatarUrl, // Temporarily use local URI
+        },
+      });
+
+      if (updateError) throw updateError;
+
+      // Update nickname via context in parallel (local only since we already updated Supabase)
+      const nicknamePromise = formData.nickname.trim() 
+        ? updateNicknameLocal(formData.nickname.trim())
+        : Promise.resolve({ success: true });
+
+      // Show success immediately for better UX
+      Alert.alert('Success', 'Profile updated successfully!', [
+        { text: 'OK' },
+      ]);
+
+      // Upload avatar in background if needed
+      if (hasNewAvatar) {
+        uploadAvatarInBackground(formData.avatarUri);
+      }
+
+      // Wait for nickname update
+      await nicknamePromise;
+
+    } catch (err) {
+      console.error('Profile save error:', err);
+      Alert.alert('Error', err.message || 'Failed to update profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  /** Upload avatar in background and update user metadata when complete. */
+  const uploadAvatarInBackground = async (localUri) => {
+    try {
+      const avatarUrl = await uploadAvatar(localUri);
+      
+      // Update user metadata with actual avatar URL
+      await supabase.auth.updateUser({
+        data: {
+          avatar_url: avatarUrl,
+        },
+      });
+    } catch (err) {
+      console.warn('Background avatar upload failed:', err);
+      // Could show a non-blocking toast notification here
+    }
+  };
+
+  /**
+   * Upload avatar image to Supabase Storage.
+   * @param {string} localUri - Local file URI from image picker
+   * @returns {Promise<string>} Public URL of uploaded avatar
+   */
+  const uploadAvatar = async (localUri) => {
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (!currentUser) throw new Error('Not authenticated');
+
+    const fileExt = localUri.split('.').pop() || 'jpg';
+    const fileName = `${currentUser.id}/avatar.${fileExt}`;
+
+    // Fetch file as blob
+    const response = await fetch(localUri);
+    const blob = await response.blob();
+
+    // Convert blob to ArrayBuffer for Supabase upload
+    const arrayBuffer = await new Response(blob).arrayBuffer();
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, arrayBuffer, {
+        contentType: `image/${fileExt}`,
+        upsert: true,
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  };
+
+  /**
+   * Auto-save avatar to Supabase when user picks and crops.
+   * Updates form state and Supabase metadata immediately.
+   */
+  const handleAvatarAutoSave = async (localUri) => {
+    try {
+      // Show success immediately to user
+      setFormData((prev) => ({ ...prev, avatarUri: localUri }));
+      Alert.alert('Success', 'Profile picture updated!', [{ text: 'OK' }]);
+
+      // Upload and update Supabase in background
+      const uploadedUrl = await uploadAvatar(localUri);
+      await supabase.auth.updateUser({
+        data: { avatar_url: uploadedUrl },
+      });
+
+      // Update local state with uploaded URL
+      setFormData((prev) => ({ ...prev, avatarUri: uploadedUrl }));
+    } catch (err) {
+      console.error('Avatar auto-save error:', err);
+      Alert.alert('Error', 'Failed to save profile picture. Please try again.');
+      // Revert form state on error
+      setFormData((prev) => ({ ...prev, avatarUri: user?.avatar_url || null }));
+    }
   };
 
   const handleCancel = () => {
-    // Reset form to initial values
     setFormData({
       firstName: user?.name?.split(' ')[0] || '',
       lastName: user?.name?.split(' ').slice(1).join(' ') || '',
+      nickname: user?.nickname || '',
       email: user?.email || '',
       avatarUri: user?.avatar_url || null,
     });
@@ -86,15 +222,19 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleGoBack = () => {
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Dashboard');
+    }
   };
 
   const handleChangePassword = () => {
-    Alert.alert('Change Password', 'Password change flow will be available soon.');
+    navigation.navigate('ChangePassword');
   };
 
   const handleAccountSettings = () => {
-    Alert.alert('Account Settings', 'Account settings will be available soon.');
+    navigation.navigate('AccountSettings');
   };
 
   const handleLogout = async () => {
@@ -123,7 +263,7 @@ const ProfileScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
       >
         <ScrollView
@@ -133,8 +273,8 @@ const ProfileScreen = ({ navigation }) => {
         >
           <View style={styles.contentWrap}>
             {/* ──── Back button ──── */}
-            <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-              <Ionicons name="arrow-back" size={18} color={colors.textPrimary} />
+            <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
+              <Ionicons name="arrow-back" size={24} color={colors.black} />
             </TouchableOpacity>
 
             {/* ──── Title ──── */}
@@ -149,7 +289,7 @@ const ProfileScreen = ({ navigation }) => {
                 username={formData.firstName || 'U'}
                 size={120}
                 editable
-                onImageSelect={(uri) => updateField('avatarUri', uri)}
+                onImageSelectAndUpload={handleAvatarAutoSave}
               />
             </View>
 
@@ -191,6 +331,16 @@ const ProfileScreen = ({ navigation }) => {
                 error={errors.email}
               />
 
+              {/* Nickname */}
+              <TextField
+                label="NICKNAME"
+                placeholder="Enter your nickname"
+                value={formData.nickname}
+                onChangeText={(v) => updateField('nickname', v)}
+                autoCapitalize="words"
+                error={errors.nickname}
+              />
+
               {/* Change Password */}
               <TouchableOpacity style={styles.settingRow} onPress={handleChangePassword}>
                 <Typography variant="body" style={styles.settingLabel}>
@@ -213,7 +363,8 @@ const ProfileScreen = ({ navigation }) => {
               <PrimaryButton
                 title="Save Changes"
                 onPress={handleSaveChanges}
-                loading={isLoading}
+                loading={isSaving}
+                disabled={!hasChanges()}
                 variant="secondary"
                 size="large"
                 style={styles.saveButton}
@@ -260,8 +411,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: borderRadius.full,
-    borderWidth: 1.5,
-    borderColor: colors.borderDark,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,

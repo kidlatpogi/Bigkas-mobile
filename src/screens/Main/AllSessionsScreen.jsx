@@ -149,7 +149,9 @@ const AllSessionsScreen = ({ navigation }) => {
   }, [filterType, allSessionsMock]);
 
   const handleGoBack = () => {
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
   };
 
   const handleSessionPress = (sessionId) => {

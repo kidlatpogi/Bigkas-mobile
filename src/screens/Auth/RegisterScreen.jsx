@@ -92,22 +92,28 @@ const RegisterScreen = ({ navigation }) => {
   };
 
   const handleGoBack = () => {
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
       >
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <View style={styles.contentWrap}>
-            <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-              <Ionicons name="arrow-back" size={18} color={colors.textPrimary} />
-            </TouchableOpacity>
-
-            <BrandLogo style={styles.logo} />
+            <View style={styles.topBar}>
+              <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
+                <Ionicons name="arrow-back" size={24} color={colors.black} />
+              </TouchableOpacity>
+              <View style={styles.logoContainer}>
+                <BrandLogo style={styles.headerLogo} />
+              </View>
+              <View style={styles.spacer} />
+            </View>
 
             <Typography variant="h1" style={styles.title}>
               Create
@@ -233,14 +239,26 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: colors.borderDark,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  logoContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  spacer: {
+    width: 40,
+  },
+  headerLogo: {
+    marginBottom: 0,
   },
   logo: {
-    alignSelf: 'center',
     marginBottom: spacing.lg,
   },
   title: {

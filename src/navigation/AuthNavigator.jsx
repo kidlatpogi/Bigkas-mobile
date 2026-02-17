@@ -11,6 +11,8 @@ const AuthNavigator = () => {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
+        animation: 'slide_from_right',
+        animationDuration: 200,
       }}
     >
       <Stack.Screen name="Login" component={LoginScreen} />

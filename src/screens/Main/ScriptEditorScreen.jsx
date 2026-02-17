@@ -57,7 +57,7 @@ const ScriptEditorScreen = ({ navigation, route }) => {
       setIsLoading(true);
       const { data, error } = await supabase
         .from('scripts')
-        .select('*')
+        .select('id, user_id, title, content, type, created_at, updated_at')
         .eq('id', scriptId)
         .single();
 
@@ -95,7 +95,7 @@ const ScriptEditorScreen = ({ navigation, route }) => {
           .update({
             title: title.trim(),
             content: content.trim(),
-            editedAt: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           })
           .eq('id', scriptId);
 
@@ -105,16 +105,16 @@ const ScriptEditorScreen = ({ navigation, route }) => {
         ]);
       } else {
         // Create new script
-        const { error } = await supabase.from('scripts').insert([
-          {
-            userId: user?.id,
+        const { error } = await supabase
+          .from('scripts')
+          .insert({
+            user_id: user?.id,
             title: title.trim(),
             content: content.trim(),
             type: 'self-authored',
-            createdAt: new Date().toISOString(),
-            editedAt: new Date().toISOString(),
-          },
-        ]);
+          })
+          .select('id, user_id, title, content, type, created_at, updated_at')
+          .single();
 
         if (error) throw error;
         Alert.alert('Success', 'Script created successfully', [
@@ -174,7 +174,7 @@ const ScriptEditorScreen = ({ navigation, route }) => {
 
         {/* Scrollable Content */}
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardView}
         >
           <ScrollView

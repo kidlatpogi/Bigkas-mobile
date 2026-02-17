@@ -5,9 +5,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TouchableOpacity,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import Typography from '../../components/common/Typography';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import BrandLogo from '../../components/common/BrandLogo';
@@ -67,12 +69,14 @@ const LoginScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
       >
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <View style={styles.contentWrap}>
-            <BrandLogo style={styles.logo} />
+            <View style={styles.logoWrapper}>
+              <BrandLogo style={styles.logo} />
+            </View>
 
             <Typography variant="h1" style={styles.title}>
               Login
@@ -180,8 +184,36 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     alignSelf: 'center',
   },
+  logoWrapper: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  logoContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  spacer: {
+    width: 40,
+  },
+  headerLogo: {
+    marginBottom: 0,
+  },
   logo: {
-    marginBottom: spacing.xl,
+    alignSelf: 'center',
+    marginBottom: spacing.lg,
   },
   title: {
     marginBottom: spacing.xs,

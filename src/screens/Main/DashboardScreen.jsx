@@ -6,6 +6,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   Dimensions,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -158,7 +159,7 @@ const DashboardScreen = ({ navigation }) => {
   }, [navigation]);
 
   const handleStartTraining = useCallback(() => {
-    navigation.navigate('Practice');
+    navigation.navigate('TrainingSetup');
   }, [navigation]);
 
   /* --------------- derived display values --------------- */
@@ -198,7 +199,14 @@ const DashboardScreen = ({ navigation }) => {
             onPress={() => navigation.navigate('Profile')}
             activeOpacity={0.7}
           >
-            <Ionicons name="person-outline" size={20} color={colors.primary} />
+            {user?.avatar_url ? (
+              <Image
+                source={{ uri: user.avatar_url }}
+                style={styles.profileAvatar}
+              />
+            ) : (
+              <Ionicons name="person-outline" size={20} color={colors.primary} />
+            )}
           </TouchableOpacity>
         </View>
 
@@ -366,6 +374,11 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  profileAvatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
   },
 
   /* Greeting */

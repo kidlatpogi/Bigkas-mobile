@@ -74,20 +74,24 @@ const EditProfileScreen = ({ navigation }) => {
   };
 
   const handleCancel = () => navigation.goBack();
-  const handleGoBack = () => navigation.goBack();
+  const handleGoBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  };
 
   const handleChangePassword = () => {
     Alert.alert('Change Password', 'Password change flow will be available soon.');
   };
 
   const handleAccountSettings = () => {
-    Alert.alert('Account Settings', 'Account settings will be available soon.');
+    navigation.navigate('AccountSettings');
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
       >
         <ScrollView
@@ -97,8 +101,8 @@ const EditProfileScreen = ({ navigation }) => {
         >
           <View style={styles.contentWrap}>
             {/* ── Back button ── */}
-            <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-              <Ionicons name="arrow-back" size={18} color={colors.textPrimary} />
+            <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
+              <Ionicons name="arrow-back" size={24} color={colors.black} />
             </TouchableOpacity>
 
             {/* ── Title ── */}
@@ -224,8 +228,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: borderRadius.full,
-    borderWidth: 1.5,
-    borderColor: colors.borderDark,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,

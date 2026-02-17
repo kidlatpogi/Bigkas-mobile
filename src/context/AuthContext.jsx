@@ -280,23 +280,25 @@ export const AuthProvider = ({ children }) => {
   // ── Logout ─────────────────────────────────────────────────
   /**
    * Sign out the current user from Supabase and clear local storage.
+   * Optimized for fast UI response - clears local state immediately.
    */
   const logout = async () => {
-    dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
-
-    try {
-      await supabase.auth.signOut();
-    } catch (err) {
-      console.error('Supabase signOut error:', err);
-    }
-
-    // Clear stored data regardless of signOut success
-    await AsyncStorage.multiRemove([
-      STORAGE_KEYS.AUTH_TOKEN,
-      STORAGE_KEYS.USER_DATA,
-    ]);
-
+    // Clear UI state immediately for fast UX
     dispatch({ type: AUTH_ACTIONS.LOGOUT });
+    
+    // Do cleanup in background (don't block UI)
+    Promise.all([
+      // Clear local storage
+      AsyncStorage.multiRemove([
+        STORAGE_KEYS.AUTH_TOKEN,
+        STORAGE_KEYS.USER_DATA,
+      ]).catch(err => console.warn('AsyncStorage cleanup failed:', err)),
+      
+      // Sign out from Supabase (network can be slow)
+      supabase.auth.signOut().catch(err => console.warn('Supabase signOut failed:', err))
+    ]).catch(err => {
+      console.error('Background logout cleanup failed:', err);
+    });
   };
 
   // ── Clear error ────────────────────────────────────────────
@@ -343,6 +345,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  /**
+   * Update nickname in local state only (when Supabase was already updated).
+   * @param {string} nickname
+   * @returns {Promise<{ success: boolean }>}
+   */
+  const updateNicknameLocal = async (nickname) => {
+    try {
+      const updatedUser = { ...state.user, nickname: nickname.trim() };
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.USER_DATA,
+        JSON.stringify(updatedUser),
+      );
+
+      dispatch({
+        type: AUTH_ACTIONS.UPDATE_PROFILE,
+        payload: updatedUser,
+      });
+
+      return { success: true };
+    } catch (err) {
+      console.warn('Failed to update local nickname:', err);
+      return { success: false };
+    }
+  };
+
   // ── Context value ──────────────────────────────────────────
   const value = {
     ...state,
@@ -351,6 +378,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     clearError,
     updateNickname,
+    updateNicknameLocal,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

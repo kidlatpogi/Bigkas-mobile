@@ -14,6 +14,7 @@ import { borderRadius } from '../../styles/spacing';
  * @param {number} [props.size] - Avatar diameter in pixels.
  * @param {boolean} [props.editable] - Show camera icon if true.
  * @param {Function} [props.onImageSelect] - Callback when image is picked (uri) => void.
+ * @param {Function} [props.onImageSelectAndUpload] - Callback to handle auto-upload (uri, onProgress?) => Promise<void>.
  * @param {Object} [props.style] - Additional container styles.
  */
 const AvatarPicker = ({
@@ -22,6 +23,7 @@ const AvatarPicker = ({
   size = 120,
   editable = false,
   onImageSelect,
+  onImageSelectAndUpload,
   style,
 }) => {
   const handlePickImage = async () => {
@@ -34,14 +36,24 @@ const AvatarPicker = ({
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
     });
 
     if (!result.canceled && result.assets?.[0]?.uri) {
-      onImageSelect(result.assets[0].uri);
+      const selectedUri = result.assets[0].uri;
+      
+      // Call onImageSelect if provided (form field update)
+      if (onImageSelect) {
+        onImageSelect(selectedUri);
+      }
+      
+      // Call onImageSelectAndUpload if provided (auto-save to Supabase)
+      if (onImageSelectAndUpload) {
+        await onImageSelectAndUpload(selectedUri);
+      }
     }
   };
 
