@@ -47,6 +47,7 @@ const BottomTabNavigator = () => {
   return (
     <Tab.Navigator
       initialRouteName="Dashboard"
+      backBehavior="initialRoute"
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: false,
