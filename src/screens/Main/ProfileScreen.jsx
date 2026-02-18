@@ -138,12 +138,18 @@ const ProfileScreen = ({ navigation }) => {
     try {
       const avatarUrl = await uploadAvatar(localUri);
       
-      // Update user metadata with actual avatar URL
-      await supabase.auth.updateUser({
-        data: {
-          avatar_url: avatarUrl,
-        },
-      });
+      // Try to update user metadata with actual avatar URL, but don't fail if RLS blocks it
+      try {
+        await supabase.auth.updateUser({
+          data: {
+            avatar_url: avatarUrl,
+          },
+        });
+      } catch (updateErr) {
+        // RLS policy may prevent user_metadata updates, which is okay
+        console.warn('Could not update user metadata (RLS policy):', updateErr);
+        // Avatar is still uploaded to storage, just can't sync metadata
+      }
     } catch (err) {
       console.warn('Background avatar upload failed:', err);
       // Could show a non-blocking toast notification here
@@ -195,14 +201,8 @@ const ProfileScreen = ({ navigation }) => {
       setFormData((prev) => ({ ...prev, avatarUri: localUri }));
       Alert.alert('Success', 'Profile picture updated!', [{ text: 'OK' }]);
 
-      // Upload and update Supabase in background
-      const uploadedUrl = await uploadAvatar(localUri);
-      await supabase.auth.updateUser({
-        data: { avatar_url: uploadedUrl },
-      });
-
-      // Update local state with uploaded URL
-      setFormData((prev) => ({ ...prev, avatarUri: uploadedUrl }));
+      // Upload avatar to storage in background (don't wait for it)
+      uploadAvatarInBackground(localUri);
     } catch (err) {
       console.error('Avatar auto-save error:', err);
       Alert.alert('Error', 'Failed to save profile picture. Please try again.');

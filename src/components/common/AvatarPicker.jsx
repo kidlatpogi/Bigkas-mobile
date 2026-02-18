@@ -64,10 +64,6 @@ const AvatarPicker = ({
     const options = uri
       ? [
           {
-            text: 'Change Profile Picture',
-            onPress: handlePickImage,
-          },
-          {
             text: 'Remove Profile Picture',
             onPress: () => {
               Alert.alert(
@@ -93,6 +89,10 @@ const AvatarPicker = ({
               );
             },
             style: 'destructive',
+          },
+          {
+            text: 'Change Profile Picture',
+            onPress: handlePickImage,
           },
           { text: 'Cancel', onPress: () => {}, style: 'cancel' },
         ]
