@@ -191,12 +191,13 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
   },
   contentWrap: {
-    paddingHorizontal: spacing.md,
-    flex: 1,
-    justifyContent: 'center',
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
   },
   topBar: {
     flexDirection: 'row',

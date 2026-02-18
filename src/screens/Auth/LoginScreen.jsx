@@ -236,7 +236,7 @@ const LoginScreen = ({ navigation }) => {
                 <View style={styles.dividerLine} />
               </View>
 
-              <SocialButton title="Log In with Google" onPress={() => {}} />
+              <SocialButton title="Continue with Google" onPress={() => {}} />
             </View>
 
             <View style={styles.registerContainer}>

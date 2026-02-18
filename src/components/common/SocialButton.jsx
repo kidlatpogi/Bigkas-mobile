@@ -1,6 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+import { TouchableOpacity, Text, StyleSheet, View, Image } from 'react-native';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 import { textStyles, fontFamily } from '../../styles/typography';
@@ -16,7 +15,11 @@ const SocialButton = ({ title, onPress, style }) => {
   return (
     <TouchableOpacity style={[styles.container, style]} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.iconWrap}>
-        <FontAwesome name="google" size={18} color="#DB4437" />
+        <Image
+          source={require('../../../assets/Google-Logo.png')}
+          style={styles.googleIcon}
+          resizeMode="contain"
+        />
       </View>
       <Text style={styles.text}>{title}</Text>
     </TouchableOpacity>
@@ -36,6 +39,10 @@ const styles = StyleSheet.create({
   },
   iconWrap: {
     marginRight: spacing.sm,
+  },
+  googleIcon: {
+    width: 20,
+    height: 20,
   },
   text: {
     ...textStyles.body,
