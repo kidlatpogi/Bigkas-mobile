@@ -137,10 +137,14 @@ const DashboardScreen = ({ navigation }) => {
     text: 'Courage is what it takes to stand up and speak.',
     author: 'Winston Churchill',
   });
+  const [quoteLoading, setQuoteLoading] = useState(true);
   const tip = useMemo(() => getDailyTip(), []);
 
   useEffect(() => {
-    fetchDailyQuote().then(setQuote);
+    // Load quote in background - don't block UI
+    fetchDailyQuote()
+      .then(setQuote)
+      .finally(() => setQuoteLoading(false));
   }, []);
 
   /* --------------- sessions fetch --------------- */

@@ -41,8 +41,8 @@ const EditProfileScreen = ({ navigation }) => {
 
   /** @type {[{firstName:string,lastName:string,email:string,avatarUri:string|null}, Function]} */
   const [formData, setFormData] = useState({
-    firstName: user?.name?.split(' ')[0] || '',
-    lastName: user?.name?.split(' ').slice(1).join(' ') || '',
+    firstName: user?.firstName || user?.name?.split(' ')[0] || '',
+    lastName: user?.lastName || user?.name?.split(' ').slice(1).join(' ') || '',
     email: user?.email || '',
     avatarUri: user?.avatar_url || null,
   });
@@ -89,6 +89,10 @@ const EditProfileScreen = ({ navigation }) => {
     navigation.navigate('AccountSettings');
   };
 
+  const handleRemoveAvatar = () => {
+    updateField('avatarUri', null);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -117,6 +121,7 @@ const EditProfileScreen = ({ navigation }) => {
                 size={120}
                 editable
                 onImageSelect={(uri) => updateField('avatarUri', uri)}
+                onRemoveImage={handleRemoveAvatar}
               />
             </View>
 

@@ -62,7 +62,7 @@ const SettingsScreen = ({ navigation }) => {
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
-      navigation.navigate('Dashboard');
+      navigation.navigate('MainTabs', { screen: 'Dashboard' });
     }
   };
 

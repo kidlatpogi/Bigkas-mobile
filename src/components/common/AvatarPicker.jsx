@@ -24,6 +24,7 @@ const AvatarPicker = ({
   editable = false,
   onImageSelect,
   onImageSelectAndUpload,
+  onRemoveImage,
   style,
 }) => {
   const handlePickImage = async () => {
@@ -57,6 +58,55 @@ const AvatarPicker = ({
     }
   };
 
+  const handleAvatarPress = () => {
+    if (!editable) return;
+
+    const options = uri
+      ? [
+          { text: 'Cancel', onPress: () => {}, style: 'cancel' },
+          {
+            text: 'Change Profile Picture',
+            onPress: handlePickImage,
+          },
+          {
+            text: 'Remove Profile Picture',
+            onPress: () => {
+              Alert.alert(
+                'Remove Profile Picture',
+                'Are you sure you want to remove your profile picture?',
+                [
+                  { text: 'Cancel', onPress: () => {}, style: 'cancel' },
+                  {
+                    text: 'Remove',
+                    onPress: () => {
+                      if (onRemoveImage) {
+                        onRemoveImage();
+                      } else {
+                        // Fallback: set to null
+                        if (onImageSelect) {
+                          onImageSelect(null);
+                        }
+                      }
+                    },
+                    style: 'destructive',
+                  },
+                ]
+              );
+            },
+            style: 'destructive',
+          },
+        ]
+      : [
+          { text: 'Cancel', onPress: () => {}, style: 'cancel' },
+          {
+            text: 'Add Profile Picture',
+            onPress: handlePickImage,
+          },
+        ];
+
+    Alert.alert('Profile Picture', '', options);
+  };
+
   const containerSize = { width: size, height: size, borderRadius: size / 2 };
   const iconSize = Math.floor(size * 0.267); // ~32px for 120px avatar
   const iconContainerSize = Math.floor(size * 0.267);
@@ -64,7 +114,7 @@ const AvatarPicker = ({
   return (
     <TouchableOpacity
       style={[styles.container, containerSize, style]}
-      onPress={handlePickImage}
+      onPress={handleAvatarPress}
       disabled={!editable}
       activeOpacity={editable ? 0.7 : 1}
     >

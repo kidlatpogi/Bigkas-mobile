@@ -53,7 +53,7 @@ const DetailedFeedbackScreen = ({ route, navigation }) => {
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
-      navigation.navigate('Dashboard');
+      navigation.navigate('MainTabs', { screen: 'Dashboard' });
     }
   };
 
@@ -70,7 +70,7 @@ const DetailedFeedbackScreen = ({ route, navigation }) => {
   };
 
   const handleCancel = () => {
-    navigation.navigate('Dashboard');
+    navigation.navigate('MainTabs', { screen: 'Dashboard' });
   };
 
   const toneColor = (tone) => {
@@ -183,7 +183,7 @@ const DetailedFeedbackScreen = ({ route, navigation }) => {
           onPress={handlePracticeAgain}
           style={styles.primaryButton}
         />
-        <PrimaryButton title="Cancel" onPress={handleCancel} variant="outline" style={styles.secondaryButton} />
+        <PrimaryButton title="Go Home" onPress={handleCancel} variant="outline" style={styles.secondaryButton} />
       </ScrollView>
     </SafeAreaView>
   );

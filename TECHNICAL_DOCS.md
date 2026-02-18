@@ -845,36 +845,40 @@ const { user, logout, isLoading, updateNickname } = useAuth();
 | ------------------------- | -------------------------- | --------------------------------------------------- |
 | `updateField(field, value)` | Any input change         | Updates `formData[field]`, clears matching error    |
 | `handleSaveChanges()`     | "Save Changes" press       | Validates, uploads avatar if changed, updates Supabase user_metadata (full_name, nickname, avatar_url), syncs nickname via context |
-| `handleAvatarAutoSave(localUri)` | Callback from AvatarPicker after image selection | Immediately updates local state, uploads avatar to Supabase Storage, updates user_metadata with new avatar URL, shows success alert |
+| `handleAvatarAutoSave(localUri)` | Callback from AvatarPicker after image selection | Updates local state immediately, attempts upload to Supabase Storage, updates user_metadata if possible, shows success/notice alert |
+| `handleRemoveAvatar()`   | "Remove Profile Picture" in avatar menu | Resets `formData.avatarUri` to null            |
 | `handleCancel()`          | "Cancel" press             | Resets form to initial user values                  |
-| `handleGoBack()`          | Back arrow press           | `navigation.goBack()` or `navigation.navigate('Dashboard')` |
+| `handleGoBack()`          | Back arrow press           | `navigation.goBack()` or `navigation.navigate('MainTabs', { screen: 'Dashboard' })` |
 | `handleChangePassword()`  | "Change Password" row     | `navigation.navigate('ChangePassword')`             |
 | `handleAccountSettings()` | "Account Settings" row    | `navigation.navigate('AccountSettings')`            |
-| `uploadAvatar(localUri)`  | Called by handleSaveChanges or handleAvatarAutoSave | Uploads image to Supabase Storage `avatars` bucket, returns public URL |
+| `uploadAvatar(localUri)`  | Called by handleAvatarAutoSave | Uploads image to Supabase Storage `avatars` bucket, returns public URL |
 | `uploadAvatarInBackground(localUri)` | Called for background upload | Uploads avatar and updates Supabase user_metadata without blocking UI |
 
 #### Avatar Upload Flow
 
 **Auto-Save Flow (Recommended):**
-1. User taps avatar with camera icon → AvatarPicker opens image picker
-2. User selects and crops image → local URI obtained
-3. `handleAvatarAutoSave` immediately called with URI
-4. Form state updated with new URI + success alert shown
-5. Upload happens in background: image → Supabase Storage → public URL → user_metadata
-6. No need to tap "Save Changes" button
+1. User taps avatar → AvatarPicker shows context menu:
+   - **Remove Profile Picture** (destructive, at top on Android)
+   - **Change Profile Picture** (middle)
+   - **Cancel** (bottom)
+2. User selects "Change Profile Picture" → image picker opens
+3. User selects and crops image → local URI obtained
+4. `handleAvatarAutoSave` called with URI
+5. Form state updated with local URI immediately (instant visual feedback)
+6. Upload attempted: image → Supabase Storage → public URL → user_metadata
+7. On success: shows "Success" alert, updates form state with remote URL
+8. On RLS/upload failure: shows "Notice" alert, local image still displays
 
-**Manual Save Flow:**
-1. User picks image via AvatarPicker → URI stored in `formData.avatarUri`
-2. User taps "Save Changes" button
-3. `handleSaveChanges()` detects `formData.avatarUri` differs from `user.avatar_url`
-4. Calls `uploadAvatar()` immediately (blocking)
-5. All changes saved atomically to Supabase
+**RLS Error Handling:**
+- If Supabase Storage RLS policy blocks upload, user still sees avatar locally
+- Warning logged to console but no crash
+- User informed via non-blocking alert that cloud sync may be unavailable
 
 #### Components Used
 
 | Component      | Props                                        | Description               |
 | -------------- | -------------------------------------------- | ------------------------- |
-| `AvatarPicker` | `uri`, `username`, `size`, `editable`, `onImageSelectAndUpload` | Avatar selection with camera icon; calls callback after image selection |
+| `AvatarPicker` | `uri`, `username`, `size`, `editable`, `onImageSelectAndUpload`, `onRemoveImage` | Avatar with context menu (Remove/Change/Cancel); on Android menu order is reversed for correct display |
 | `TextField`    | `label`, `value`, `onChangeText`, `error`    | Form inputs               |
 | `PrimaryButton`| `title`, `onPress`, `loading`, `variant`     | Save/Cancel buttons       |
 
@@ -937,7 +941,7 @@ const { user, updateNickname, isLoading } = useAuth();
 
 | Component      | Props                                 | Description               |
 | -------------- | ------------------------------------- | ------------------------- |
-| `AvatarPicker` | `uri`, `onImageSelected`, `size`, `editable` | Avatar selection with camera icon |
+| `AvatarPicker` | `uri`, `onImageSelect`, `onImageSelectAndUpload`, `onRemoveImage`, `size`, `editable` | Avatar selection with context menu (add/change/remove) |
 | `TextField`    | `label`, `value`, `onChangeText`, `error` | Form inputs              |
 
 ---
@@ -1677,13 +1681,18 @@ Uses FontAwesome `google` icon with outline border style.
 | `editable`        | `boolean`  | `false` | Show camera overlay icon        |
 | `onImageSelect`   | `function` | —       | Callback with selected URI (optional form field update) |
 | `onImageSelectAndUpload` | `function` | — | Callback for auto-save/upload after selection `(uri) => Promise<void>` |
+| `onRemoveImage`   | `function` | —       | Callback to remove profile picture; enables "Remove" option in context menu |
 | `style`           | `ViewStyle`| —       | Container style override        |
 
 **Usage Notes:**
-- When `editable={true}`, tapping avatar opens image picker
+- When `editable={true}`, tapping avatar opens a context menu (Alert dialog)
+- **With existing avatar**: Shows "Remove Profile Picture", "Change Profile Picture", "Cancel"
+- **Without avatar**: Shows "Add Profile Picture", "Cancel"
+- Android Alert buttons are displayed in reverse array order — the code accounts for this by reversing the array so options appear in the correct visual order
 - If `onImageSelectAndUpload` provided, fires after image selection with auto-upload flow
 - If `onImageSelect` provided, fires to update form field
-- Both callbacks can be provided simultaneously
+- If `onRemoveImage` provided, enables the "Remove Profile Picture" option in the context menu
+- Both `onImageSelect` and `onImageSelectAndUpload` callbacks can be provided simultaneously
 
 ### Typography (`src/components/common/Typography.jsx`)
 

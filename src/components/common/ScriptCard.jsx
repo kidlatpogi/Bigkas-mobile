@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Typography from './Typography';
@@ -36,6 +36,21 @@ const ScriptCard = ({
   onPress,
 }) => {
   const [menuVisible, setMenuVisible] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+  const menuTriggerRef = useRef(null);
+
+  const handleMenuPress = () => {
+    if (menuTriggerRef.current) {
+      menuTriggerRef.current.measureInWindow((x, y, width, height) => {
+        setMenuPosition({
+          x: x + width - 200,
+          y: y + height + 8,
+        });
+      });
+    }
+    setMenuVisible(true);
+  };
+
   const getBadgeStyle = () => {
     if (type === 'auto-generated') {
       return { backgroundColor: colors.gray200, text: colors.textSecondary };
@@ -67,8 +82,9 @@ const ScriptCard = ({
           </View>
 
           <TouchableOpacity
+            ref={menuTriggerRef}
             style={styles.menuTrigger}
-            onPress={() => setMenuVisible(true)}
+            onPress={handleMenuPress}
             activeOpacity={0.6}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
@@ -107,7 +123,7 @@ const ScriptCard = ({
         onRequestClose={() => setMenuVisible(false)}
       >
         <Pressable style={styles.menuOverlay} onPress={() => setMenuVisible(false)}>
-          <View style={styles.menuContainer}>
+          <View style={[styles.menuContainer, { top: menuPosition.y, left: menuPosition.x }]}>
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
@@ -185,8 +201,6 @@ const styles = StyleSheet.create({
   menuOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   menuContainer: {
     width: 200,
@@ -198,6 +212,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
+    position: 'absolute',
+    zIndex: 1000,
   },
   menuItem: {
     flexDirection: 'row',

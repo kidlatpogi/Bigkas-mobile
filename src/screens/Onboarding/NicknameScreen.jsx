@@ -12,19 +12,33 @@ import { spacing } from '../../styles/spacing';
 /**
  * First-login nickname screen for personalized greetings.
  */
-const NicknameScreen = () => {
+const NicknameScreen = ({ navigation }) => {
   const { updateNickname, isLoading } = useAuth();
 
   // Nickname input state for reuse in web onboarding.
   const [nickname, setNickname] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleContinue = async () => {
     setError('');
-    const result = await updateNickname(nickname);
-    if (!result.success) {
-      setError(result.error || 'Please enter a nickname');
+    if (!nickname.trim()) {
+      setError('Please enter a nickname');
+      return;
     }
+
+    setIsSubmitting(true);
+    
+    // Update nickname - this will trigger navigation automatically
+    // Don't wait for the full operation to complete
+    const result = await updateNickname(nickname);
+    
+    setIsSubmitting(false);
+    
+    if (!result.success) {
+      setError('Failed to set nickname. Please try again.');
+    }
+    // On success, app will auto-navigate via AuthContext
   };
 
   return (
@@ -38,11 +52,10 @@ const NicknameScreen = () => {
             <BrandLogo style={styles.logo} />
 
             <Typography variant="h1" style={styles.title}>
-              Add your
-              {'\n'}nickname
+              Add your nickname
             </Typography>
             <Typography variant="body" color="textSecondary" weight="medium" style={styles.subtitle}>
-              This will be shown on your dashboard.
+              This will be shown on your dashboard. You can change it later in settings.
             </Typography>
 
             <TextField
@@ -56,7 +69,7 @@ const NicknameScreen = () => {
             <PrimaryButton
               title="Continue"
               onPress={handleContinue}
-              loading={isLoading}
+              loading={isSubmitting || isLoading}
               variant="primary"
               size="large"
               style={styles.continueButton}

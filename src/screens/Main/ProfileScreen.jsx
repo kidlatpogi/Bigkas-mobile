@@ -43,8 +43,8 @@ const ProfileScreen = ({ navigation }) => {
     useAuth();
 
   const [formData, setFormData] = useState({
-    firstName: user?.name?.split(' ')[0] || '',
-    lastName: user?.name?.split(' ').slice(1).join(' ') || '',
+    firstName: user?.firstName || user?.name?.split(' ')[0] || '',
+    lastName: user?.lastName || user?.name?.split(' ').slice(1).join(' ') || '',
     nickname: user?.nickname || '',
     email: user?.email || '',
     avatarUri: user?.avatar_url || null,
@@ -58,8 +58,8 @@ const ProfileScreen = ({ navigation }) => {
    * Returns true if there are unsaved changes.
    */
   const hasChanges = () => {
-    const originalFirstName = user?.name?.split(' ')[0] || '';
-    const originalLastName = user?.name?.split(' ').slice(1).join(' ') || '';
+    const originalFirstName = user?.firstName || user?.name?.split(' ')[0] || '';
+    const originalLastName = user?.lastName || user?.name?.split(' ').slice(1).join(' ') || '';
     const originalNickname = user?.nickname || '';
     const originalAvatar = user?.avatar_url || null;
 
@@ -92,13 +92,17 @@ const ProfileScreen = ({ navigation }) => {
     try {
       setIsSaving(true);
 
-      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+      const firstName = formData.firstName.trim();
+      const lastName = formData.lastName.trim();
+      const fullName = `${firstName} ${lastName}`.trim();
       let avatarUrl = formData.avatarUri;
       const hasNewAvatar = formData.avatarUri && formData.avatarUri !== user?.avatar_url && formData.avatarUri.startsWith('file');
 
       // Update Supabase user metadata immediately (without waiting for avatar)
       const { error: updateError } = await supabase.auth.updateUser({
         data: {
+          first_name: firstName,
+          last_name: lastName,
           full_name: fullName,
           nickname: formData.nickname.trim() || null,
           avatar_url: hasNewAvatar ? formData.avatarUri : avatarUrl, // Temporarily use local URI
@@ -138,15 +142,23 @@ const ProfileScreen = ({ navigation }) => {
     try {
       const avatarUrl = await uploadAvatar(localUri);
       
-      // Update user metadata with actual avatar URL
-      await supabase.auth.updateUser({
-        data: {
-          avatar_url: avatarUrl,
-        },
-      });
+      // Update local state with the uploaded URL
+      setFormData((prev) => ({ ...prev, avatarUri: avatarUrl }));
+      
+      // Try to update user metadata with actual avatar URL
+      try {
+        await supabase.auth.updateUser({
+          data: {
+            avatar_url: avatarUrl,
+          },
+        });
+      } catch (updateErr) {
+        // RLS policy may prevent user_metadata updates — avatar is still in storage
+        console.warn('Could not update user metadata (RLS policy):', updateErr);
+      }
     } catch (err) {
       console.warn('Background avatar upload failed:', err);
-      // Could show a non-blocking toast notification here
+      // Don't revert UI — the local URI still works for display
     }
   };
 
@@ -187,34 +199,44 @@ const ProfileScreen = ({ navigation }) => {
 
   /**
    * Auto-save avatar to Supabase when user picks and crops.
-   * Updates form state and Supabase metadata immediately.
+   * Updates form state immediately, uploads in background.
    */
   const handleAvatarAutoSave = async (localUri) => {
     try {
-      // Show success immediately to user
+      // Update local state immediately so user sees the new picture
       setFormData((prev) => ({ ...prev, avatarUri: localUri }));
+
+      // Try uploading to Supabase Storage
+      const avatarUrl = await uploadAvatar(localUri);
+
+      // Update local state with the remote URL
+      setFormData((prev) => ({ ...prev, avatarUri: avatarUrl }));
+
+      // Try to update user metadata
+      try {
+        await supabase.auth.updateUser({
+          data: { avatar_url: avatarUrl },
+        });
+      } catch (metaErr) {
+        console.warn('Could not update user metadata:', metaErr);
+      }
+
       Alert.alert('Success', 'Profile picture updated!', [{ text: 'OK' }]);
-
-      // Upload and update Supabase in background
-      const uploadedUrl = await uploadAvatar(localUri);
-      await supabase.auth.updateUser({
-        data: { avatar_url: uploadedUrl },
-      });
-
-      // Update local state with uploaded URL
-      setFormData((prev) => ({ ...prev, avatarUri: uploadedUrl }));
     } catch (err) {
       console.error('Avatar auto-save error:', err);
-      Alert.alert('Error', 'Failed to save profile picture. Please try again.');
-      // Revert form state on error
-      setFormData((prev) => ({ ...prev, avatarUri: user?.avatar_url || null }));
+      // Keep the local URI so the user can still see the picture locally
+      Alert.alert(
+        'Notice',
+        'Profile picture updated locally. Cloud sync may be unavailable — please check your storage permissions in Supabase.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
   const handleCancel = () => {
     setFormData({
-      firstName: user?.name?.split(' ')[0] || '',
-      lastName: user?.name?.split(' ').slice(1).join(' ') || '',
+      firstName: user?.firstName || user?.name?.split(' ')[0] || '',
+      lastName: user?.lastName || user?.name?.split(' ').slice(1).join(' ') || '',
       nickname: user?.nickname || '',
       email: user?.email || '',
       avatarUri: user?.avatar_url || null,
@@ -226,7 +248,7 @@ const ProfileScreen = ({ navigation }) => {
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
-      navigation.navigate('Dashboard');
+      navigation.navigate('MainTabs', { screen: 'Dashboard' });
     }
   };
 
@@ -236,6 +258,13 @@ const ProfileScreen = ({ navigation }) => {
 
   const handleAccountSettings = () => {
     navigation.navigate('AccountSettings');
+  };
+
+  /**
+   * Handle removing the current avatar
+   */
+  const handleRemoveAvatar = () => {
+    setFormData((prev) => ({ ...prev, avatarUri: null }));
   };
 
   const handleLogout = async () => {
@@ -289,6 +318,7 @@ const ProfileScreen = ({ navigation }) => {
                 size={120}
                 editable
                 onImageSelectAndUpload={handleAvatarAutoSave}
+                onRemoveImage={handleRemoveAvatar}
               />
             </View>
 

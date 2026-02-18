@@ -14,6 +14,7 @@ import Typography from '../../components/common/Typography';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import PasswordField from '../../components/common/PasswordField';
 import { supabase } from '../../api/supabaseClient';
+import { useAuth } from '../../hooks/useAuth';
 import BackButton from '../../components/common/BackButton';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
@@ -34,6 +35,8 @@ import { spacing, borderRadius } from '../../styles/spacing';
  * @param {{ navigation: import('@react-navigation/native').NavigationProp }} props
  */
 const ChangePasswordScreen = ({ navigation }) => {
+  const { logout, user } = useAuth();
+  const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState({});
@@ -48,6 +51,7 @@ const ChangePasswordScreen = ({ navigation }) => {
   const handleSaveNewPassword = async () => {
     const newErrors = {};
 
+    if (!oldPassword.trim()) newErrors.oldPassword = 'Current password is required';
     if (!newPassword.trim()) newErrors.newPassword = 'New password is required';
     else if (newPassword.length < 6) newErrors.newPassword = 'Password must be at least 6 characters';
     if (!confirmPassword.trim()) newErrors.confirmPassword = 'Please confirm your new password';
@@ -61,7 +65,19 @@ const ChangePasswordScreen = ({ navigation }) => {
     try {
       setIsSaving(true);
 
-      // Update password via Supabase (built-in verification)
+      // Verify old password by attempting to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email,
+        password: oldPassword,
+      });
+
+      if (signInError) {
+        setErrors({ oldPassword: 'Current password is incorrect' });
+        setIsSaving(false);
+        return;
+      }
+
+      // Update password via Supabase
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword,
       });
@@ -75,22 +91,38 @@ const ChangePasswordScreen = ({ navigation }) => {
         } else {
           throw updateError;
         }
+        setIsSaving(false);
         return;
       }
 
-      Alert.alert('Success', 'Your password has been updated successfully.', [
-        { text: 'OK', onPress: handleGoBack },
-      ]);
+      // Password changed successfully - logout user and prompt to login again
+      setIsSaving(false);
+      Alert.alert(
+        'Password Updated',
+        'Your password has been changed successfully. Please log in again with your new password.',
+        [
+          {
+            text: 'OK',
+            onPress: async () => {
+              await logout();
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Auth' }],
+              });
+            },
+          },
+        ],
+      );
     } catch (err) {
       console.error('Change password error:', err);
-      Alert.alert('Error', err.message || 'Failed to update password. Please try again.');
-    } finally {
       setIsSaving(false);
+      Alert.alert('Error', err.message || 'Failed to update password. Please try again.');
     }
   };
 
   const updateField = (field, value) => {
-    if (field === 'newPassword') setNewPassword(value);
+    if (field === 'oldPassword') setOldPassword(value);
+    else if (field === 'newPassword') setNewPassword(value);
     else if (field === 'confirmPassword') setConfirmPassword(value);
 
     if (errors[field]) {
@@ -115,16 +147,24 @@ const ChangePasswordScreen = ({ navigation }) => {
 
             {/* ── Title ── */}
             <Typography variant="h1" style={styles.title}>
-              New Password
+              Change Password
             </Typography>
 
             {/* ── Description ── */}
             <Typography variant="body" color="textSecondary" style={styles.description}>
-              Create a new, strong password{'\n'}for your account
+              Enter your current password and create{'\n'}a new, strong password for your account
             </Typography>
 
             {/* ── Form ── */}
             <View style={styles.form}>
+              <PasswordField
+                label="Current Password"
+                placeholder="Enter your current password"
+                value={oldPassword}
+                onChangeText={(v) => updateField('oldPassword', v)}
+                error={errors.oldPassword}
+              />
+
               <PasswordField
                 label="New Password"
                 placeholder="Enter new password"

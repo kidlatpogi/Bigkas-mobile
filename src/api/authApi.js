@@ -28,7 +28,8 @@ export const login = async (email, password) => {
  * @param {Object} userData
  * @param {string} userData.email
  * @param {string} userData.password
- * @param {string} userData.name
+ * @param {string} userData.firstName
+ * @param {string} userData.lastName
  * @returns {Promise<{ user: Object, error?: string }>}
  */
 export const register = async (userData) => {
@@ -38,7 +39,9 @@ export const register = async (userData) => {
       password: userData.password,
       options: {
         data: {
-          full_name: userData.name,
+          first_name: userData.firstName,
+          last_name: userData.lastName,
+          full_name: `${userData.firstName} ${userData.lastName}`.trim(),
         },
         emailRedirectTo: undefined, // Will use default email template
       },
