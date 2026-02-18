@@ -243,6 +243,7 @@ const { login, isLoading, error, clearError } = useAuth();
 | `email`            | `string`                     | `''`          | Email input value                    |
 | `password`         | `string`                     | `''`          | Password input value                 |
 | `validationErrors` | `{ email?: string, password?: string }` | `{}` | Client-side validation error map |
+| `verificationExpanded` | `boolean`                | `false`       | Controls email verification card collapse/expand state |
 
 #### From Hooks
 
@@ -260,12 +261,29 @@ const { login, isLoading, error, clearError } = useAuth();
 | `validate()`        | Called inside `handleLogin`    | Validates email format and non-empty password; sets `validationErrors` |
 | `handleLogin()`     | "Log In" button press          | Calls `clearError()`, validates, then `login(email, password)` |
 | `handleGoogleLogin()` | Google social button press   | Placeholder — Alert for Google OAuth status       |
+| `handleResendVerificationEmail()` | Resend button in expanded verification card | Sets `resendLoading`, calls `resendVerificationEmail()` |
+
+#### Email Verification UI (Pending Verification State)
+
+When `pendingEmailVerification = true`:
+- **Collapsed State** (default): Compact bar showing mail icon + "Email Verification Pending" text + chevron-down
+  - Only spans minimal vertical space on screen
+  - Background: Warning color with 9% opacity (`${colors.warning}15`)
+  - Border-left: 4px warning accent for visual emphasis
+  
+- **Expanded State** (on tap): Shows full details
+  - Displays pending email address
+  - Shows verification instructions
+  - "Resend Email" button appears
+  - Chevron changes to chevron-up to indicate expandable state
+  - Automatically collapses when user taps elsewhere or logs in
 
 #### Navigation Actions
 
 | Action                 | Destination        |
 | ---------------------- | ------------------ |
 | `navigation.navigate('Register')` | RegisterScreen |
+| `navigation.navigate('ForgotPassword')` | ForgotPasswordScreen |
 
 #### Validation Logic
 

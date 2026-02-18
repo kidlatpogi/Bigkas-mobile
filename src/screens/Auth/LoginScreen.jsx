@@ -37,6 +37,7 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
   const [resendLoading, setResendLoading] = useState(false);
+  const [verificationExpanded, setVerificationExpanded] = useState(false);
 
   const validate = () => {
     const errors = {};
@@ -150,11 +151,15 @@ const LoginScreen = ({ navigation }) => {
               </Typography>
 
               {pendingEmailVerification ? (
-                <View style={styles.verificationContainer}>
+                <TouchableOpacity
+                  style={styles.verificationContainer}
+                  onPress={() => setVerificationExpanded(!verificationExpanded)}
+                  activeOpacity={0.7}
+                >
                   <View style={styles.verificationHeader}>
                     <Ionicons
                       name="mail-open"
-                      size={20}
+                      size={16}
                       color={colors.warning}
                     />
                     <Typography
@@ -163,34 +168,44 @@ const LoginScreen = ({ navigation }) => {
                       weight="bold"
                       style={styles.verificationTitle}
                     >
-                      Verify Your Email
+                      Email Verification Pending
                     </Typography>
+                    <Ionicons
+                      name={verificationExpanded ? 'chevron-up' : 'chevron-down'}
+                      size={16}
+                      color={colors.warning}
+                      style={styles.verificationChevron}
+                    />
                   </View>
-                  <Typography
-                    variant="bodySmall"
-                    color="textSecondary"
-                    style={styles.verificationText}
-                  >
-                    We've sent a verification link to{' '}
-                    <Typography
-                      variant="bodySmall"
-                      color="textPrimary"
-                      weight="bold"
-                    >
-                      {pendingEmail}
-                    </Typography>
-                    . Please click the link in the email to verify your
-                    account before logging in.
-                  </Typography>
-                  <PrimaryButton
-                    title="Resend Verification Email"
-                    onPress={handleResendVerificationEmail}
-                    loading={resendLoading}
-                    variant="secondary"
-                    size="small"
-                    style={styles.resendButton}
-                  />
-                </View>
+
+                  {verificationExpanded && (
+                    <View style={styles.verificationContent}>
+                      <Typography
+                        variant="bodySmall"
+                        color="textSecondary"
+                        style={styles.verificationText}
+                      >
+                        A verification link has been sent to{' '}
+                        <Typography
+                          variant="bodySmall"
+                          color="textPrimary"
+                          weight="bold"
+                        >
+                          {pendingEmail}
+                        </Typography>
+                        . Click the link in your email to verify your account.
+                      </Typography>
+                      <PrimaryButton
+                        title="Resend Email"
+                        onPress={handleResendVerificationEmail}
+                        loading={resendLoading}
+                        variant="secondary"
+                        size="small"
+                        style={styles.resendButton}
+                      />
+                    </View>
+                  )}
+                </TouchableOpacity>
               ) : null}
 
               {error && !pendingEmailVerification ? (
@@ -337,7 +352,7 @@ const styles = StyleSheet.create({
   verificationContainer: {
     backgroundColor: `${colors.warning}15`,
     borderRadius: 8,
-    padding: spacing.md,
+    padding: spacing.sm,
     marginBottom: spacing.lg,
     borderLeftWidth: 4,
     borderLeftColor: colors.warning,
@@ -345,10 +360,20 @@ const styles = StyleSheet.create({
   verificationHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    gap: spacing.xs,
   },
   verificationTitle: {
-    marginLeft: spacing.sm,
+    flex: 1,
+    fontSize: 13,
+  },
+  verificationChevron: {
+    marginLeft: spacing.xs,
+  },
+  verificationContent: {
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: `${colors.warning}30`,
   },
   verificationText: {
     marginBottom: spacing.md,
