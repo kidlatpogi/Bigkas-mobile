@@ -163,21 +163,39 @@ export const AuthProvider = ({ children }) => {
         const { data: { session } } = await supabase.auth.getSession();
 
         if (session?.user) {
-          // Try to load cached nickname from AsyncStorage
-          const cachedData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
-          const cached = cachedData ? JSON.parse(cachedData) : {};
+          // Try to load cached nickname from AsyncStorage (non-blocking)
+          AsyncStorage.getItem(STORAGE_KEYS.USER_DATA)
+            .then(cachedData => {
+              const cached = cachedData ? JSON.parse(cachedData) : {};
+              const appUser = mapSupabaseUser(session.user, cached.nickname);
+              return appUser;
+            })
+            .then(appUser => {
+              // Update AsyncStorage in background
+              AsyncStorage.setItem(
+                STORAGE_KEYS.USER_DATA,
+                JSON.stringify(appUser),
+              ).catch(err => console.warn('AsyncStorage update failed:', err));
 
-          const appUser = mapSupabaseUser(session.user, cached.nickname);
-
-          await AsyncStorage.setItem(
-            STORAGE_KEYS.USER_DATA,
-            JSON.stringify(appUser),
-          );
-
-          dispatch({
-            type: AUTH_ACTIONS.RESTORE_SESSION,
-            payload: { user: appUser },
-          });
+              dispatch({
+                type: AUTH_ACTIONS.RESTORE_SESSION,
+                payload: { user: appUser },
+              });
+            })
+            .catch(err => {
+              console.error('Failed to get cached data:', err);
+              // Fallback: use session user directly
+              const appUser = mapSupabaseUser(session.user);
+              AsyncStorage.setItem(
+                STORAGE_KEYS.USER_DATA,
+                JSON.stringify(appUser),
+              ).catch(e => console.warn('AsyncStorage fallback failed:', e));
+              
+              dispatch({
+                type: AUTH_ACTIONS.RESTORE_SESSION,
+                payload: { user: appUser },
+              });
+            });
         } else {
           dispatch({
             type: AUTH_ACTIONS.RESTORE_SESSION,
@@ -199,22 +217,40 @@ export const AuthProvider = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_OUT' || !session) {
-          await AsyncStorage.removeItem(STORAGE_KEYS.USER_DATA);
+          await AsyncStorage.removeItem(STORAGE_KEYS.USER_DATA).catch(e => console.warn('AsyncStorage cleanup failed:', e));
           dispatch({ type: AUTH_ACTIONS.LOGOUT });
         } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          const cachedData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
-          const cached = cachedData ? JSON.parse(cachedData) : {};
-          const appUser = mapSupabaseUser(session.user, cached.nickname);
+          AsyncStorage.getItem(STORAGE_KEYS.USER_DATA)
+            .then(cachedData => {
+              const cached = cachedData ? JSON.parse(cachedData) : {};
+              const appUser = mapSupabaseUser(session.user, cached.nickname);
+              return appUser;
+            })
+            .then(appUser => {
+              // Update AsyncStorage in background
+              AsyncStorage.setItem(
+                STORAGE_KEYS.USER_DATA,
+                JSON.stringify(appUser),
+              ).catch(err => console.warn('AsyncStorage update failed:', err));
 
-          await AsyncStorage.setItem(
-            STORAGE_KEYS.USER_DATA,
-            JSON.stringify(appUser),
-          );
-
-          dispatch({
-            type: AUTH_ACTIONS.LOGIN_SUCCESS,
-            payload: { user: appUser },
-          });
+              dispatch({
+                type: AUTH_ACTIONS.LOGIN_SUCCESS,
+                payload: { user: appUser },
+              });
+            })
+            .catch(err => {
+              console.error('Failed to process auth state change:', err);
+              const appUser = mapSupabaseUser(session.user);
+              AsyncStorage.setItem(
+                STORAGE_KEYS.USER_DATA,
+                JSON.stringify(appUser),
+              ).catch(e => console.warn('AsyncStorage fallback failed:', e));
+              
+              dispatch({
+                type: AUTH_ACTIONS.LOGIN_SUCCESS,
+                payload: { user: appUser },
+              });
+            });
         }
       },
     );
