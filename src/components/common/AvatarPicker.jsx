@@ -63,6 +63,11 @@ const AvatarPicker = ({
 
     const options = uri
       ? [
+          { text: 'Cancel', onPress: () => {}, style: 'cancel' },
+          {
+            text: 'Change Profile Picture',
+            onPress: handlePickImage,
+          },
           {
             text: 'Remove Profile Picture',
             onPress: () => {
@@ -90,18 +95,13 @@ const AvatarPicker = ({
             },
             style: 'destructive',
           },
-          {
-            text: 'Change Profile Picture',
-            onPress: handlePickImage,
-          },
-          { text: 'Cancel', onPress: () => {}, style: 'cancel' },
         ]
       : [
+          { text: 'Cancel', onPress: () => {}, style: 'cancel' },
           {
             text: 'Add Profile Picture',
             onPress: handlePickImage,
           },
-          { text: 'Cancel', onPress: () => {}, style: 'cancel' },
         ];
 
     Alert.alert('Profile Picture', '', options);

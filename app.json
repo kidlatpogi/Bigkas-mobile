@@ -33,7 +33,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#00000000"
       },
       "edgeToEdgeEnabled": true,
       "navigationBar": {

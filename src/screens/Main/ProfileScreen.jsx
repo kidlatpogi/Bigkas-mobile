@@ -138,7 +138,10 @@ const ProfileScreen = ({ navigation }) => {
     try {
       const avatarUrl = await uploadAvatar(localUri);
       
-      // Try to update user metadata with actual avatar URL, but don't fail if RLS blocks it
+      // Update local state with the uploaded URL
+      setFormData((prev) => ({ ...prev, avatarUri: avatarUrl }));
+      
+      // Try to update user metadata with actual avatar URL
       try {
         await supabase.auth.updateUser({
           data: {
@@ -146,13 +149,12 @@ const ProfileScreen = ({ navigation }) => {
           },
         });
       } catch (updateErr) {
-        // RLS policy may prevent user_metadata updates, which is okay
+        // RLS policy may prevent user_metadata updates — avatar is still in storage
         console.warn('Could not update user metadata (RLS policy):', updateErr);
-        // Avatar is still uploaded to storage, just can't sync metadata
       }
     } catch (err) {
       console.warn('Background avatar upload failed:', err);
-      // Could show a non-blocking toast notification here
+      // Don't revert UI — the local URI still works for display
     }
   };
 
@@ -193,21 +195,37 @@ const ProfileScreen = ({ navigation }) => {
 
   /**
    * Auto-save avatar to Supabase when user picks and crops.
-   * Updates form state and Supabase metadata immediately.
+   * Updates form state immediately, uploads in background.
    */
   const handleAvatarAutoSave = async (localUri) => {
     try {
-      // Show success immediately to user
+      // Update local state immediately so user sees the new picture
       setFormData((prev) => ({ ...prev, avatarUri: localUri }));
-      Alert.alert('Success', 'Profile picture updated!', [{ text: 'OK' }]);
 
-      // Upload avatar to storage in background (don't wait for it)
-      uploadAvatarInBackground(localUri);
+      // Try uploading to Supabase Storage
+      const avatarUrl = await uploadAvatar(localUri);
+
+      // Update local state with the remote URL
+      setFormData((prev) => ({ ...prev, avatarUri: avatarUrl }));
+
+      // Try to update user metadata
+      try {
+        await supabase.auth.updateUser({
+          data: { avatar_url: avatarUrl },
+        });
+      } catch (metaErr) {
+        console.warn('Could not update user metadata:', metaErr);
+      }
+
+      Alert.alert('Success', 'Profile picture updated!', [{ text: 'OK' }]);
     } catch (err) {
       console.error('Avatar auto-save error:', err);
-      Alert.alert('Error', 'Failed to save profile picture. Please try again.');
-      // Revert form state on error
-      setFormData((prev) => ({ ...prev, avatarUri: user?.avatar_url || null }));
+      // Keep the local URI so the user can still see the picture locally
+      Alert.alert(
+        'Notice',
+        'Profile picture updated locally. Cloud sync may be unavailable — please check your storage permissions in Supabase.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
