@@ -131,6 +131,32 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
       setIsLoadingScript(false);
       return;
     }
+
+    // If freeSpeechContext is provided (for system speeches), use it directly
+    if (freeSpeechContext && freeSpeechTopic) {
+      setScriptData({
+        id: `system-${Date.now()}`,
+        title: freeSpeechTopic,
+        body: freeSpeechContext,
+        type: 'system-prewritten',
+      });
+      setIsLoadingScript(false);
+      return;
+    }
+
+    // Otherwise, fetch real script from Supabase using scriptId
+    if (!scriptId) {
+      console.error('No scriptId or freeSpeechContext provided');
+      setScriptData({
+        id: 'unknown',
+        title: 'Script',
+        body: 'No script content available. Please go back and try again.',
+        type: scriptType || 'prewritten',
+      });
+      setIsLoadingScript(false);
+      return;
+    }
+
     const loadScript = async () => {
       setIsLoadingScript(true);
       try {
@@ -167,7 +193,7 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
     };
 
     loadScript();
-  }, [scriptId, isFreeMode]);
+  }, [scriptId, isFreeMode, freeSpeechContext, freeSpeechTopic]);
 
   // Countdown timer effect
   useEffect(() => {
