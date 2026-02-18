@@ -845,25 +845,36 @@ const { user, logout, isLoading, updateNickname } = useAuth();
 | ------------------------- | -------------------------- | --------------------------------------------------- |
 | `updateField(field, value)` | Any input change         | Updates `formData[field]`, clears matching error    |
 | `handleSaveChanges()`     | "Save Changes" press       | Validates, uploads avatar if changed, updates Supabase user_metadata (full_name, nickname, avatar_url), syncs nickname via context |
+| `handleAvatarAutoSave(localUri)` | Callback from AvatarPicker after image selection | Immediately updates local state, uploads avatar to Supabase Storage, updates user_metadata with new avatar URL, shows success alert |
 | `handleCancel()`          | "Cancel" press             | Resets form to initial user values                  |
 | `handleGoBack()`          | Back arrow press           | `navigation.goBack()` or `navigation.navigate('Dashboard')` |
 | `handleChangePassword()`  | "Change Password" row     | `navigation.navigate('ChangePassword')`             |
 | `handleAccountSettings()` | "Account Settings" row    | `navigation.navigate('AccountSettings')`            |
-| `uploadAvatar(localUri)`  | Called by handleSaveChanges | Uploads image to Supabase Storage `avatars` bucket, returns public URL |
+| `uploadAvatar(localUri)`  | Called by handleSaveChanges or handleAvatarAutoSave | Uploads image to Supabase Storage `avatars` bucket, returns public URL |
+| `uploadAvatarInBackground(localUri)` | Called for background upload | Uploads avatar and updates Supabase user_metadata without blocking UI |
 
 #### Avatar Upload Flow
 
-1. User picks image via `AvatarPicker` → local URI stored in `formData.avatarUri`
-2. On save, if URI changed and starts with `file`, `uploadAvatar()` is called
-3. Image fetched as blob → converted to ArrayBuffer
-4. Uploaded to `avatars/{userId}/avatar.{ext}` with `upsert: true`
-5. Public URL returned and saved to `user_metadata.avatar_url`
+**Auto-Save Flow (Recommended):**
+1. User taps avatar with camera icon → AvatarPicker opens image picker
+2. User selects and crops image → local URI obtained
+3. `handleAvatarAutoSave` immediately called with URI
+4. Form state updated with new URI + success alert shown
+5. Upload happens in background: image → Supabase Storage → public URL → user_metadata
+6. No need to tap "Save Changes" button
+
+**Manual Save Flow:**
+1. User picks image via AvatarPicker → URI stored in `formData.avatarUri`
+2. User taps "Save Changes" button
+3. `handleSaveChanges()` detects `formData.avatarUri` differs from `user.avatar_url`
+4. Calls `uploadAvatar()` immediately (blocking)
+5. All changes saved atomically to Supabase
 
 #### Components Used
 
 | Component      | Props                                        | Description               |
 | -------------- | -------------------------------------------- | ------------------------- |
-| `AvatarPicker` | `uri`, `username`, `size`, `editable`, `onImageSelect` | Avatar selection with camera icon |
+| `AvatarPicker` | `uri`, `username`, `size`, `editable`, `onImageSelectAndUpload` | Avatar selection with camera icon; calls callback after image selection |
 | `TextField`    | `label`, `value`, `onChangeText`, `error`    | Form inputs               |
 | `PrimaryButton`| `title`, `onPress`, `loading`, `variant`     | Save/Cancel buttons       |
 
@@ -1649,9 +1660,18 @@ Uses FontAwesome `google` icon with outline border style.
 | Prop              | Type       | Default | Description                     |
 | ----------------- | ---------- | ------- | ------------------------------- |
 | `uri`             | `string`   | `null`  | Current avatar image URI        |
-| `onImageSelected` | `function` | —       | Callback with selected URI      |
-| `size`            | `number`   | `120`   | Circle diameter                 |
-| `editable`        | `boolean`  | `true`  | Show camera overlay icon        |
+| `username`        | `string`   | `'U'`   | Fallback initial character      |
+| `size`            | `number`   | `120`   | Circle diameter in pixels       |
+| `editable`        | `boolean`  | `false` | Show camera overlay icon        |
+| `onImageSelect`   | `function` | —       | Callback with selected URI (optional form field update) |
+| `onImageSelectAndUpload` | `function` | — | Callback for auto-save/upload after selection `(uri) => Promise<void>` |
+| `style`           | `ViewStyle`| —       | Container style override        |
+
+**Usage Notes:**
+- When `editable={true}`, tapping avatar opens image picker
+- If `onImageSelectAndUpload` provided, fires after image selection with auto-upload flow
+- If `onImageSelect` provided, fires to update form field
+- Both callbacks can be provided simultaneously
 
 ### Typography (`src/components/common/Typography.jsx`)
 
