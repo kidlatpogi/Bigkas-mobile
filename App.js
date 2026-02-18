@@ -1,8 +1,10 @@
 import React from 'react';
-import { StatusBar } from 'expo-status-bar';
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_700Bold } from '@expo-google-fonts/inter';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useEffect } from 'react';
+import { Platform, UIManager } from 'react-native';
 
 import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/context/AuthContext';
@@ -23,6 +25,20 @@ export default function App() {
     'Inter-Bold': Inter_700Bold,
   });
 
+  // Hide Android system navigation bar (bottom buttons)
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      try {
+        // Hide system UI including navigation bar
+        if (UIManager.setSystemUIMode) {
+          UIManager.setSystemUIMode('immersive_sticky');
+        }
+      } catch (e) {
+        console.log('Error hiding navigation bar:', e);
+      }
+    }
+  }, []);
+
   if (!fontsLoaded) {
     return null;
   }
@@ -33,7 +49,7 @@ export default function App() {
         <NavigationContainer>
           <AuthProvider>
             <SessionProvider>
-              <StatusBar style="auto" />
+              <ExpoStatusBar style="auto" />
               <AppNavigator />
             </SessionProvider>
           </AuthProvider>

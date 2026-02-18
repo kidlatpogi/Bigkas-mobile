@@ -28,7 +28,7 @@ const SessionResultScreen = ({ route, navigation }) => {
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
-      navigation.navigate('Dashboard');
+      navigation.navigate('MainTabs', { screen: 'Dashboard' });
     }
   };
 
@@ -45,7 +45,7 @@ const SessionResultScreen = ({ route, navigation }) => {
   };
 
   const handleCancel = () => {
-    navigation.navigate('Dashboard');
+    navigation.navigate('MainTabs', { screen: 'Dashboard' });
   };
 
   const handleViewDetailedFeedback = () => {

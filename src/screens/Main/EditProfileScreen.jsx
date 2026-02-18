@@ -89,6 +89,10 @@ const EditProfileScreen = ({ navigation }) => {
     navigation.navigate('AccountSettings');
   };
 
+  const handleRemoveAvatar = () => {
+    updateField('avatarUri', null);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -117,6 +121,7 @@ const EditProfileScreen = ({ navigation }) => {
                 size={120}
                 editable
                 onImageSelect={(uri) => updateField('avatarUri', uri)}
+                onRemoveImage={handleRemoveAvatar}
               />
             </View>
 

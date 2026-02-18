@@ -234,8 +234,11 @@ const ProfileScreen = ({ navigation }) => {
     navigation.navigate('ChangePassword');
   };
 
-  const handleAccountSettings = () => {
-    navigation.navigate('AccountSettings');
+  /**
+   * Handle removing the current avatar
+   */
+  const handleRemoveAvatar = () => {
+    setFormData((prev) => ({ ...prev, avatarUri: null }));
   };
 
   const handleLogout = async () => {
@@ -289,6 +292,7 @@ const ProfileScreen = ({ navigation }) => {
                 size={120}
                 editable
                 onImageSelectAndUpload={handleAvatarAutoSave}
+                onRemoveImage={handleRemoveAvatar}
               />
             </View>
 
