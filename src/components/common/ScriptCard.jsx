@@ -215,7 +215,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: 1000,
   },
-  },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
