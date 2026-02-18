@@ -1,6 +1,7 @@
 // Authentication API functions
 import apiClient from './client';
 import { ENDPOINTS } from '../utils/constants';
+import { supabase } from './supabaseClient';
 
 /**
  * Login with email and password
@@ -23,23 +24,88 @@ export const login = async (email, password) => {
 };
 
 /**
- * Register a new user
+ * Register a new user via Supabase Auth
  * @param {Object} userData
  * @param {string} userData.email
  * @param {string} userData.password
  * @param {string} userData.name
- * @param {string} [userData.username]
- * @returns {Promise<{ user: Object, token: string }>}
+ * @returns {Promise<{ user: Object, error?: string }>}
  */
 export const register = async (userData) => {
-  const response = await apiClient.post(ENDPOINTS.REGISTER, userData);
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email: userData.email,
+      password: userData.password,
+      options: {
+        data: {
+          full_name: userData.name,
+        },
+        emailRedirectTo: undefined, // Will use default email template
+      },
+    });
 
-  // Store the token in the API client for subsequent requests
-  if (response.token) {
-    apiClient.setAuthToken(response.token);
+    if (error) throw error;
+
+    return { user: data.user, error: null };
+  } catch (err) {
+    return { user: null, error: err.message };
   }
+};
 
-  return response;
+/**
+ * Resend email verification link
+ * @param {string} email
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export const resendVerificationEmail = async (email) => {
+  try {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+    });
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+};
+
+/**
+ * Send password reset link via email
+ * @param {string} email
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export const resetPassword = async (email) => {
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+};
+
+/**
+ * Update password with recovery token
+ * @param {string} newPassword
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export const updatePassword = async (newPassword) => {
+  try {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 };
 
 /**
@@ -102,4 +168,7 @@ export default {
   getProfile,
   updateProfile,
   setAuthToken,
+  resendVerificationEmail,
+  resetPassword,
+  updatePassword,
 };

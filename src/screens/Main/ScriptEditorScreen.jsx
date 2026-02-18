@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Typography from '../../components/common/Typography';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import TextField from '../../components/common/TextField';
+import BackButton from '../../components/common/BackButton';
 import { useAuth } from '../../hooks/useAuth';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
@@ -159,13 +160,7 @@ const ScriptEditorScreen = ({ navigation, route }) => {
       <View style={styles.content}>
         {/* Fixed Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={handleCancel}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.black} />
-          </TouchableOpacity>
+          <BackButton onPress={handleCancel} />
           <Typography variant="h3">
             {isEditing ? 'Edit Script' : 'New Script'}
           </Typography>
@@ -276,14 +271,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     marginBottom: spacing.md,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   headerSpacer: {
     width: 40,
   },

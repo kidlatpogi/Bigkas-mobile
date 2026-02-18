@@ -243,6 +243,7 @@ const { login, isLoading, error, clearError } = useAuth();
 | `email`            | `string`                     | `''`          | Email input value                    |
 | `password`         | `string`                     | `''`          | Password input value                 |
 | `validationErrors` | `{ email?: string, password?: string }` | `{}` | Client-side validation error map |
+| `verificationExpanded` | `boolean`                | `false`       | Controls email verification card collapse/expand state |
 
 #### From Hooks
 
@@ -260,12 +261,29 @@ const { login, isLoading, error, clearError } = useAuth();
 | `validate()`        | Called inside `handleLogin`    | Validates email format and non-empty password; sets `validationErrors` |
 | `handleLogin()`     | "Log In" button press          | Calls `clearError()`, validates, then `login(email, password)` |
 | `handleGoogleLogin()` | Google social button press   | Placeholder — Alert for Google OAuth status       |
+| `handleResendVerificationEmail()` | Resend button in expanded verification card | Sets `resendLoading`, calls `resendVerificationEmail()` |
+
+#### Email Verification UI (Pending Verification State)
+
+When `pendingEmailVerification = true`:
+- **Collapsed State** (default): Compact bar showing mail icon + "Email Verification Pending" text + chevron-down
+  - Only spans minimal vertical space on screen
+  - Background: Warning color with 9% opacity (`${colors.warning}15`)
+  - Border-left: 4px warning accent for visual emphasis
+  
+- **Expanded State** (on tap): Shows full details
+  - Displays pending email address
+  - Shows verification instructions
+  - "Resend Email" button appears
+  - Chevron changes to chevron-up to indicate expandable state
+  - Automatically collapses when user taps elsewhere or logs in
 
 #### Navigation Actions
 
 | Action                 | Destination        |
 | ---------------------- | ------------------ |
 | `navigation.navigate('Register')` | RegisterScreen |
+| `navigation.navigate('ForgotPassword')` | ForgotPasswordScreen |
 
 #### Validation Logic
 
@@ -827,25 +845,36 @@ const { user, logout, isLoading, updateNickname } = useAuth();
 | ------------------------- | -------------------------- | --------------------------------------------------- |
 | `updateField(field, value)` | Any input change         | Updates `formData[field]`, clears matching error    |
 | `handleSaveChanges()`     | "Save Changes" press       | Validates, uploads avatar if changed, updates Supabase user_metadata (full_name, nickname, avatar_url), syncs nickname via context |
+| `handleAvatarAutoSave(localUri)` | Callback from AvatarPicker after image selection | Immediately updates local state, uploads avatar to Supabase Storage, updates user_metadata with new avatar URL, shows success alert |
 | `handleCancel()`          | "Cancel" press             | Resets form to initial user values                  |
 | `handleGoBack()`          | Back arrow press           | `navigation.goBack()` or `navigation.navigate('Dashboard')` |
 | `handleChangePassword()`  | "Change Password" row     | `navigation.navigate('ChangePassword')`             |
 | `handleAccountSettings()` | "Account Settings" row    | `navigation.navigate('AccountSettings')`            |
-| `uploadAvatar(localUri)`  | Called by handleSaveChanges | Uploads image to Supabase Storage `avatars` bucket, returns public URL |
+| `uploadAvatar(localUri)`  | Called by handleSaveChanges or handleAvatarAutoSave | Uploads image to Supabase Storage `avatars` bucket, returns public URL |
+| `uploadAvatarInBackground(localUri)` | Called for background upload | Uploads avatar and updates Supabase user_metadata without blocking UI |
 
 #### Avatar Upload Flow
 
-1. User picks image via `AvatarPicker` → local URI stored in `formData.avatarUri`
-2. On save, if URI changed and starts with `file`, `uploadAvatar()` is called
-3. Image fetched as blob → converted to ArrayBuffer
-4. Uploaded to `avatars/{userId}/avatar.{ext}` with `upsert: true`
-5. Public URL returned and saved to `user_metadata.avatar_url`
+**Auto-Save Flow (Recommended):**
+1. User taps avatar with camera icon → AvatarPicker opens image picker
+2. User selects and crops image → local URI obtained
+3. `handleAvatarAutoSave` immediately called with URI
+4. Form state updated with new URI + success alert shown
+5. Upload happens in background: image → Supabase Storage → public URL → user_metadata
+6. No need to tap "Save Changes" button
+
+**Manual Save Flow:**
+1. User picks image via AvatarPicker → URI stored in `formData.avatarUri`
+2. User taps "Save Changes" button
+3. `handleSaveChanges()` detects `formData.avatarUri` differs from `user.avatar_url`
+4. Calls `uploadAvatar()` immediately (blocking)
+5. All changes saved atomically to Supabase
 
 #### Components Used
 
 | Component      | Props                                        | Description               |
 | -------------- | -------------------------------------------- | ------------------------- |
-| `AvatarPicker` | `uri`, `username`, `size`, `editable`, `onImageSelect` | Avatar selection with camera icon |
+| `AvatarPicker` | `uri`, `username`, `size`, `editable`, `onImageSelectAndUpload` | Avatar selection with camera icon; calls callback after image selection |
 | `TextField`    | `label`, `value`, `onChangeText`, `error`    | Form inputs               |
 | `PrimaryButton`| `title`, `onPress`, `loading`, `variant`     | Save/Cancel buttons       |
 
@@ -1572,6 +1601,18 @@ const { logout } = useAuth();
 
 ## 5. Reusable Component Props
 
+### BackButton (`src/components/common/BackButton.jsx`)
+
+Shared circular back button used consistently across **all** screens.  
+Design: 48×48 white circle with light gray border (`colors.border`), centered 22px `arrow-back` Ionicon.
+
+| Prop     | Type        | Default              | Description                                      |
+| -------- | ----------- | -------------------- | ------------------------------------------------ |
+| `onPress`| `function`  | `navigation.goBack()`| Custom press handler. Falls back to goBack()     |
+| `style`  | `ViewStyle` | —                    | Override container style (e.g., add marginBottom)|
+
+**Used in:** ForgotPasswordScreen, RegisterScreen, SessionResultScreen, DetailedFeedbackScreen, TrainingSetupScreen, TrainingScriptedScreen, SettingsScreen, ScriptsScreen, ScriptEditorScreen, ProgressScreen, ProfileScreen, PracticeScreen, HistoryScreen, GenerateScriptScreen, EditProfileScreen, ChangePasswordScreen, AudioCameraTestScreen, AllSessionsScreen, AccountSettingsScreen (19 screens total).
+
 ### BrandLogo (`src/components/common/BrandLogo.jsx`)
 
 | Prop     | Type           | Default | Description          |
@@ -1631,9 +1672,18 @@ Uses FontAwesome `google` icon with outline border style.
 | Prop              | Type       | Default | Description                     |
 | ----------------- | ---------- | ------- | ------------------------------- |
 | `uri`             | `string`   | `null`  | Current avatar image URI        |
-| `onImageSelected` | `function` | —       | Callback with selected URI      |
-| `size`            | `number`   | `120`   | Circle diameter                 |
-| `editable`        | `boolean`  | `true`  | Show camera overlay icon        |
+| `username`        | `string`   | `'U'`   | Fallback initial character      |
+| `size`            | `number`   | `120`   | Circle diameter in pixels       |
+| `editable`        | `boolean`  | `false` | Show camera overlay icon        |
+| `onImageSelect`   | `function` | —       | Callback with selected URI (optional form field update) |
+| `onImageSelectAndUpload` | `function` | — | Callback for auto-save/upload after selection `(uri) => Promise<void>` |
+| `style`           | `ViewStyle`| —       | Container style override        |
+
+**Usage Notes:**
+- When `editable={true}`, tapping avatar opens image picker
+- If `onImageSelectAndUpload` provided, fires after image selection with auto-upload flow
+- If `onImageSelect` provided, fires to update form field
+- Both callbacks can be provided simultaneously
 
 ### Typography (`src/components/common/Typography.jsx`)
 

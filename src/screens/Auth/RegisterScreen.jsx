@@ -15,13 +15,14 @@ import PrimaryButton from '../../components/common/PrimaryButton';
 import BrandLogo from '../../components/common/BrandLogo';
 import TextField from '../../components/common/TextField';
 import PasswordField from '../../components/common/PasswordField';
+import BackButton from '../../components/common/BackButton';
 import { useAuth } from '../../hooks/useAuth';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 import { isValidEmail, validatePassword, isNotEmpty } from '../../utils/validators';
 
 const RegisterScreen = ({ navigation }) => {
-  const { register, isLoading, error, clearError } = useAuth();
+  const { register, isLoading, error, clearError, resendVerificationEmail } = useAuth();
 
   // Form fields for cross-platform reuse (web + mobile).
   const [formData, setFormData] = useState({
@@ -32,6 +33,8 @@ const RegisterScreen = ({ navigation }) => {
     confirmPassword: '',
   });
   const [validationErrors, setValidationErrors] = useState({});
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   const updateField = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -82,7 +85,9 @@ const RegisterScreen = ({ navigation }) => {
       password: formData.password,
     });
 
-    if (!result.success) {
+    if (result.success) {
+      setRegistrationSuccess(true);
+    } else {
       Alert.alert('Registration Failed', result.error || 'Please try again');
     }
   };
@@ -91,11 +96,125 @@ const RegisterScreen = ({ navigation }) => {
     navigation.navigate('Login');
   };
 
+  const handleResendVerificationEmail = async () => {
+    setResendLoading(true);
+    const result = await resendVerificationEmail(formData.email.trim());
+    setResendLoading(false);
+
+    if (result.success) {
+      Alert.alert(
+        'Verification Email Sent',
+        'Check your email for the verification link. It may take a few minutes.',
+      );
+    } else {
+      Alert.alert(
+        'Failed to Resend',
+        result.error || 'Please try again later',
+      );
+    }
+  };
+
   const handleGoBack = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
   };
+
+  if (registrationSuccess) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboardView}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.contentWrap}>
+              <View style={styles.topBar}>
+                <View style={styles.spacer} />
+                <View style={styles.logoContainer}>
+                  <BrandLogo style={styles.headerLogo} />
+                </View>
+                <View style={styles.spacer} />
+              </View>
+
+              <View style={styles.successContainer}>
+                <Ionicons
+                  name="checkmark-circle"
+                  size={80}
+                  color={colors.success}
+                  style={styles.successIcon}
+                />
+
+                <Typography variant="h2" style={styles.successTitle}>
+                  Verification Email Sent!
+                </Typography>
+
+                <Typography
+                  variant="body"
+                  color="textSecondary"
+                  weight="medium"
+                  align="center"
+                  style={styles.successMessage}
+                >
+                  We've sent a verification link to
+                </Typography>
+
+                <View style={styles.emailBox}>
+                  <Typography
+                    variant="body"
+                    color="primary"
+                    weight="bold"
+                    align="center"
+                  >
+                    {formData.email}
+                  </Typography>
+                </View>
+
+                <Typography
+                  variant="bodySmall"
+                  color="textSecondary"
+                  align="center"
+                  style={styles.instructionText}
+                >
+                  Please click the link in the email to verify your account. It
+                  may take a few minutes to arrive.
+                </Typography>
+
+                <PrimaryButton
+                  title="Go to Login"
+                  onPress={handleLoginPress}
+                  variant="secondary"
+                  size="large"
+                  style={styles.successButton}
+                />
+
+                <View style={styles.resendContainer}>
+                  <Typography
+                    variant="bodySmall"
+                    color="textSecondary"
+                    align="center"
+                  >
+                    Didn't receive the email?
+                  </Typography>
+                  <PrimaryButton
+                    title="Resend Verification Email"
+                    onPress={handleResendVerificationEmail}
+                    loading={resendLoading}
+                    variant="text"
+                    size="small"
+                    style={styles.resendButton}
+                  />
+                </View>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -106,9 +225,7 @@ const RegisterScreen = ({ navigation }) => {
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <View style={styles.contentWrap}>
             <View style={styles.topBar}>
-              <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
-                <Ionicons name="arrow-back" size={24} color={colors.black} />
-              </TouchableOpacity>
+              <BackButton onPress={handleGoBack} />
               <View style={styles.logoContainer}>
                 <BrandLogo style={styles.headerLogo} />
               </View>
@@ -235,14 +352,7 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     alignSelf: 'center',
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -294,6 +404,46 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     fontWeight: '600',
+  },
+  successContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  successIcon: {
+    marginBottom: spacing.lg,
+  },
+  successTitle: {
+    marginBottom: spacing.md,
+    color: colors.black,
+    textAlign: 'center',
+  },
+  successMessage: {
+    marginBottom: spacing.sm,
+    lineHeight: 20,
+  },
+  emailBox: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  instructionText: {
+    marginBottom: spacing.xl,
+    lineHeight: 18,
+  },
+  successButton: {
+    width: '100%',
+    marginBottom: spacing.lg,
+  },
+  resendContainer: {
+    alignItems: 'center',
+  },
+  resendButton: {
+    marginTop: spacing.sm,
+    paddingHorizontal: 0,
   },
 });
 

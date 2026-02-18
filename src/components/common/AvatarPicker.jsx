@@ -27,7 +27,7 @@ const AvatarPicker = ({
   style,
 }) => {
   const handlePickImage = async () => {
-    if (!editable || !onImageSelect) return;
+    if (!editable || (!onImageSelect && !onImageSelectAndUpload)) return;
 
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../utils/constants';
 import { supabase } from '../api/supabaseClient';
+import * as authApi from '../api/authApi';
 
 // ──────────────────────────────────────────────
 // Initial state
@@ -11,6 +12,9 @@ const initialState = {
   isLoading: true,
   isAuthenticated: false,
   error: null,
+  emailVerified: false,
+  pendingEmailVerification: false,
+  pendingEmail: null,
 };
 
 // ──────────────────────────────────────────────
@@ -24,6 +28,9 @@ const AUTH_ACTIONS = {
   CLEAR_ERROR: 'CLEAR_ERROR',
   RESTORE_SESSION: 'RESTORE_SESSION',
   UPDATE_PROFILE: 'UPDATE_PROFILE',
+  SET_EMAIL_VERIFIED: 'SET_EMAIL_VERIFIED',
+  SET_PENDING_EMAIL_VERIFICATION: 'SET_PENDING_EMAIL_VERIFICATION',
+  SET_PENDING_EMAIL: 'SET_PENDING_EMAIL',
 };
 
 // ──────────────────────────────────────────────
@@ -41,6 +48,7 @@ const authReducer = (state, action) => {
         isAuthenticated: true,
         isLoading: false,
         error: null,
+        emailVerified: action.payload.emailVerified || false,
       };
 
     case AUTH_ACTIONS.LOGOUT:
@@ -50,6 +58,9 @@ const authReducer = (state, action) => {
         isAuthenticated: false,
         isLoading: false,
         error: null,
+        emailVerified: false,
+        pendingEmailVerification: false,
+        pendingEmail: null,
       };
 
     case AUTH_ACTIONS.SET_ERROR:
@@ -68,6 +79,7 @@ const authReducer = (state, action) => {
         user: action.payload.user,
         isAuthenticated: !!action.payload.user,
         isLoading: false,
+        emailVerified: action.payload.emailVerified || false,
       };
 
     case AUTH_ACTIONS.UPDATE_PROFILE:
@@ -77,6 +89,24 @@ const authReducer = (state, action) => {
         isAuthenticated: true,
         isLoading: false,
         error: null,
+      };
+
+    case AUTH_ACTIONS.SET_EMAIL_VERIFIED:
+      return {
+        ...state,
+        emailVerified: action.payload,
+      };
+
+    case AUTH_ACTIONS.SET_PENDING_EMAIL_VERIFICATION:
+      return {
+        ...state,
+        pendingEmailVerification: action.payload,
+      };
+
+    case AUTH_ACTIONS.SET_PENDING_EMAIL:
+      return {
+        ...state,
+        pendingEmail: action.payload,
       };
 
     default:
@@ -211,6 +241,30 @@ export const AuthProvider = ({ children }) => {
 
       if (error) throw error;
 
+      // Check if email is verified
+      const emailVerified = !!data.user?.email_confirmed_at;
+
+      if (!emailVerified) {
+        dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
+        dispatch({
+          type: AUTH_ACTIONS.SET_ERROR,
+          payload: 'Please verify your email address before logging in',
+        });
+        dispatch({
+          type: AUTH_ACTIONS.SET_PENDING_EMAIL_VERIFICATION,
+          payload: true,
+        });
+        dispatch({
+          type: AUTH_ACTIONS.SET_PENDING_EMAIL,
+          payload: email,
+        });
+        return { 
+          success: false, 
+          error: 'Please verify your email address first',
+          requiresEmailVerification: true,
+        };
+      }
+
       const appUser = mapSupabaseUser(data.user);
 
       await AsyncStorage.setItem(
@@ -220,7 +274,7 @@ export const AuthProvider = ({ children }) => {
 
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
-        payload: { user: appUser },
+        payload: { user: appUser, emailVerified: true },
       });
 
       return { success: true };
@@ -242,30 +296,24 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
-        options: {
-          data: {
-            full_name: userData.name,
-          },
-        },
-      });
+      const result = await authApi.register(userData);
 
-      if (error) throw error;
+      if (result.error) throw new Error(result.error);
 
-      // Supabase may return user even when email confirmation is required
-      if (data.user) {
-        const appUser = mapSupabaseUser(data.user);
-
-        await AsyncStorage.setItem(
-          STORAGE_KEYS.USER_DATA,
-          JSON.stringify(appUser),
-        );
-
+      if (result.user) {
+        // Set pending email verification - user needs to confirm email before login
         dispatch({
-          type: AUTH_ACTIONS.LOGIN_SUCCESS,
-          payload: { user: appUser },
+          type: AUTH_ACTIONS.SET_PENDING_EMAIL_VERIFICATION,
+          payload: true,
+        });
+        dispatch({
+          type: AUTH_ACTIONS.SET_PENDING_EMAIL,
+          payload: userData.email,
+        });
+        
+        dispatch({
+          type: AUTH_ACTIONS.SET_LOADING,
+          payload: false,
         });
       }
 
@@ -370,6 +418,68 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // ── Resend Verification Email ───────────────────────────────
+  /**
+   * Resend email verification link to user's email.
+   * @param {string} email
+   * @returns {Promise<{ success: boolean, error?: string }>}
+   */
+  const resendVerificationEmail = async (email) => {
+    dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
+
+    try {
+      const result = await authApi.resendVerificationEmail(email);
+
+      if (!result.success) throw new Error(result.error);
+
+      dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
+      return { success: true };
+    } catch (err) {
+      const message = err?.message || 'Failed to resend verification email';
+      dispatch({ type: AUTH_ACTIONS.SET_ERROR, payload: message });
+      return { success: false, error: message };
+    }
+  };
+
+  // ── Reset Password ──────────────────────────────────────────
+  /**
+   * Send password reset link via email.
+   * @param {string} email
+   * @returns {Promise<{ success: boolean, error?: string }>}
+   */
+  const resetPassword = async (email) => {
+    dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
+    dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
+
+    try {
+      const result = await authApi.resetPassword(email);
+
+      if (!result.success) throw new Error(result.error);
+
+      dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
+      return { success: true };
+    } catch (err) {
+      const message = err?.message || 'Failed to send password reset link';
+      dispatch({ type: AUTH_ACTIONS.SET_ERROR, payload: message });
+      return { success: false, error: message };
+    }
+  };
+
+  // ── Clear Pending Verification ──────────────────────────────
+  /**
+   * Clear pending email verification state.
+   */
+  const clearPendingEmailVerification = () => {
+    dispatch({
+      type: AUTH_ACTIONS.SET_PENDING_EMAIL_VERIFICATION,
+      payload: false,
+    });
+    dispatch({
+      type: AUTH_ACTIONS.SET_PENDING_EMAIL,
+      payload: null,
+    });
+  };
+
   // ── Context value ──────────────────────────────────────────
   const value = {
     ...state,
@@ -379,6 +489,9 @@ export const AuthProvider = ({ children }) => {
     clearError,
     updateNickname,
     updateNicknameLocal,
+    resendVerificationEmail,
+    resetPassword,
+    clearPendingEmailVerification,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

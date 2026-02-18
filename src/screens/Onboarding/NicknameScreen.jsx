@@ -47,7 +47,6 @@ const NicknameScreen = () => {
 
             <TextField
               label="Nickname"
-              placeholder="Mr. Suave"
               value={nickname}
               onChangeText={setNickname}
               error={error}

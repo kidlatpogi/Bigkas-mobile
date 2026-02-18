@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Typography from '../../components/common/Typography';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import Dropdown from '../../components/common/Dropdown';
+import BackButton from '../../components/common/BackButton';
 import { useAuth } from '../../hooks/useAuth';
 import { useSessions } from '../../hooks/useSessions';
 import { STORAGE_KEYS } from '../../utils/constants';
@@ -152,13 +153,7 @@ const SettingsScreen = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={handleGoBack}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.black} />
-          </TouchableOpacity>
+          <BackButton onPress={handleGoBack} />
           <Typography variant="h3">Settings</Typography>
           <View style={styles.headerSpacer} />
         </View>
@@ -255,14 +250,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: spacing.md,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   headerSpacer: {
     width: 40,
   },

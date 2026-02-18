@@ -22,12 +22,22 @@ import { spacing } from '../../styles/spacing';
 import { isValidEmail } from '../../utils/validators';
 
 const LoginScreen = ({ navigation }) => {
-  const { login, isLoading, error, clearError } = useAuth();
+  const {
+    login,
+    isLoading,
+    error,
+    clearError,
+    pendingEmailVerification,
+    pendingEmail,
+    resendVerificationEmail,
+  } = useAuth();
 
   // Auth form state for reuse across platforms.
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
+  const [resendLoading, setResendLoading] = useState(false);
+  const [verificationExpanded, setVerificationExpanded] = useState(false);
 
   const validate = () => {
     const errors = {};
@@ -54,7 +64,10 @@ const LoginScreen = ({ navigation }) => {
     const result = await login(email.trim(), password);
 
     if (!result.success) {
-      Alert.alert('Login Failed', result.error || 'Please check your credentials');
+      Alert.alert(
+        'Login Failed',
+        result.error || 'Please check your credentials',
+      );
     }
   };
 
@@ -63,7 +76,25 @@ const LoginScreen = ({ navigation }) => {
   };
 
   const handleForgotPassword = () => {
-    Alert.alert('Forgot Password', 'Password reset will be available soon.');
+    navigation.navigate('ForgotPassword');
+  };
+
+  const handleResendVerificationEmail = async () => {
+    setResendLoading(true);
+    const result = await resendVerificationEmail(pendingEmail || email);
+    setResendLoading(false);
+
+    if (result.success) {
+      Alert.alert(
+        'Verification Link Sent',
+        'Check your email for the verification link. It may take a few minutes to arrive.',
+      );
+    } else {
+      Alert.alert(
+        'Failed to Resend',
+        result.error || 'Please try again later',
+      );
+    }
   };
 
   return (
@@ -119,8 +150,71 @@ const LoginScreen = ({ navigation }) => {
                 Forgot password?
               </Typography>
 
-              {error ? (
-                <Typography variant="bodySmall" color="error" align="center" style={styles.errorText}>
+              {pendingEmailVerification ? (
+                <TouchableOpacity
+                  style={styles.verificationContainer}
+                  onPress={() => setVerificationExpanded(!verificationExpanded)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.verificationHeader}>
+                    <Ionicons
+                      name="mail-open"
+                      size={16}
+                      color={colors.warning}
+                    />
+                    <Typography
+                      variant="bodySmall"
+                      color="textPrimary"
+                      weight="bold"
+                      style={styles.verificationTitle}
+                    >
+                      Email Verification Pending
+                    </Typography>
+                    <Ionicons
+                      name={verificationExpanded ? 'chevron-up' : 'chevron-down'}
+                      size={16}
+                      color={colors.warning}
+                      style={styles.verificationChevron}
+                    />
+                  </View>
+
+                  {verificationExpanded && (
+                    <View style={styles.verificationContent}>
+                      <Typography
+                        variant="bodySmall"
+                        color="textSecondary"
+                        style={styles.verificationText}
+                      >
+                        A verification link has been sent to{' '}
+                        <Typography
+                          variant="bodySmall"
+                          color="textPrimary"
+                          weight="bold"
+                        >
+                          {pendingEmail}
+                        </Typography>
+                        . Click the link in your email to verify your account.
+                      </Typography>
+                      <PrimaryButton
+                        title="Resend Email"
+                        onPress={handleResendVerificationEmail}
+                        loading={resendLoading}
+                        variant="secondary"
+                        size="small"
+                        style={styles.resendButton}
+                      />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ) : null}
+
+              {error && !pendingEmailVerification ? (
+                <Typography
+                  variant="bodySmall"
+                  color="error"
+                  align="center"
+                  style={styles.errorText}
+                >
                   {error}
                 </Typography>
               ) : null}
@@ -142,7 +236,7 @@ const LoginScreen = ({ navigation }) => {
                 <View style={styles.dividerLine} />
               </View>
 
-              <SocialButton title="Log In with Google" onPress={() => {}} />
+              <SocialButton title="Continue with Google" onPress={() => {}} />
             </View>
 
             <View style={styles.registerContainer}>
@@ -187,14 +281,6 @@ const styles = StyleSheet.create({
   logoWrapper: {
     alignItems: 'center',
     marginBottom: spacing.lg,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   topBar: {
     flexDirection: 'row',
@@ -254,6 +340,39 @@ const styles = StyleSheet.create({
   },
   registerLink: {
     fontWeight: '600',
+  },
+  verificationContainer: {
+    backgroundColor: `${colors.warning}15`,
+    borderRadius: 8,
+    padding: spacing.sm,
+    marginBottom: spacing.lg,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.warning,
+  },
+  verificationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  verificationTitle: {
+    flex: 1,
+    fontSize: 13,
+  },
+  verificationChevron: {
+    marginLeft: spacing.xs,
+  },
+  verificationContent: {
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: `${colors.warning}30`,
+  },
+  verificationText: {
+    marginBottom: spacing.md,
+    lineHeight: 18,
+  },
+  resendButton: {
+    marginTop: spacing.sm,
   },
 });
 
