@@ -52,11 +52,10 @@ const NicknameScreen = ({ navigation }) => {
             <BrandLogo style={styles.logo} />
 
             <Typography variant="h1" style={styles.title}>
-              Add your
-              {'\n'}nickname
+              Add your nickname
             </Typography>
             <Typography variant="body" color="textSecondary" weight="medium" style={styles.subtitle}>
-              This will be shown on your dashboard.
+              This will be shown on your dashboard. You can change it later in settings.
             </Typography>
 
             <TextField

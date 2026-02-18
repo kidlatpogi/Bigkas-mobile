@@ -118,21 +118,29 @@ const authReducer = (state, action) => {
  * Map a Supabase auth user object to the app-level user shape.
  * @param {import('@supabase/supabase-js').User} sbUser
  * @param {string|null} [nickname]
- * @returns {{ id:string, name:string, email:string, nickname:string|null, createdAt:string }}
+ * @returns {{ id:string, firstName:string, lastName:string, name:string, email:string, nickname:string|null, createdAt:string }}
  */
-const mapSupabaseUser = (sbUser, nickname = null) => ({
-  id: sbUser.id,
-  name:
+const mapSupabaseUser = (sbUser, nickname = null) => {
+  const firstName = sbUser.user_metadata?.first_name || '';
+  const lastName = sbUser.user_metadata?.last_name || '';
+  const fullName = `${firstName} ${lastName}`.trim() ||
     sbUser.user_metadata?.full_name ||
     sbUser.user_metadata?.name ||
     sbUser.email?.split('@')[0] ||
-    'User',
-  email: sbUser.email || '',
-  nickname:
-    nickname ?? sbUser.user_metadata?.nickname ?? null,
-  avatar_url: sbUser.user_metadata?.avatar_url ?? null,
-  createdAt: sbUser.created_at,
-});
+    'User';
+  
+  return {
+    id: sbUser.id,
+    firstName: firstName || fullName.split(' ')[0],
+    lastName: lastName || fullName.split(' ').slice(1).join(' '),
+    name: fullName,
+    email: sbUser.email || '',
+    nickname:
+      nickname ?? sbUser.user_metadata?.nickname ?? null,
+    avatar_url: sbUser.user_metadata?.avatar_url ?? null,
+    createdAt: sbUser.created_at,
+  };
+};
 
 // ──────────────────────────────────────────────
 // Context

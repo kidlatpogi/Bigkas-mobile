@@ -79,11 +79,9 @@ const RegisterScreen = ({ navigation }) => {
 
     if (!validate()) return;
 
-    const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim();
-    console.log('Registering with name:', fullName, 'email:', formData.email);
-
     const result = await register({
-      name: fullName,
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
       email: formData.email.trim(),
       password: formData.password,
     });

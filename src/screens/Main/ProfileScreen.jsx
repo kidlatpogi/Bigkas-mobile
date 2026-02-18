@@ -43,8 +43,8 @@ const ProfileScreen = ({ navigation }) => {
     useAuth();
 
   const [formData, setFormData] = useState({
-    firstName: user?.name?.split(' ')[0] || '',
-    lastName: user?.name?.split(' ').slice(1).join(' ') || '',
+    firstName: user?.firstName || user?.name?.split(' ')[0] || '',
+    lastName: user?.lastName || user?.name?.split(' ').slice(1).join(' ') || '',
     nickname: user?.nickname || '',
     email: user?.email || '',
     avatarUri: user?.avatar_url || null,
@@ -58,8 +58,8 @@ const ProfileScreen = ({ navigation }) => {
    * Returns true if there are unsaved changes.
    */
   const hasChanges = () => {
-    const originalFirstName = user?.name?.split(' ')[0] || '';
-    const originalLastName = user?.name?.split(' ').slice(1).join(' ') || '';
+    const originalFirstName = user?.firstName || user?.name?.split(' ')[0] || '';
+    const originalLastName = user?.lastName || user?.name?.split(' ').slice(1).join(' ') || '';
     const originalNickname = user?.nickname || '';
     const originalAvatar = user?.avatar_url || null;
 
@@ -92,13 +92,17 @@ const ProfileScreen = ({ navigation }) => {
     try {
       setIsSaving(true);
 
-      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+      const firstName = formData.firstName.trim();
+      const lastName = formData.lastName.trim();
+      const fullName = `${firstName} ${lastName}`.trim();
       let avatarUrl = formData.avatarUri;
       const hasNewAvatar = formData.avatarUri && formData.avatarUri !== user?.avatar_url && formData.avatarUri.startsWith('file');
 
       // Update Supabase user metadata immediately (without waiting for avatar)
       const { error: updateError } = await supabase.auth.updateUser({
         data: {
+          first_name: firstName,
+          last_name: lastName,
           full_name: fullName,
           nickname: formData.nickname.trim() || null,
           avatar_url: hasNewAvatar ? formData.avatarUri : avatarUrl, // Temporarily use local URI
@@ -231,8 +235,8 @@ const ProfileScreen = ({ navigation }) => {
 
   const handleCancel = () => {
     setFormData({
-      firstName: user?.name?.split(' ')[0] || '',
-      lastName: user?.name?.split(' ').slice(1).join(' ') || '',
+      firstName: user?.firstName || user?.name?.split(' ')[0] || '',
+      lastName: user?.lastName || user?.name?.split(' ').slice(1).join(' ') || '',
       nickname: user?.nickname || '',
       email: user?.email || '',
       avatarUri: user?.avatar_url || null,

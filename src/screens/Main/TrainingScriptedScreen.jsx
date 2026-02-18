@@ -18,6 +18,7 @@ import Typography from '../../components/common/Typography';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import AudioLevelIndicator from '../../components/audio/AudioLevelIndicator';
 import BackButton from '../../components/common/BackButton';
+import { fetchScriptById } from '../../api/scriptsApi';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 
@@ -59,7 +60,7 @@ const { width: screenWidth } = Dimensions.get('window');
  */
 const TrainingScriptedScreen = ({ navigation, route }) => {
   // Route params
-  const { scriptId, focusMode, autoStart, entryPoint, scriptType } = route?.params || {};
+  const { scriptId, focusMode, autoStart, entryPoint, scriptType, freeSpeechTopic, freeSpeechContext } = route?.params || {};
   const isFreeMode = focusMode === 'free';
   const resultMode = entryPoint === 'practice' ? 'practice' : 'training';
 
@@ -133,17 +134,33 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
     const loadScript = async () => {
       setIsLoadingScript(true);
       try {
-        // TODO: Replace with Supabase query using scriptId.
-        // Query: SELECT id, title, body, type FROM practice_scripts WHERE id = scriptId
-        const mockScript = {
-          id: scriptId,
-          title: 'Graduation Draft 1',
-          body: `It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose injected humour and the like.`,
-          type: 'prewritten',
-        };
-        setScriptData(mockScript);
+        // Fetch real script from Supabase
+        const result = await fetchScriptById(scriptId);
+        if (result.success && result.script) {
+          setScriptData({
+            id: result.script.id,
+            title: result.script.title,
+            body: result.script.content,
+            type: result.script.type,
+          });
+        } else {
+          console.error('Failed to load script:', result.error);
+          // Fallback placeholder
+          setScriptData({
+            id: scriptId,
+            title: 'Script',
+            body: 'Failed to load script content. Please go back and try again.',
+            type: scriptType || 'prewritten',
+          });
+        }
       } catch (error) {
         console.error('Failed to load script:', error);
+        setScriptData({
+          id: scriptId,
+          title: 'Script',
+          body: 'Failed to load script content. Please go back and try again.',
+          type: scriptType || 'prewritten',
+        });
       } finally {
         setIsLoadingScript(false);
       }
@@ -316,12 +333,15 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
                 paceWpm: 145,
                 paceRating: 'NEEDS WORK',
                 resultMode,
+                freeSpeechTopic: freeSpeechTopic || freeSpeechContext || null,
                 trainingParams: {
                   scriptId,
                   focusMode,
                   scriptType,
                   autoStart: true,
                   entryPoint,
+                  freeSpeechTopic,
+                  freeSpeechContext,
                 },
               });
             },
@@ -394,7 +414,9 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
         <BackButton onPress={handleGoBack} />
 
         <Typography variant="bodySmall" color="textSecondary" style={styles.scriptTitle}>
-          {isFreeMode ? 'Free Speech' : scriptData?.title || 'Loading...'}
+          {isFreeMode
+            ? (freeSpeechTopic ? `Free Speech: ${freeSpeechTopic}` : 'Free Speech')
+            : scriptData?.title || 'Loading...'}
         </Typography>
 
         {!isFreeMode && (
