@@ -22,12 +22,21 @@ import { spacing } from '../../styles/spacing';
 import { isValidEmail } from '../../utils/validators';
 
 const LoginScreen = ({ navigation }) => {
-  const { login, isLoading, error, clearError } = useAuth();
+  const {
+    login,
+    isLoading,
+    error,
+    clearError,
+    pendingEmailVerification,
+    pendingEmail,
+    resendVerificationEmail,
+  } = useAuth();
 
   // Auth form state for reuse across platforms.
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
+  const [resendLoading, setResendLoading] = useState(false);
 
   const validate = () => {
     const errors = {};
@@ -54,7 +63,10 @@ const LoginScreen = ({ navigation }) => {
     const result = await login(email.trim(), password);
 
     if (!result.success) {
-      Alert.alert('Login Failed', result.error || 'Please check your credentials');
+      Alert.alert(
+        'Login Failed',
+        result.error || 'Please check your credentials',
+      );
     }
   };
 
@@ -63,7 +75,25 @@ const LoginScreen = ({ navigation }) => {
   };
 
   const handleForgotPassword = () => {
-    Alert.alert('Forgot Password', 'Password reset will be available soon.');
+    navigation.navigate('ForgotPassword');
+  };
+
+  const handleResendVerificationEmail = async () => {
+    setResendLoading(true);
+    const result = await resendVerificationEmail(pendingEmail || email);
+    setResendLoading(false);
+
+    if (result.success) {
+      Alert.alert(
+        'Verification Link Sent',
+        'Check your email for the verification link. It may take a few minutes to arrive.',
+      );
+    } else {
+      Alert.alert(
+        'Failed to Resend',
+        result.error || 'Please try again later',
+      );
+    }
   };
 
   return (
@@ -119,8 +149,57 @@ const LoginScreen = ({ navigation }) => {
                 Forgot password?
               </Typography>
 
-              {error ? (
-                <Typography variant="bodySmall" color="error" align="center" style={styles.errorText}>
+              {pendingEmailVerification ? (
+                <View style={styles.verificationContainer}>
+                  <View style={styles.verificationHeader}>
+                    <Ionicons
+                      name="mail-open"
+                      size={20}
+                      color={colors.warning}
+                    />
+                    <Typography
+                      variant="bodySmall"
+                      color="textPrimary"
+                      weight="bold"
+                      style={styles.verificationTitle}
+                    >
+                      Verify Your Email
+                    </Typography>
+                  </View>
+                  <Typography
+                    variant="bodySmall"
+                    color="textSecondary"
+                    style={styles.verificationText}
+                  >
+                    We've sent a verification link to{' '}
+                    <Typography
+                      variant="bodySmall"
+                      color="textPrimary"
+                      weight="bold"
+                    >
+                      {pendingEmail}
+                    </Typography>
+                    . Please click the link in the email to verify your
+                    account before logging in.
+                  </Typography>
+                  <PrimaryButton
+                    title="Resend Verification Email"
+                    onPress={handleResendVerificationEmail}
+                    loading={resendLoading}
+                    variant="secondary"
+                    size="small"
+                    style={styles.resendButton}
+                  />
+                </View>
+              ) : null}
+
+              {error && !pendingEmailVerification ? (
+                <Typography
+                  variant="bodySmall"
+                  color="error"
+                  align="center"
+                  style={styles.errorText}
+                >
                   {error}
                 </Typography>
               ) : null}
@@ -254,6 +333,29 @@ const styles = StyleSheet.create({
   },
   registerLink: {
     fontWeight: '600',
+  },
+  verificationContainer: {
+    backgroundColor: `${colors.warning}15`,
+    borderRadius: 8,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.warning,
+  },
+  verificationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  verificationTitle: {
+    marginLeft: spacing.sm,
+  },
+  verificationText: {
+    marginBottom: spacing.md,
+    lineHeight: 18,
+  },
+  resendButton: {
+    marginTop: spacing.sm,
   },
 });
 
