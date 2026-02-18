@@ -79,8 +79,11 @@ const RegisterScreen = ({ navigation }) => {
 
     if (!validate()) return;
 
+    const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim();
+    console.log('Registering with name:', fullName, 'email:', formData.email);
+
     const result = await register({
-      name: `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim(),
+      name: fullName,
       email: formData.email.trim(),
       password: formData.password,
     });
@@ -159,7 +162,7 @@ const RegisterScreen = ({ navigation }) => {
                   align="center"
                   style={styles.successMessage}
                 >
-                  We've sent a verification link to
+                  Account created for
                 </Typography>
 
                 <View style={styles.emailBox}>
@@ -168,6 +171,14 @@ const RegisterScreen = ({ navigation }) => {
                     color="primary"
                     weight="bold"
                     align="center"
+                  >
+                    {`${formData.firstName} ${formData.lastName}`}
+                  </Typography>
+                  <Typography
+                    variant="bodySmall"
+                    color="textSecondary"
+                    align="center"
+                    style={styles.emailSubtext}
                   >
                     {formData.email}
                   </Typography>
@@ -429,6 +440,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  emailSubtext: {
+    marginTop: spacing.xs,
   },
   instructionText: {
     marginBottom: spacing.xl,
