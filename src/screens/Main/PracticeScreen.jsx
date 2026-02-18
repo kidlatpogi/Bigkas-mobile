@@ -11,6 +11,40 @@ import { fetchScripts } from '../../api/scriptsApi';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 
+/** Built-in pre-written speeches provided by the system */
+const SYSTEM_PREWRITTEN_SPEECHES = [
+  {
+    id: 'sys-1',
+    title: 'Graduation Speech',
+    content: `Good morning, everyone. I stand before you today with a mix of emotions—pride, gratitude, and a hint of nostalgia. As I look around this auditorium, I see not just classmates, but friends who have shaped my journey. We've laughed together in cafeterias, studied late into the night, and supported each other through challenges. Today marks not an ending, but a beginning. As we leave these halls, let us carry with us the lessons we've learned and the bonds we've formed. The future is waiting for us, full of opportunities and possibilities. I'm confident that each one of you will make a positive impact in your communities and in the world. Thank you for being part of my story. Class of 2026, let's go change the world!`,
+    type: 'system-prewritten',
+  },
+  {
+    id: 'sys-2',
+    title: 'Motivational Speech',
+    content: `Failure is not the opposite of success; it's a stepping stone toward it. I want to share my journey with you—a journey filled with setbacks, doubts, and moments when I wanted to give up. But each time I fell, I rose stronger. Life will test you. There will be days when everything seems impossible. But remember this: your potential is far greater than your problems. Success is not about never falling; it's about getting back up every single time. It's about learning from your mistakes and pushing forward. So when you face challenges, don't see them as roadblocks. See them as opportunities to grow. Believe in yourself when no one else does. Work harder than your excuses. And never, ever give up on your dreams. You are capable of extraordinary things. The world is waiting for your contribution.`,
+    type: 'system-prewritten',
+  },
+  {
+    id: 'sys-3',
+    title: 'Environmental Awareness',
+    content: `Climate change is no longer a distant threat—it's our reality. Every day, we see signs of it: rising temperatures, extreme weather events, and environmental degradation. But here's the good news: we can make a difference. It starts with awareness and responsibility. If each one of us commits to small changes in our daily lives—reducing waste, conserving energy, supporting sustainable practices—we create a ripple effect. Imagine if millions of people took these steps. Our collective action can turn the tide. It's about making conscious choices: using reusable bags, reducing plastic consumption, supporting renewable energy. The planet has given us so much. It's time we give back. Our children deserve to inherit a beautiful, thriving world. Together, we can build a sustainable future. The time to act is now, and every action counts.`,
+    type: 'system-prewritten',
+  },
+  {
+    id: 'sys-4',
+    title: 'Leadership Inspiration',
+    content: `What does it mean to be a leader? It's not about having a title or holding the most powerful position. True leadership is about influence, integrity, and impact. A leader listens more than they speak. They empower others instead of diminishing them. They take responsibility, not just credit. Throughout history, the greatest leaders were those who uplifted others and inspired positive change. They led by example. In your own sphere of influence—whether it's your family, your workplace, or your community—you have the power to lead. Lead with kindness. Lead with honesty. Lead with purpose. Set an example that others want to follow. Challenge the status quo when it's wrong. Stand up for what's right, even when it's difficult. Remember, leadership is not about being the loudest voice in the room. It's about being the most thoughtful, most compassionate, and most dedicated to serving others.`,
+    type: 'system-prewritten',
+  },
+  {
+    id: 'sys-5',
+    title: 'The Power of Kindness',
+    content: `In a world that often feels divided and harsh, kindness is a revolutionary act. It costs nothing, yet it can change everything. A simple smile to a stranger can brighten their entire day. A listening ear to a struggling friend can be the lifeline they need. Kindness ripples outward in ways we may never fully understand. I've seen how one act of compassion has transformed someone's life trajectory. I've witnessed bullying stop because someone chose to show kindness to the bullied. Compassion is contagious. When you show kindness, you inspire others to do the same. Our world needs more of it now than ever before. So let's commit to being kind—not just when it's easy or convenient, but especially when it's difficult. Be kind to those who disagree with you. Be kind to those who have hurt you. Be kind to yourself. Kindness is strength, and the world needs your kindness today.`,
+    type: 'system-prewritten',
+  },
+];
+
 /** Random topics pool for the Randomizer tab */
 const RANDOM_TOPICS = [
   { title: 'The Future of Education', body: 'Talk about how technology is changing the way we learn and what schools might look like in 20 years.' },
@@ -89,10 +123,12 @@ const PracticeScreen = ({ navigation }) => {
     []
   );
 
-  /** Filter scripts by tab: pre-written = self-authored, generate = auto-generated */
+  /** Filter scripts by tab: pre-written = system + user self-authored, generate = auto-generated */
   const visibleScripts = useMemo(() => {
     if (selectedTab === 'prewritten') {
-      return scripts.filter((s) => s.type === 'self-authored');
+      // Combine system pre-written speeches with user's self-authored scripts
+      const userScripts = scripts.filter((s) => s.type === 'self-authored');
+      return [...SYSTEM_PREWRITTEN_SPEECHES, ...userScripts];
     }
     if (selectedTab === 'generate') {
       return scripts.filter((s) => s.type === 'auto-generated');
@@ -126,10 +162,17 @@ const PracticeScreen = ({ navigation }) => {
   const handleStartPractice = () => {
     if (!previewScript) return;
     setShowPreview(false);
+    
+    // For system pre-written speeches, don't pass scriptId (it's free mode with script context)
+    // For user scripts, pass the real scriptId
+    const isSystemSpeech = previewScript.type === 'system-prewritten';
+    
     navigation.navigate('TrainingScripted', {
-      scriptId: previewScript.id,
+      ...(isSystemSpeech
+        ? { freeSpeechContext: previewScript.content, freeSpeechTopic: previewScript.title }
+        : { scriptId: previewScript.id, scriptType: previewScript.type === 'auto-generated' ? 'autogenerated' : 'prewritten' }
+      ),
       focusMode: 'free',
-      scriptType: previewScript.type === 'auto-generated' ? 'autogenerated' : 'prewritten',
       autoStart: true,
       entryPoint: 'practice',
     });
