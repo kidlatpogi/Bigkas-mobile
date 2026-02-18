@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Typography from '../../components/common/Typography';
 import Card from '../../components/common/Card';
 import { useSessions } from '../../hooks/useSessions';
+import BackButton from '../../components/common/BackButton';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 import { formatDate, formatScore } from '../../utils/formatters';
@@ -106,13 +107,7 @@ const HistoryScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={handleGoBack}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.black} />
-        </TouchableOpacity>
+        <BackButton onPress={handleGoBack} />
         <Typography variant="h3">History</Typography>
         <View style={styles.headerSpacer} />
         <Typography variant="bodySmall" color="textSecondary">
@@ -150,14 +145,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   headerSpacer: {
     width: 40,
   },

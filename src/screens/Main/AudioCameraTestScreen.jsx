@@ -13,6 +13,7 @@ import { Audio } from 'expo-audio';
 import Typography from '../../components/common/Typography';
 import AudioLevelIndicator from '../../components/audio/AudioLevelIndicator';
 import PrimaryButton from '../../components/common/PrimaryButton';
+import BackButton from '../../components/common/BackButton';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 
@@ -149,13 +150,7 @@ const AudioCameraTestScreen = ({ navigation }) => {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={handleGoBack}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.black} />
-        </TouchableOpacity>
+        <BackButton onPress={handleGoBack} />
         <Typography variant="h3">Test Audio / Video</Typography>
         <View style={styles.headerSpacer} />
       </View>
@@ -313,14 +308,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     marginBottom: spacing.md,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   headerSpacer: {
     width: 40,
   },

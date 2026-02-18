@@ -17,6 +17,7 @@ import { Audio } from 'expo-audio';
 import Typography from '../../components/common/Typography';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import AudioLevelIndicator from '../../components/audio/AudioLevelIndicator';
+import BackButton from '../../components/common/BackButton';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 
@@ -390,13 +391,7 @@ const TrainingScriptedScreen = ({ navigation, route }) => {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={handleGoBack}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={22} color={colors.black} />
-        </TouchableOpacity>
+        <BackButton onPress={handleGoBack} />
 
         <Typography variant="bodySmall" color="textSecondary" style={styles.scriptTitle}>
           {isFreeMode ? 'Free Speech' : scriptData?.title || 'Loading...'}
@@ -787,14 +782,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   scriptTitle: {
     flex: 1,
     textAlign: 'center',

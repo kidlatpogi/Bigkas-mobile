@@ -15,6 +15,7 @@ import PrimaryButton from '../../components/common/PrimaryButton';
 import BrandLogo from '../../components/common/BrandLogo';
 import TextField from '../../components/common/TextField';
 import PasswordField from '../../components/common/PasswordField';
+import BackButton from '../../components/common/BackButton';
 import { useAuth } from '../../hooks/useAuth';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
@@ -224,9 +225,7 @@ const RegisterScreen = ({ navigation }) => {
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <View style={styles.contentWrap}>
             <View style={styles.topBar}>
-              <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
-                <Ionicons name="arrow-back" size={24} color={colors.black} />
-              </TouchableOpacity>
+              <BackButton onPress={handleGoBack} />
               <View style={styles.logoContainer}>
                 <BrandLogo style={styles.headerLogo} />
               </View>
@@ -353,14 +352,7 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     alignSelf: 'center',
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',

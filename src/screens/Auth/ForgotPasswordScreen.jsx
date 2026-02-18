@@ -14,6 +14,7 @@ import Typography from '../../components/common/Typography';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import BrandLogo from '../../components/common/BrandLogo';
 import TextField from '../../components/common/TextField';
+import BackButton from '../../components/common/BackButton';
 import { useAuth } from '../../hooks/useAuth';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
@@ -80,20 +81,15 @@ const ForgotPasswordScreen = ({ navigation }) => {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.contentWrap}>
+            {/* Header */}
             <View style={styles.topBar}>
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={handleGoBack}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="arrow-back" size={24} color={colors.black} />
-              </TouchableOpacity>
+              <BackButton onPress={handleGoBack} />
               <View style={styles.logoContainer}>
                 <BrandLogo style={styles.headerLogo} />
               </View>
               <View style={styles.spacer} />
             </View>
+          <View style={styles.contentWrap}>
 
             <Typography variant="h1" style={styles.title}>
               Reset Password
@@ -208,13 +204,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: spacing.xl,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+
   logoContainer: {
     flex: 1,
     alignItems: 'center',

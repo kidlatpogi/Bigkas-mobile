@@ -1601,6 +1601,18 @@ const { logout } = useAuth();
 
 ## 5. Reusable Component Props
 
+### BackButton (`src/components/common/BackButton.jsx`)
+
+Shared circular back button used consistently across **all** screens.  
+Design: 48×48 white circle with light gray border (`colors.border`), centered 22px `arrow-back` Ionicon.
+
+| Prop     | Type        | Default              | Description                                      |
+| -------- | ----------- | -------------------- | ------------------------------------------------ |
+| `onPress`| `function`  | `navigation.goBack()`| Custom press handler. Falls back to goBack()     |
+| `style`  | `ViewStyle` | —                    | Override container style (e.g., add marginBottom)|
+
+**Used in:** ForgotPasswordScreen, RegisterScreen, SessionResultScreen, DetailedFeedbackScreen, TrainingSetupScreen, TrainingScriptedScreen, SettingsScreen, ScriptsScreen, ScriptEditorScreen, ProgressScreen, ProfileScreen, PracticeScreen, HistoryScreen, GenerateScriptScreen, EditProfileScreen, ChangePasswordScreen, AudioCameraTestScreen, AllSessionsScreen, AccountSettingsScreen (19 screens total).
+
 ### BrandLogo (`src/components/common/BrandLogo.jsx`)
 
 | Prop     | Type           | Default | Description          |

@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Typography from '../../components/common/Typography';
 import Card from '../../components/common/Card';
 import PrimaryButton from '../../components/common/PrimaryButton';
+import BackButton from '../../components/common/BackButton';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 
@@ -93,9 +94,7 @@ const SessionResultScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
-            <Ionicons name="arrow-back" size={20} color={colors.black} />
-          </TouchableOpacity>
+          <BackButton onPress={handleGoBack} />
         </View>
 
         <Typography variant="h1" align="center" style={styles.title}>
@@ -188,14 +187,7 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: spacing.sm,
   },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   title: {
     marginBottom: spacing.md,
   },

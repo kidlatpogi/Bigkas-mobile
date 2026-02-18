@@ -14,6 +14,7 @@ import Typography from '../../components/common/Typography';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import TextField from '../../components/common/TextField';
 import AvatarPicker from '../../components/common/AvatarPicker';
+import BackButton from '../../components/common/BackButton';
 import { useAuth } from '../../hooks/useAuth';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
@@ -101,9 +102,7 @@ const EditProfileScreen = ({ navigation }) => {
         >
           <View style={styles.contentWrap}>
             {/* ── Back button ── */}
-            <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
-              <Ionicons name="arrow-back" size={24} color={colors.black} />
-            </TouchableOpacity>
+            <BackButton onPress={handleGoBack} style={{ marginBottom: spacing.sm }} />
 
             {/* ── Title ── */}
             <Typography variant="h1" style={styles.title}>
@@ -223,16 +222,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
 
-  /* ── Back button ── */
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
+
 
   /* ── Title ── */
   title: {

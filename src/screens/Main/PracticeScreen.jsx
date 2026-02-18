@@ -6,6 +6,7 @@ import Typography from '../../components/common/Typography';
 import Card from '../../components/common/Card';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import FilterTabs from '../../components/common/FilterTabs';
+import BackButton from '../../components/common/BackButton';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 
@@ -114,13 +115,7 @@ const PracticeScreen = ({ navigation }) => {
       >
         <View style={styles.contentWrap}>
           {/* Back button */}
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={handleGoBack}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={22} color={colors.black} />
-          </TouchableOpacity>
+          <BackButton onPress={handleGoBack} style={{ marginBottom: spacing.md }} />
 
           {/* Title */}
           <Typography variant="h1" style={styles.title}>
@@ -212,15 +207,7 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     alignSelf: 'center',
   },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
+
   title: {
     marginBottom: spacing.sm,
   },

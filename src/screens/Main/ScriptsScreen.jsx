@@ -6,6 +6,7 @@ import Typography from '../../components/common/Typography';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import FilterTabs from '../../components/common/FilterTabs';
 import ScriptCard from '../../components/common/ScriptCard';
+import BackButton from '../../components/common/BackButton';
 import { fetchScripts, deleteScript } from '../../api/scriptsApi';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
@@ -148,13 +149,7 @@ const ScriptsScreen = ({ navigation }) => {
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={handleGoBack}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.black} />
-          </TouchableOpacity>
+          <BackButton onPress={handleGoBack} />
           <Typography variant="h3">Scripts</Typography>
           <View style={styles.headerSpacer} />
         </View>
@@ -242,14 +237,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     marginBottom: spacing.md,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   headerSpacer: {
     width: 40,
   },
