@@ -220,6 +220,25 @@ export const AuthProvider = ({ children }) => {
           await AsyncStorage.removeItem(STORAGE_KEYS.USER_DATA).catch(e => console.warn('AsyncStorage cleanup failed:', e));
           dispatch({ type: AUTH_ACTIONS.LOGOUT });
         } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          // Check if email is verified for new sign-ups
+          const emailVerified = !!session.user?.email_confirmed_at;
+          
+          if (event === 'SIGNED_IN' && !emailVerified) {
+            // Newly registered user - require email verification
+            dispatch({
+              type: AUTH_ACTIONS.SET_PENDING_EMAIL_VERIFICATION,
+              payload: true,
+            });
+            dispatch({
+              type: AUTH_ACTIONS.SET_PENDING_EMAIL,
+              payload: session.user?.email,
+            });
+            dispatch({
+              type: AUTH_ACTIONS.LOGOUT,
+            });
+            return;
+          }
+
           AsyncStorage.getItem(STORAGE_KEYS.USER_DATA)
             .then(cachedData => {
               const cached = cachedData ? JSON.parse(cachedData) : {};
@@ -235,7 +254,7 @@ export const AuthProvider = ({ children }) => {
 
               dispatch({
                 type: AUTH_ACTIONS.LOGIN_SUCCESS,
-                payload: { user: appUser },
+                payload: { user: appUser, emailVerified },
               });
             })
             .catch(err => {
@@ -248,7 +267,7 @@ export const AuthProvider = ({ children }) => {
               
               dispatch({
                 type: AUTH_ACTIONS.LOGIN_SUCCESS,
-                payload: { user: appUser },
+                payload: { user: appUser, emailVerified },
               });
             });
         }
