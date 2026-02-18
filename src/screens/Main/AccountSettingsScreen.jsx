@@ -107,9 +107,9 @@ const AccountSettingsScreen = ({ navigation }) => {
       }
 
       // Delete all related data first (cascade delete)
-      // Delete sessions
+      // Delete analysis sessions
       await supabase
-        .from('sessions')
+        .from('analysis_sessions')
         .delete()
         .eq('user_id', user.id);
 
